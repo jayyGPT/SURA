@@ -5,14 +5,13 @@ PPT Link - [text](https://gamma.app/docs/SURA-Hybrid-Indoor-Localization-cqfkusy
 
 Next Step:
 - Check for any Papers on the IEEE MagFi Dataset
-- from Webmail (
-    
-Hybrid WiFi and Magnetic Localization:
-https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8260607
-https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=7275551
+- from Webmail {
+    Hybrid WiFi and Magnetic Localization:
+    https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8260607
+    https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=7275551
 
-Published Papers on Magnetic Field-Based Localization:
-https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=11174264
-https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=11105791
-
-)
+    Published Papers on Magnetic Field-Based Localization:
+    https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=11174264
+    https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=11105791
+    }
+- 
