@@ -1,0 +1,941 @@
+--- PAGE 1 ---
+Received April 29, 2021, accepted May 16, 2021, date of publication May 25, 2021, date of current version June 3, 2021.
+Digital Object Identifier 10.1 109/ACCESS.2021.3083662
+MagWi: Benchmark Dataset for Long Term Magnetic
+Field and Wi-Fi Data Involving Heterogeneous
+Smartphones, Multiple Orientations, Spatial
+Diversity and Multi-Floor Buildings
+IMRAN ASHRAF
+1, SADIA DIN
+1, MUHAMMAD USMAN ALI
+2, SOOJUNG HUR1,
+YOUSAF BIN ZIKRIA
+1, (Senior Member, IEEE), AND YONGWAN PARK1
+1Department of Information and Communication Engineering, Yeungnam University, Gyeongsan 38541, South Korea
+2Department of Computer Science, University of Gujrat, Gujrat 50700, Pakistan
+Corresponding authors: Yongwan Park (ywpark@yu.ac.kr) and Yousaf Bin Zikria (yousafbinzikria@ynu.ac.kr)
+This work was supported in part by the Ministry of Science and ICT (MSIT), South Korea, through the Information Technology Research
+Center (ITRC) Support Program supervised by the Institute for Information and Communications Technology Planning and
+Evaluation (IITP) under Grant IITP-2020-2016-0-00313, and in part by the Basic Science Research Program through the National
+Research Foundation of Korea (NRF) funded by the Ministry of Science, ICT and Future Planning under Grant 2017R1E1A1A01074345.
+ABSTRACT The wide use of mobile devices introduced several new services for the consumer market
+which are collectively called location-based services, the name being indicative of the signicance of the
+consumer position. Consequently, a rich variety of positioning technologies have been adopted to provide and
+enhance user location information. The mass deployment of Wi-Fi access points (APs) and the ubiquity of
+the magnetic eld data make them attractive candidates for indoor positioning. Additionally, the availability
+of embedded magnetic and Wi-Fi sensors in smartphones helps to achieve positioning without additional
+infrastructure. Even though Wi-Fi and magnetic eld data offer complementary characteristics for enhancing
+positioning accuracy, several challenges for these technologies remain unresolved. However, the lack of
+publicly available datasets for the magnetic eld and Wi-Fi makes it very difcult to extensively investigate
+these characteristics. Also, the proposed approaches cannot be tested on common benchmark datasets to
+analyze the results of the state-of-the-art approaches. To resolve these issues, this study presents a dataset
+that comprises the magnetic eld, Wi-Fi, and the data from the inertial measurement unit (IMU) sensors of
+the smartphone including accelerometer, gyroscope, and barometer. First, the important characteristics of
+both the Wi-Fi and the magnetic eld that require further investigation are highlighted, and later the data
+are collected. The data are collected over a longer period spanning approximately ve years involving ve
+different smartphones used by four different users, both female, and males. Different path geometries are
+followed in different multi-oor buildings which are physically separated, comprising both small and large
+areas. Besides, three different orientations of the smartphone are considered for data collection covering
+corridors, halls, and laboratories. The data from the stairs help to test `stairs up' and `stairs down' events and
+approaches aiming at multi-oor positioning can be tested with the provided dataset.
+INDEX TERMS Indoor positioning, smartphone sensors, magnetic eld data, Wi-Fi data, inertial measure-
+ment unit, benchmark dataset.
+I. INTRODUCTION
+Indoor positioning and localization have been an area of wide
+research interest over the past few years. Precise location
+information serves location-based services (LBS) and offers
+The associate editor coordinating the review of this manuscript and
+approving it for publication was Vlad Diaconita
+ .invaluable help for rescue operations during an emergency.
+Although both outdoor and indoor positioning is necessary,
+the indoor position becomes signicantly important because
+humans spend 80% to 90% of their time indoors [1]. As a
+result, 70% of cellular calls and 80% of data connections
+originate from indoor environments which include airports,
+universities, train and bus stations, and ofces, etc. [2].
+77976This work is licensed under a Creative Commons Attribution 4.0 License. For more information, see https://creativecommons.org/licenses/by/4.0/VOLUME 9, 2021
+
+--- PAGE 2 ---
+I. Ashraf et al.: MagWi: Benchmark Dataset for Long Term Magnetic Field and Wi-Fi Data
+Unlike outdoor positioning where the global positioning
+system (GPS) and its variants like assisted-GPS (A-GPS),
+GPS-inertial navigation system (GPS-INS), and GPS with
+camera provide reliable position information, the indoor envi-
+ronment poses several additional challenges. GPS faces many
+physical barriers to performing indoor positioning including
+frequency blocking, attenuation caused by walls and roofs,
+less number of visible satellites, and similar other problems.
+So, the calculated position shows high error which may
+be higher than the indoor area itself, especially for small
+buildings.
+To overcome the challenges of indoor positioning, several
+positioning technologies have been proposed and adopted
+for indoor environments. For example, radio frequency iden-
+tication (RFID), infrared (IR) and ultrawideband (UWB)
+have been adopted for indoor positioning [3][5]. Similarly,
+Bluetooth low energy (BLE) has been a topic of interest
+due to its low cost and easy implementation. However,
+these technologies require installing additional sensors such
+as tags or beacons to perform positioning and are called
+infrastructure-based technologies collectively. On the other
+hand, infrastructure-less technologies do not need additional
+infrastructures, such as pedestrian dead reckoning (PDR),
+Wi-Fi, and the earth's magnetic eld-based positioning. PDR
+provides the relative position of a user and requires a start-
+ing or previous position contrary to the Wi-Fi and magnetic
+eld-based positioning that have no such presumption. Wi-Fi
+is categorized under the infrastructure-less category owing
+to the wide deployment of Wi-Fi access points (APs) and
+its ability to calculate user's position in sparsely deployed
+APs [6].
+Wi-Fi positioning approaches have been investigated over
+the last two decades and offer an average accuracy of 4 to
+6 m [7], [8]. However, several challenges of Wi-Fi posi-
+tioning remain unresolved and require further investiga-
+tion. For example, the propagation losses of wireless prop-
+agation cause a substantial change in the received signal
+strength (RSS) and the performance of the ngerprinting
+approaches is severely affected [9], [10]. Similarly, signal
+absorption and shading, multipath shadowing, and dynamic
+environments involving human mobility such as airports, and
+shopping malls cause signal uctuation and introduce high
+positioning errors. Heterogeneity of hardware and antenna
+design from various vendors and signal absorption by the
+human body are also reported to inuence the RSS value and
+degrade positioning performance [11], [12].
+Magnetic eld-based positioning has emerged as a poten-
+tial solution for indoor positioning due to its ubiquity,
+simplicity, and offered positioning accuracy. Despite being
+smooth outdoor, the magnetic eld data is disturbed by the
+ferromagnetic materials present in the construction material
+and indoor infrastructure that leads to magnetic disturbances
+also called anomalies. Such anomalies are reported to have
+unique distribution in the indoor and can be leveraged to
+identify various locations [13]. Smartphone embedded micro-
+electromechanical system (MEMS) magnetometer measuressuch anomalies which can be used as ngerprints. Although
+magnetic eld-based positioning is simple to adapt and an
+effective technique for indoor positioning, it has several limi-
+tations [14]. For example, smartphone heterogeneity leads to
+different positioning results even with the same positioning
+algorithms. Smartphone companies use the embedded mag-
+netometers from various manufacturers with different noise
+tolerance levels and precision which shows the difference in
+the measured data. Similarly, the impact of different orien-
+tations of the smartphone is not studied very well for such
+approaches. However, it offers several supportive features
+to enhance the Wi-Fi positioning performance. For exam-
+ple, the magnetic eld data tend to show long-term stability
+than Wi-Fi data. Similarly, dynamic environments involving
+human mobility have less inuence on the magnetic eld
+data.
+Wi-Fi and magnetic eld data offer complementary fea-
+tures that can help to enhance the positioning performance
+of hybrid systems. However, lack of the publicly available
+datasets containing both Wi-Fi and magnetic eld data,
+makes it very difcult to study such systems. Data collec-
+tion is a laborious and time-consuming process that requires
+experienced users. Already available datasets lack several of
+the previously discussed characteristics. Hence, this study
+provides a hybrid dataset of Wi-Fi and magnetic eld data
+and makes the following contributions in essence
+A detailed analysis of the existing datasets has been con-
+ducted to analyze their pros and cons. Essential elements
+of a hybrid dataset are outlined.
+A large dataset MagWi is presented which contains the
+data for Wi-Fi and the magnetic eld for indoor posi-
+tioning. The data are collected over a long period of
+approximately 5 years.
+Beside Wi-Fi and magnetic eld, inertial measurement
+unit (IMU) data are provided from the accelerometer,
+motion sensors, and barometer involving four users both
+males and females. Five different buildings are used for
+data collection and ve smartphones including Galaxy
+S8, LG G6, Galaxy A8, LG 7, and Galaxy S9C are used.
+To study the inuence of the dynamic environment,
+various scenarios are considered involving low to high
+human mobility at a public exhibition hall where the data
+are collected from different smartphones.
+The data collection also involves various orientations of
+the smartphone such as navigation, call listening, and
+swinging. Apart from the data from multi-oor build-
+ing, the data collection environments include stairs in
+a multi-oor building, and `stairs up' and `stairs down'
+events can be tested.
+The rest of the paper is organized as follows. Already avail-
+able public datasets are discussed and analyzed in Section II.
+Important elements of both Wi-Fi and magnetic eld datasets
+are highlighted in Section III. The description of the data
+collection process, path geometry used for data collection,
+details of the smartphones and their orientations, and data
+collection scenarios are provided in Section IV. Section V
+VOLUME 9, 2021 77977
+
+--- PAGE 3 ---
+I. Ashraf et al.: MagWi: Benchmark Dataset for Long Term Magnetic Field and Wi-Fi Data
+contains the structure of the dataset including both Wi-Fi
+and magnetic eld data. The guide on how to use the data
+for positioning is described in Section VIalong with several
+positioning results. In the end, discussions and conclusions
+are given in Section VII.
+II. RELATED WORK
+Despite a large number of proposed approaches and research
+papers on indoor positioning and localization involving the
+use of the magnetic eld and Wi-Fi, publicly available
+datasets are not in tandem. The available datasets are ana-
+lyzed in the following sections.
+A. MAGNETIC FIELD DATASETS
+A large number of research papers can be found in literature
+during the last few years that focus on using magnetic eld
+data for indoor positioning. However, the number of publicly
+available datasets is only a few. For example, a large dataset
+containing the magnetic eld data is presented in [15]. Indoor
+magnetic eld anomalies are recorded using two different
+smartphones including Motorola Moto Z Play and Lenovo
+Phab 2 Pro. For data collection two platforms are used: a
+hand-held smartphone and a wheeled robot-mounted smart-
+phone. The data are collected simultaneously at the prede-
+ned location points in two different buildings. The data for
+various temporary interfering items are collected by placing
+an industrial fan, iron cupboard, and a rack of personal com-
+puters alongside the path used for data collection.
+A dataset called, UJIIndoorLoc-Mag is presented in [16]
+that contains the magnetic eld data collected in a labora-
+tory environment. Consisting of 8 corridors, the area has a
+dimension of 260 m2which is separated by bookcases and
+desktop computers. Space is further divided into smaller areas
+where the data are collected between starting and ending
+points at each 0.1 s. Data collection involves two different
+smartphones including Google Nexus 4 and LG G3, both
+operating on Android 5.0. Dataset also contains the IMU
+sensor data collected while the user is walking at a consistent
+speed. Also, multiple users collected the data over a short
+period of few days.
+B. WI-FI FINGERPRINTING DATASETS
+Two public datasets containing the data from Wi-Fi APs
+are presented for open areas with no GPS coverage in [17].
+First, the dataset is collected from four different users in a
+busy open area called Bush Court in Murdoch University,
+while the second dataset contains auto-generated records
+from Wi-Fi APs received from users' devices. Four smart-
+phones are used for the data collection so that the impact of
+smartphone heterogeneity can be investigated. PRIMO GH7I
+with Android 8.1, Oppo F1 Plus with Android 6.0, and LG
+G6 and Samsung S8 both operating on Android 7.0 are used
+for data collection.
+A Wi-Fi RSS dataset is presented in [18] to analyze the
+uctuations in RSS over a longer period. A trained pro-
+fessional collected the data spanning over 15 months onpre-dened location points. Various datasets are provided
+for each month containing both training and testing data
+separately. Data collection is done using Samsung Galaxy
+S3 in an indoor building with several oors.
+Similarly, the authors present a Wi-Fi dataset called
+UTSIndoorLoc for indoor positioning in [19]. The dataset
+contains Wi-Fi ngerprints from a 16 story building of
+the University of Technology, Sydney. Covering an area of
+approximately 44,000 m2, a total of 1,840 sample points are
+provided in the dataset. It provides approximately 9,107 train-
+ing samples and 387 test samples from 589 different
+Wi-Fi APs.
+Data collection for Wi-Fi or magnetic eld ngerprints is a
+labor-intensive task that requires a substantial amount of time
+by expert users. An alternative strategy is to involve multiple
+non-professional users through an approach called crowd-
+sourcing. In crowdsourcing, the data from multiple users are
+collected which are later combined into one database after
+necessary preprocessing and data cleansing. Following a sim-
+ilar procedure, a crowdsourced Wi-Fi ngerprinting dataset
+is provided by [20]. The data are collected in a ve-oor
+university building with a footprint of 208 108m2. Eight
+volunteers participated in the data collection process with
+21 android devices. The data are collected along with differ-
+ent directions, and the details of how the data are joined from
+8 users are not provided.
+C. HYBRID DATASETS FOR WI-FI AND MAGNETIC FIELD
+Due to the complementary features of Wi-F- and magnetic
+eld data, several hybrid datasets have been presented over
+the last few years that comprise both the Wi-Fi and magnetic
+eld data for indoor positioning.
+A public dataset is introduced in [21] that contains the
+magnetic eld and Wi-Fi data. Sony Xperia M2 and LG
+W110G Watch R is used for the data collection in an indoor
+space comprising ofces, corridors, and connected corridors.
+Additionally, the data from IMU sensors are included as well
+such as accelerometer and gyroscope. The data from the
+smartwatch helps to analyze user's various orientations and
+their impact on the data. The covered area is large and the
+path trajectory is complex involving several turns in different
+directions. Besides, the Wi-Fi and IMU data can be used to
+enhance the positioning accuracy when used with the mag-
+netic eld data.
+A hybrid dataset is provided in [22] where the data are
+collected using several technologies to enhance the accuracy
+of the indoor positioning. The dataset contains the data for the
+Wi-Fi, Bluetooth, and magnetic eld, and Samsung Galaxy
+Young GT-S5360 operating on Android 4.4.4 is used for data
+collection. Thirty Wi-Fi APs and 9 Bluetooth devices are
+installed in an indoor area of 465.75 m2for data collection.
+The data are collected using a client-server architecture where
+the smartphone has a lightweight client application for data
+collection while the storage is on the server-side. The ground
+truth points for the data collection are marked by manually
+77978 VOLUME 9, 2021
+
+--- PAGE 4 ---
+I. Ashraf et al.: MagWi: Benchmark Dataset for Long Term Magnetic Field and Wi-Fi Data
+calculating the distance. Besides, the data collection environ-
+ment is a multi-level building.
+A Wi-Fi and magnetic eld dataset is presented in [23]
+to evaluate hybrid positioning approaches using Wi-Fi and
+the magnetic eld data. IMU data are also incorporated for
+providing the heading direction and orientation information
+of the user. The data are collected following two different
+directions in corridors and intersections. A single smartphone
+Google Nexus 4 operating on Android 5.0.1 is used for data
+collection. Data collection time spans over 6 months to study
+the time-related mutation of the magnetic eld and Wi-Fi
+data.
+IPIN2016 tutorial dataset is an alternative to the UJIIndoor-
+Loc dataset and uses comparatively smaller indoor scenarios
+for positioning [24]. The data are collected in an indoor
+corridor, located in the School of Engineering of the Univer-
+sity of Alcala, Spain. The dataset contains both training and
+testing samples separately comprising 927 and 702 records,
+respectively. The data are collected for a total of 168 APs on
+manually marked location points in the corridor. AP names,
+RSS, basic service set identier (BSSID), location coordi-
+nates, and other important information are provided with the
+dataset.
+D. LIMITATIONS OF EXISTING DATASETS
+Although a large number of separate datasets are publicly
+available for Wi-Fi and magnetic eld data, as well as, hybrid
+datasets for the same, they lack in several aspects. First,
+magnetic eld datasets often involve using single or at most
+two devices which shows their inability to investigate device
+heterogeneity. For example, [15] provides the magnetic eld
+data of two smartphones while [22], [23] provide the data
+using only one smartphone. The availability of a large range
+of smartphone companies including Samsung, iPhone, LG,
+Huawei, and Nokia necessitate a dataset containing the data
+from more number of smartphones. Second, the use of xed
+orientation of the smartphone is the predominant way of data
+collection for the magnetic eld data as large variations are
+observed when changing smartphone orientations. None of
+the publicly available magnetic eld datasets use more than
+one orientation for the data collection. For the most part,
+the smartphone is held in front of the user's body to collect
+the data where the user is allowed to change the directions
+but not the smartphone orientation. Thirdly, for the Wi-Fi
+data, the impact of long-term uctuations in RSS is not
+studied very well. Although the data of 15 months is provided
+in [18], the data are collected using a single smartphone,
+i.e., Galaxy S3. The inuence of various smartphones on
+RSS uctuation over time is not covered. Fourthly, Wi-Fi
+has been investigated for almost two decades and it provides
+a solution for multi-oor indoor positioning, the datasets
+do not cover different scenarios for multi-oor environ-
+ments. For example, uneven oors pose a great challenge for
+multi-oor Wi-Fi positioning, however, none of the available
+datasets provide the Wi-Fi data for such environments to test
+the Wi-Fi positioning approaches. Last but most important,dynamic environments with human mobility cause problems
+and reduce the positioning performance of Wi-Fi positioning.
+Similarly, for magnetic eld data, the height of the user,
+walking speed of the user, and temporal indoor changes are
+important aspects of the positioning which are not covered in
+the existing datasets.
+III. IMPORTANT ELEMENTS OF INDOOR POSITIONING
+DATASETS
+Magnetic eld and Wi-Fi data have different characteristics
+that are regarded as important for indoor positioning. The
+characteristics that can inuence indoor positioning accuracy
+are highlighted here.
+A. CHARACTERISTICS OF MAGNETIC FIELD DATA FOR
+INDOOR POSITIONING
+The magnetic eld data can be denoted by two represen-
+tations: using magnetic x,y, and zorF,D, and I, where
+x,y, and zrepresent the North, East and vertical values of
+the magnetic eld while F,D, and Ishow the total mag-
+netic intensity, declination and inclination of the magnetic
+eld, respectively [25]. The inclination and declination in
+the 2nd representations are angles that are very sensitive to
+the attitude of the device and conventionally not used for
+positioning. The elements in the rst representation change
+with the orientation of the smartphone and are not very well
+studied. Figure 1 shows the magnetic eld data for different
+orientations of the smartphone including phone in the pocket,
+call listening, and phone swinging. Two orientations are con-
+sidered for the phone in the pocket mode where the phone
+is put in an upside-down position with a camera at the top
+and an opposite position with the camera at the bottom. The
+objective of these orientations is to show that even a single
+orientation can have multiple sub-orientations that affect the
+magnetic eld data.
+Ideally, the navigation mode is used where the user holds
+the smartphone in front of his body with the smartphone
+LCD facing upward. In this orientation, the y-axis is direct-
+ing towards the user's moving direction. The user moves in
+various directions with the smartphone's xed orientation.
+To increase accuracy and reduce preprocessing the frame of
+reference should be always aligned with the global coor-
+dinates, however, this is not very practical for real-world
+positioning scenarios. Existing datasets are collected with a
+xed orientation and lack the diversity of orientation.
+Despite its long-term stability, the magnetic eld data is
+mutated over time and the world magnetic model is revised
+every ve years to tackle the mutation [26]. Studies involving
+long-term magnetic eld data conrm that the mutation of the
+magnetic eld data is slower than the Wi-Fi signals [27][30].
+Similarly, the materials used in man-made constructions
+affect the magnetic eld data differently. This effect depends
+on the type and quantity of the ferromagnetic materials.
+Consequently, the nature of the indoor environment and its
+settings like the place of electric doors, elevators, vending
+machines, and electric cupboards, etc. interfere with the
+VOLUME 9, 2021 77979
+
+--- PAGE 5 ---
+I. Ashraf et al.: MagWi: Benchmark Dataset for Long Term Magnetic Field and Wi-Fi Data
+FIGURE 1. The magnetic field data for different orientations, (a) Total magnetic field intensity F, (b) Magnetic xcomponent, (c)
+Magnet ycomponent, and (d) Magnetic zcomponent.
+magnetic data and offer different distribution of the
+magnetic eld data. To analyze the performance of
+the magnetic eld-based indoor positioning approaches,
+the dataset should contain data from different types of
+buildings.
+One of the bigger challenges of magnetic eld-based posi-
+tioning is to cope with smartphone heterogeneity. In the
+majority of the cases, positioning approaches utilize a sin-
+gle smartphone for performance evaluation which does not
+show the capability of the approach to work seamlessly
+with various smartphones. Smartphone heterogeneity poses
+two challenges: the attitude of the smartphone magnetometer
+and the diversity of the magnetometer. Various smartphone
+companies use IMU sensors from different manufacturers
+even for the different models of the same product line. The
+embedded magnetometers have different levels of sensitivity
+and noise tolerance and result in different magnetic eld
+values even for the same location. Even though the indoor
+infrastructure, as well as, human mobility is the same, varia-
+tions can easily be observed. A sample for this phenomenon
+of the magnetic eld data is shown in Figure 2which shows
+the data collected at the same location using four different
+smartphones.The presence of magnetometers from different manufac-
+turers and their different models tends to show different
+magnetic eld data even when the data are collected for the
+same location from various smartphones. This leads to dif-
+ferent positioning accuracy even while the same positioning
+approach is used. Device calibration helps to minimize the
+change in the magnetic eld readings from the same device
+where calibration is achieved by moving the smartphone
+making a shape like a digit 8 along three axis [31]. Besides,
+offset value [32] and sequential measurements [33] have been
+used for the same purpose as well. However, the major-
+ity of the existing datasets do not provide the sequential
+measurements to test the positioning approaches. Similarly,
+the datasets provide the magnetic eld data collected from a
+single user which is not appropriate to analyze the impact of
+the user's height on the positioning accuracy.
+B. IMPORTANT CHARACTERISTICS OF WI-FI DATA FOR
+INDOOR POSITIONING
+Wi-Fi indoor positioning has been investigated for almost two
+decades now, yet it has several challenging and unresolved
+problems. For example, the direction of the smartphone at the
+77980 VOLUME 9, 2021
+
+--- PAGE 13 ---
+I. Ashraf et al.: MagWi: Benchmark Dataset for Long Term Magnetic Field and Wi-Fi Data
+FIGURE 11. Data collection scenario for BE building, (a) Path followed for data collection, and (b) Details for the path and stairs.
+FIGURE 12. Structure of 3 floor stairs used for data collection.
+FIGURE 13. Data collection points in COEX exhibition hall.
+positioning research using sensor fusion and is publicly avail-
+able from the `IEEE Data Port' at link1with the digital object
+identier (DOI) https://dx.doi.org/10.21227/7g9v-6z48.
+1https://ieee-dataport.org/open-access/magwi-benchmark-dataset-long-
+term-magnetic-eld-and-wi--data-involving-heterogeneousThe dataset contains both the magnetic eld and Wi-Fi data
+which are stored in separate folders. The data are collected
+for Wi-Fi and magnetic eld on the same location points
+which indicates that the data in different folders correspond
+to the same locations for different scenarios and users. The
+hierarchical structure of the dataset is shown in Figure 14. The
+MagWi contains two subfolders, one each for the magnetic
+eld and Wi-Fi data, respectively. For the magnetic eld data,
+two types of data are collected: continuous data and static
+data. The latter is collected at specied location points while
+the surveyors stand still at manually marked location points
+which are at a distance of 1 m from each other. The static
+data are collected 125 to 150 data samples at the sampling
+rate of 10 Hz. On the other hand, the former involves the data
+collection while the surveyor walks along the chosen path
+with a consistent speed between the starting and ending points
+as indicated on maps given in Figures 9 to 11. The sampling
+rate for continuous data is also 10 Hz. The former can be used
+to make the training data/ngerprint database while the latter
+aims at providing the data for various walking speeds of users.
+The data for the former category can be resampled depending
+upon the walking speed of the user.
+Apart from two types of data for the magnetic eld, the rest
+of the structure is the same for both Wi-Fi and magnetic
+eld datasets. Figure 15shows the structure of the magnetic
+eld data under MagWi. The folder and subfolder structure
+are the same for static and continuous magnetic eld data,
+as well as, the Wi-Fi data. The data for ve selected buildings
+are stored in separate folders for magnetic eld and Wi-Fi
+data, followed by the folders for three different orientation
+styles. Besides `call listening', `swinging', and `navigation',
+the data for stairs are stored separately. The data for stairs is
+gathered only for the IT building and contains the data for
+three-oor stairs including both `stairs down' and `stairs up'
+events where `stairs down' even refers to the user walking
+from 3rd to 1st oor and vice versa for `stairs up' event.
+Three scenarios are followed for each orientation where
+each scenario follows a different path geometry, as well as,
+starting and ending points. Five smartphones are used for data
+77988 VOLUME 9, 2021
+
+--- PAGE 14 ---
+I. Ashraf et al.: MagWi: Benchmark Dataset for Long Term Magnetic Field and Wi-Fi Data
+FIGURE 14. Folder and subfolder structure of MagWi dataset.
+collection including A8, S8, and S9C from Samsung Galaxy
+while G6 and G7 from LG. As mentioned previously, four
+users participate in the data collection process and the data
+for each user is stored separately. In the end, for each user,
+the data are stored as Excel les with `.xlsx' extension for
+small data size and easy processing. The following format
+is used to name the les, ``IMU_IT Engineering_Scenario
+1_User 2 (M-174cm)_Navigation_2018.02.20 120647.xlsx''.
+where
+IMU - indicates the inertial measurement unit data con-
+taining the magnetic eld, accelerometer, gyroscope,
+and barometer sensor data.
+IT Engineering - the name of the building for data col-
+lection.
+Scenario 1 - shows the scenario followed for data collec-
+tion.
+User 2 (M-174cm) - the user who collected the data, `M'
+refers to `male' while 174 cm is the height of the user.
+2018.02.20 120647 - shows the time stamp in
+`yyyy.mm.dd' format followed by the time in
+`hh.mm.ss' format.
+The same format is used for magnetic eld and Wi-Fi le
+names except for the initial name where `IMU' is replaced
+with `WiFi' for the Wi-Fi data, as in ``WiFi_CS Engineer-
+ing_Scenario 2_User 2 (M-174cm)_Navigation_2021.08.12
+170502.xlsx''. Figure 16shows the snapshot of the Excel
+sheet for the magnetic eld data.
+A. DETAILS OF WI-FI DATA RECORDS
+Excel sheet for the Wi-Fi data contains 6 columns and the
+detail of each column is as follows.
+1`Time' indicates the date and time when the data are
+collected using the format `yyyy.mm.dd hh.mm.ss'.
+2`X_pos' shows the xcoordinate of the location point
+where the data are collected.
+3`Y_pos' shows the ycoordinate of the location point.
+Both xandycoordinates are local coordinates and assignedwith respect to the maps shown in Figures 11 to 12, where the
+top left corner indicates (1,1) for x, and y.
+4`SSID' refers to the service set identier to show the
+name of the Wi-Fi AP.
+5`BSSID' refers to basic service set identier which
+shows the unique address of a Wi-Fi AP. SSID may be the
+same for several APs, but each AP has a unique BSSID. For
+security, the original SSID and BSSID have been replaced.
+6`RSS' shows the received signal strength for a particular
+Wi-Fi AP. In the dataset, the Wi-Fi records are sorted for the
+RSS value from highest to lowest.
+B. DETAILS OF MAGNETIC FIELD DATA
+Magnetic eld data has 16 columns and contains the
+accelerometer, gyroscope, and barometer data, in addition to
+the magnetic eld data.
+1`Time' shows the time stamp when the data are collected
+and stores the time stamp in `yyyy.mm.dd hh.mm.ss' format.
+2`X_pos' refers to the local xcoordinate of the location
+point where the data are collected.
+3`Y_pos' refers to the local ycoordinate of the location
+point. The xandycoordinates in the magnetic eld le are
+available only for the static data where the data are collected
+while standing at a particular point. On the other hand, for
+the continuous data, since the user collects the data while
+walking, these coordinates are not recorded.
+4, 5, 6`Mag_x', and `Mag_y', `Mag_z' represent the
+magnetic eld x,y, and zcomponents, respectively and indi-
+cates the North, West and vertical component of the magnetic
+eld. Using x,y, and z, total magnetic eld intensity can be
+calculated using
+FDq
+Mag2xCMag2yCMag2z (1)
+7, 8, 9`Acc_x', and `Acc_y', `Acc_z' represent the data
+for smartphone accelerometer and show acceleration of x,y,
+andzcomponents, respectively. Total acceleration in m=s2
+can be calculated using
+ADq
+Acc2xCAcc2yCAcc2z (2)
+10, 11, 12`Gyro_x', and `Gyro_y', `Gyro_z' refer to the
+data from the gyroscope of the smartphone. The values are
+given for gyroscope x,y, and zcomponents, respectively and
+the measuring unit is radian=s.
+13, 14, 15`Orn_x', and `Orn_y', `Orn_z' shows the data
+for smartphone current orientation with x,yandzaxes. Both
+static and continuous data record the orientation to track the
+orientation of the user smartphone. For the static data, it is
+used to nd the user's phone orientation for data collection.
+On the other hand, for a continuous walk, it is used to track the
+user's orientation, as well as, the direction where the user is
+headed. The values for `Gyro' and `Orn' are different because
+they represent different items; the former refers to the data
+from the gyroscope while the latter is obtained using the
+rotation matrix, accelerometer data, and the magnetic eld
+data at a particular location.
+VOLUME 9, 2021 77989
+
+--- PAGE 15 ---
+I. Ashraf et al.: MagWi: Benchmark Dataset for Long Term Magnetic Field and Wi-Fi Data
+FIGURE 15. Structure of magnetic field and Wi-Fi data under MagWi dataset.
+FIGURE 16. Detail of excel sheet for Wi-Fi data.
+16`Pressure' shows the data for the atmospheric pressure
+received for the barometer of the smartphone. The data for the
+barometer is represented in hecto Pascal (hPa) and is equal to
+the millibar pressure unit.VI. USING MAGWI FOR INDOOR POSITIONING
+MagWi dataset contains the data from the magnetic eld
+sensor, Wi-Fi, and IMU sensors. The data from such sensors
+is collected to be used for sensor fusion to enhance the posi-
+tioning accuracy of indoor positioning approaches. Several
+experiments are performed to show the use of the MagWi
+hybrid dataset.
+Initially, the positioning performance of the magnetic eld
+data and Wi-Fi data is analyzed separately. For this purpose,
+the ngerprinting approach is utilized where a ngerprinting
+database is built for both the magnetic eld and Wi-Fi data
+separately. Let xiandyibe the xandycoordinates for a given
+ground truth location point, the magnetic eld ngerprint
+for that location is given as fmag xi;mag yi;mag zig. Where
+mag x,mag y, and mag zrepresents the normalized values for
+77990 VOLUME 9, 2021
+
+--- PAGE 16 ---
+I. Ashraf et al.: MagWi: Benchmark Dataset for Long Term Magnetic Field and Wi-Fi Data
+FIGURE 17. Details of the magnetic field data records.
+FIGURE 18. Positioning results using the magnetic field data alone and
+magnetic field data with IMU sensors.
+magnetic eld components. During the data collection,
+the magnetic eld values are collected at a sampling rate
+of 10 Hz for 15 to 20 s. During the normalization, the average
+value of the collected data is calculated for the magnetic eld
+data at a given point. This process is repeated for all the
+location points of an indoor area intended for positioning. For
+the current study, these points are separated by 1 m and points
+are marked by measuring the distance manually.
+During the testing phase, the user collects the magnetic
+eld data at an unknown location point and the currentposition is estimated by matching it with the pre-built nger-
+print database. For matching the user data with the database,
+Euclidean distance is used. The position is estimated using
+k nearest neighbor (KNN) using kD7, where the value of
+kis empirical. Positioning results using the magnetic eld
+ngerprinting are shown in Figure 18. Results displayed
+in Figure 18are obtained by running several experiments with
+a single user and single smartphone and the total number of
+estimated positions is 1130. As nding the optimal value of
+kis challenging, several experiments are performed to nd
+a suitable value of kfor increasing the positioning perfor-
+mance. A smaller value of kis sensitive to produce high
+positioning error while a large value increases the computa-
+tion time. For this purpose, experiments are carried out using
+kD3;5;7 to analyze the positioning accuracy. Although
+conventionally k<5 is used, in the current case, kD7
+produces good results as compared to both kD3 and kD5.
+So, the adopted value of kfor the current study is 7. For
+illustration, results for magnetic eld-based positioning using
+KNN with kD3;5;7 are shown in Figure 19.
+Results are displayed for positioning using the magnetic
+eld data alone, as well as, the magnetic eld and IMU
+sensors data. For the second scenario, the data are collected
+while the user is walking along the dedicated path. For each
+1 s, the data from the magnetic eld sensor and IMU sensors
+are used for positioning. IMU sensors data are used to deter-
+mine users' state of walking and the direction of walking.
+For matching the magnetic eld data with the ngerprint
+VOLUME 9, 2021 77991
+
+--- PAGE 17 ---
+I. Ashraf et al.: MagWi: Benchmark Dataset for Long Term Magnetic Field and Wi-Fi Data
+FIGURE 19. Plot for positioning results with different values of k.
+FIGURE 20. Positioning results using the Wi-Fi fingerprinting.
+database, a second database is used where a `spline' inter-
+polation is used to generate the intermediate magnetic eld
+data between two location points. In this method, instead of
+matching one value of mag x,mag y, and mag z, a sequence
+of 10 values is matched which improves the positioning
+performance.
+For Wi-Fi positioning, a ngerprinting approach similar
+to that of magnetic eld positioning is adopted. Let xiand
+yibe the xandycoordinates for a given ground truth loca-
+tion point, Wi-Fi ngerprint for that location can be given
+asf(AP i1;RSS i1);(AP i2;RSS i2); : : : ; (AP in;RSS in)gwhere n
+represents total number of APs detected during the scan
+andRSS i1indicates the normalized RSS value for AP1at
+(xi;yi). During the scanning time of 15 to 20 scans, approx-
+imately 10 scans are carried out for detecting Wi-Fi APs
+and RSS values for each AP are normalized to make the
+ngerprint database. For positioning, the KNN approach with
+kD7 is followed using the Euclidean distance measure.
+Results for Wi-Fi ngerprinting-based positioning are shown
+in Figure 20.
+Results indicate that the positioning with the Wi-Fi data is
+superior to that of the magnetic eld data. The primary reason
+for the higher performance of Wi-Fi is the uniqueness ofWi-Fi ngerprints. The distribution of Wi-Fi signals is more
+unique than that of the magnetic eld data. The magnetic
+eld data distribution depends on the internal structure of a
+building which interferes with the earth's natural magnetic
+eld and causes anomalies. Often, the magnetic eld data
+ngerprints may be the same or very similar at different loca-
+tions, especially in large indoor areas. Consequently, while
+using alone, the positioning accuracy of the magnetic eld
+data is inferior to that of the Wi-Fi. Secondly, the ngerprint
+vector of the magnetic eld data contains only mag x,mag y,
+andmag zand may repeat for many locations. On the other
+hand, at any given location, many APs are visible making the
+Wi-Fi ngerprint vector several times larger which ultimately
+improves the uniqueness of the Wi-Fi ngerprint.
+Due to the complementary nature of Wi-Fi and the mag-
+netic eld data, they are often combined to achieve better
+positioning performance. Several research works used Wi-Fi
+data with the magnetic eld data to show that positioning
+accuracy is improved when magnetic eld and Wi-Fi data are
+used together [55][57]. Similarly, the authors in [28] study
+the behavior of Wi-Fi and the magnetic eld data for indoor
+positioning and conrm that Wi-Fi and magnetic eld data
+are complementary and improve the positioning performance
+if used jointly.
+To corroborate the ndings of these research works,
+we performed ngerprinting positioning using Wi-Fi and
+magnetic eld data. Initially, the Wi-Fi data are utilized to
+calculate a coarse position which is later used to restrict the
+search space in the magnetic eld database. For this purpose,
+an extended Kalman lter (EKF) is leveraged for data fusion
+from IMU, WiFi, and the magnetic eld. The purpose of
+these experiments is to show the practical use of MagWi and
+the feasibility of using the magnetic eld and WiFi together
+to enhance the positioning accuracy. Positioning results are
+shown in Figure 21. Results prove that using Wi-Fi and the
+magnetic eld data, positioning accuracy is enhanced sub-
+stantially. For example, the mean value for the magnetic eld
+data and Wi-Fi alone is 34.29 m and 12.86 m, respectively.
+However, when used together, the positioning performance is
+elevated with a mean value of 4.89 m; the maximum error
+is reduced as well. Similarly, when WiFi, magnetic eld,
+and IMU data are fused, the mean error is further reduced
+to 4.31 m. Using the Wi-Fi and the magnetic eld data with
+ngerprinting gives a positioning error of 10 m for 90%. The
+positioning error at 90% is approximately 9 m when IMU
+data are used along with the WiFi and magnetic eld data.
+When used with state-of-the-art approaches, the positioning
+performance can be further improved.
+VII. DISCUSSION AND CONCLUSION
+The wide proliferation of modern smartphones accelerated
+the pace of positioning research to meet the needs of
+location-based services. Hence, a large number of position-
+ing technologies and methods have been proposed to pro-
+vide precise location information, both indoors and outdoors.
+Unlike the outdoor environment where GPS can be used to
+77992 VOLUME 9, 2021
+
+--- PAGE 20 ---
+I. Ashraf et al.: MagWi: Benchmark Dataset for Long Term Magnetic Field and Wi-Fi Data
+[28] Y. Shu, C. Bo, G. Shen, C. Zhao, L. Li, and F. Zhao, ``Magicol: Indoor
+localization using pervasive magnetic eld and opportunistic WiFi sens-
+ing,'' IEEE J. Sel. Areas Commun., vol. 33, no. 7, pp. 14431457, Jul. 2015.
+[29] I. Ashraf, S. Hur, and Y. Park, ``Enhancing performance of magnetic eld
+based indoor localization using magnetic patterns from multiple smart-
+phones,'' Sensors, vol. 20, no. 9, p. 2704, May 2020.
+[30] K. P. Subbu, B. Gozick, and R. Dantu, ``LocateMe: Magnetic-elds-based
+indoor localization using smartphones,'' ACM Trans. Intell. Syst. Technol.,
+vol. 4, no. 4, pp. 127, Sep. 2013.
+[31] Developer Library. Managing the Keyboard, I Apple, Cupertino, CA, USA,
+2016, p. 9, vol. 26.
+[32] Y. Zheng, G. Shen, L. Li, C. Zhao, M. Li, and F. Zhao, ``Travi-navi: Self-
+deployable indoor navigation system,'' IEEE/ACM Trans. Netw., vol. 25,
+no. 5, pp. 26552669, Oct. 2017.
+[33] H. Xie, T. Gu, X. Tao, H. Ye, and J. Lu, ``A reliability-augmented
+particle lter for magnetic ngerprinting based indoor localization on
+smartphone,'' IEEE Trans. Mobile Comput., vol. 15, no. 8, pp. 18771892,
+Aug. 2016.
+[34] Farproc. WiFi Analyzer. Accessed: Feb. 22, 2021. [Online]. Available:
+https://play.google.com/store/apps/details?id=com.farproc.wi.analyzer&
+hl=en&gl=US
+[35] J.-G. Park, D. Curtis, S. Teller, and J. Ledlie, ``Implications of device
+diversity for organic localization,'' in Proc. IEEE INFOCOM, Shanghai,
+China, Apr. 2011, pp. 31823190, doi: 10.1109/INFCOM.2011.5935166.
+[36] I. Ashraf, S. Hur, and Y. Park, ``Indoor positioning on disparate commercial
+smartphones using Wi-Fi access points coverage area,'' Sensors, vol. 19,
+no. 19, p. 4351, Oct. 2019.
+[37] M. A. Bitew, R.-S. Hsiao, H.-P. Lin, and D.-B. Lin, ``Hybrid indoor
+human localization system for addressing the issue of RSS variation in
+ngerprinting,'' Int. J. Distrib. Sensor Netw., vol. 11, no. 3, Mar. 2015,
+Art. no. 831423.
+[38] Z. Zheng, Y. Chen, T. He, F. Li, and D. Chen, ``Weight-RSS: A calibration-
+free and robust method for WLAN-based indoor positioning,'' Int. J.
+Distrib. Sensor Netw., vol. 11, no. 4, Apr. 2015, Art. no. 573582.
+[39] J. Torres-Sospedra, A. Jiménez, A. Moreira, T. Lungenstrass, W.-C. Lu,
+S. Knauth, G. Mendoza-Silva, F. Seco, A. Pérez-Navarro, M. Nicolau,
+A. Costa, F. Meneses, J. Farina, J. Morales, W.-C. Lu, H.-T. Cheng,
+S.-S. Yang, S.-H. Fang, Y.-R. Chien, and Y. Tsao, ``Off-line evaluation of
+mobile-centric indoor positioning systems: The experiences from the 2017
+IPIN competition,'' Sensors, vol. 18, no. 2, p. 487, Feb. 2018.
+[40] L. Xu, C. Feng, Y. Wang, Y. Yao, and M. Q.-H. Meng, ``Variation of
+exterior telemetry links of capsule antenna ingested in human body,'' in
+Proc. 8th World Congr. Intell. Control Automat., 2010, pp. 22692272.
+[41] K. Subaashini, G. Dhivya, and R. Pitchiah, ``ZigBee RF signal strength for
+indoor location sensing-experiments and results,'' in Proc. 15th Int. Conf.
+Adv. Commun. Technol. (ICACT), 2013, pp. 5057.
+[42] S.-H. Fang, Y.-C. Cheng, and Y.-R. Chien, ``Exploiting sensed radio
+strength and precipitation for improved distance estimation,'' IEEE Sen-
+sors J., vol. 18, no. 16, pp. 68636873, Aug. 2018.
+[43] L. Xu, F. Yang, Y. Jiang, L. Zhang, C. Feng, and N. Bao, ``Variation of
+received signal strength in wireless sensor network,'' in Proc. 3rd Int. Conf.
+Adv. Comput. Control, Jan. 2011, pp. 151154.
+[44] A. Haeberlen, E. Flannery, A. M. Ladd, A. Rudys, D. S. Wallach, and
+L. E. Kavraki, ``Practical robust localization over large-scale 802.11 wire-
+less networks,'' in Proc. 10th Annu. Int. Conf. Mobile Comput. Netw.
+(MobiCom), 2004, pp. 7084.
+[45] S. P. Tarzia, P. A. Dinda, R. P. Dick, and G. Memik, ``Indoor localization
+without infrastructure using the acoustic background spectrum,'' in Proc.
+9th Int. Conf. Mobile Syst., Appl., Services (MobiSys), 2011, pp. 155168.
+[46] Asahi Kasei Microdevices Corporation. AK09918C.
+Accessed: Apr. 19, 2020. [Online]. Available: https://www.akm.com/
+global/en/products/electronic-compass/ak09918c/
+[47] STMicroelectronics. LSM6dsl. Accessed: Apr. 21, 2020. [Online]. Avail-
+able: https://www.st.com/resource/en/datasheet/lsm6dsl.pdf
+[48] Asahi Kasei Microdevices Corporation. AK09916C.
+Accessed: Apr. 20, 2020. [Online]. Available: https://www.akm.com/
+akm/en/le/datasheet/AK09916C.pdf
+[49] Asahi Kasei Microdevices Corporation. AK09915C.
+Accessed: Apr. 19, 2020. [Online]. Available: https://www.akm.com/
+global/en/products/electronic-compass/ak09915c/
+[50] BOSCH. BMI-160. Accessed: Apr. 18, 2020. [Online]. Available: https://
+www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/
+bst-bmi160-ds000.pdf[51] TDK Corporation. TDK InvenSense. Accessed: Apr. 19, 2020. [Online].
+Available: https://invensense.tdk.com/wp-content/uploads/2017/11/DS-
+000196-IAM-20680-v1.1-Typ.pdf
+[52] F. D. Rosa, L. Xu, J. Nurmi, C. Laoudias, M. Pelosi, and A. Terrezza,
+``Hand-grip and body-loss impact on RSS measurements for localization of
+mass market devices,'' in Proc. Int. Conf. Localization GNSS (ICL-GNSS),
+Jun. 2011, pp. 5863.
+[53] K. Kaemarungsi and P. Krishnamurthy, ``Properties of indoor received
+signal strength for WLAN location ngerprinting,'' in Proc. 1st Annu. Int.
+Conf. Mobile Ubiquitous Syst., Netw. Services (MOBIQUITOUS), 2004,
+pp. 1423.
+[54] Y. Chen, D. Lymberopoulos, J. Liu, and B. Priyantha, ``FM-based indoor
+localization,'' in Proc. 10th Int. Conf. Mobile Syst., Appl., Services
+(MobiSys), 2012, pp. 169182.
+[55] W. Zhang, R. Sengupta, J. Fodero, and X. Li, ``DeepPositioning: Intelligent
+fusion of pervasive magnetic eld and WiFi ngerprinting for smartphone
+indoor localization via deep learning,'' in Proc. 16th IEEE Int. Conf. Mach.
+Learn. Appl. (ICMLA), Dec. 2017, pp. 713.
+[56] R. Ban, K. Kaji, K. Hiroi, and N. Kawaguchi, ``Indoor positioning method
+integrating pedestrian dead reckoning with magnetic eld and WiFi nger-
+prints,'' in Proc. 8th Int. Conf. Mobile Comput. Ubiquitous Netw. (ICMU),
+Jan. 2015, pp. 167172.
+[57] E. Wang, M. Wang, Z. Meng, and X. Xu, ``A study of WiFi-aided magnetic
+matching indoor positioning algorithm,'' J. Comput. Commun., vol. 5,
+no. 3, pp. 91101, 2017.
+[58] I. Ashraf, S. Hur, and Y. Park, ``BLocate: A building identication scheme
+in GPS denied environments using smartphone sensors,'' Sensors, vol. 18,
+no. 11, p. 3862, Nov. 2018.
+[59] N. Roy, H. Wang, and R. R. Choudhury, ``I am a smartphone and I can tell
+my user's walking direction,'' in Proc. 12th Annu. Int. Conf. Mobile Syst.,
+Appl., Services, Jun. 2014, pp. 329342.
+[60] P. Zhou, M. Li, and G. Shen, ``Use it free: Instantly knowing your phone
+attitude,'' in Proc. 20th Annu. Int. Conf. Mobile Comput. Netw., Sep. 2014,
+pp. 605616.
+[61] N. Wahlström, M. Kok, T. B. Schön, and F. Gustafsson, ``Modeling mag-
+netic elds using Gaussian processes,'' in Proc. IEEE Int. Conf. Acoust.,
+Speech Signal Process., May 2013, pp. 35223526.
+[62] A. Solin, M. Kok, N. Wahlstrom, T. B. Schön, and S. Sarkka, ``Modeling
+and interpolation of the ambient magnetic eld by Gaussian processes,''
+IEEE Trans. Robot., vol. 34, no. 4, pp. 11121127, Aug. 2018.
+[63] S. Wang, H. Wen, R. Clark, and N. Trigoni, ``Keyframe based large-scale
+indoor localisation using geomagnetic eld and motion pattern,'' in Proc.
+IEEE/RSJ Int. Conf. Intell. Robots Syst. (IROS), Oct. 2016, pp. 19101917.
+IMRAN ASHRAF received the M.S. degree in
+computer science from the Blekinge Institute of
+Technology, Karlskrona, Sweden, in 2010, and
+the Ph.D. degree in information and communi-
+cation engineering from Yeungnam University,
+Gyeongsan, South Korea, in 2018. He has worked
+as a Postdoctoral Fellow with Yeungnam Uni-
+versity. He is currently working as an Assistant
+Professor with the Department of Information and
+Communication Engineering, Yeungnam Univer-
+sity. His research interests include indoor positioning and localization, indoor
+location-based services in wireless communication, and sentiment analysis.
+SADIA DIN was working as a Postdoctoral
+Researcher with Kyungpook National University,
+South Korea, from March 2020 to August 2020.
+She is currently working as an Assistant Pro-
+fessor with the Department of Information and
+Communication Engineering, Yeungnam Univer-
+sity, South Korea. Her research interests include
+demosaicking and denoising using machine/deep
+learning, articial learning, big data analytics, 5G,
+and the IoT.
+VOLUME 9, 2021 77995
+
+--- PAGE 21 ---
+I. Ashraf et al.: MagWi: Benchmark Dataset for Long Term Magnetic Field and Wi-Fi Data
+MUHAMMAD USMAN ALI received the M.S.
+degree in computer network engineering from the
+University of Engineering and Technology at Tax-
+ila, Pakistan, and the Ph.D. degree from Yeungnam
+University, South Korea, in 2008 and 2018, respec-
+tively. He is currently working with the Depart-
+ment of Computer Science, University of Gujrat,
+Pakistan. His current research interests include
+multisensor fusion-based indoor positioning sys-
+tems, Wi-Fi ngerprinting, indoor navigation and
+mapping, and computer vision technologies.
+SOOJUNG HUR received the B.S. degree from
+Daegu University, South Korea, in 2001, the M.S.
+degree in electrical engineering from San Diego
+State University, San Diego, in 2004, and the M.S.
+and Ph.D. degrees in information and commu-
+nication engineering from Yeungnam University,
+South Korea, in 2007 and 2012, respectively. She is
+currently working as a Research Professor with the
+Mobile Communication Laboratory, Yeungnam
+University. Her current research interests include
+the performance of mobile communication, indoor/outdoor location, and
+unnamed vehicle.
+YOUSAF BIN ZIKRIA (Senior Member, IEEE)
+received the Ph.D. degree from the Department
+of Information and Communication Engineer-
+ing, Yeungnam University, South Korea, in 2016.
+He has more than ten years of experience in
+research, academia, and industry in the eld of
+information and communication engineering and
+computer science. He is currently working as an
+Assistant Professor with the Department of Infor-
+mation and Communication Engineering, College
+of Engineering, Yeungnam University, Gyeongsan, South Korea. He has
+authored more than 60 scientic peer-reviewed journals, conferences,
+patents, and book chapters.
+YONGWAN PARK received the B.E. and M.E.
+degrees in electrical engineering from Kyung-
+pook National University, Daegu, South Korea,
+in 1982 and 1984, respectively, and the M.S. and
+Ph.D. degrees in electrical engineering from the
+State University of New York at Buffalo, USA,
+in 1989 and 1992, respectively. From 1992 to
+1993, he worked with the California Institute of
+Technology, as a Research Fellow. From 1994 to
+1996, he served as a Chief Researcher for devel-
+oping the IMT-2000 system at SK Telecom, South Korea. Since 1996,
+he has been a Professor of information and communication engineering with
+Yeungnam University, South Korea. From January 2000 to February 2000,
+he was an Invited Professor with the NTT DoCoMo Wireless Laboratories,
+Japan. In 2003, he was also a Visiting Professor with UC Irvine, USA. From
+2009 to March 2017, he also served as the President for the Gyeongbuk
+Institute of IT Convergence Industry Technology (GITC), South Korea. His
+current research interests include 5G systems in communication, OFDM,
+PAPR reduction, indoor location-based services in wireless communication,
+and smart sensors (LIDAR) for smart cars. From 2008 to 2009, he served as
+the Director for the Technology Innovation Center for wireless multimedia
+by the Korean Government. He is serving as the Chairman for the 5G Forum
+Convergence Service Committee, South Korea.
+77996 VOLUME 9, 2021
