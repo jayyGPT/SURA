@@ -1,0 +1,346 @@
+{
+  "Static": {
+    "BE Building": {
+      "Scenario 1": {
+        "A8": [
+          "User 2"
+        ],
+        "G7": [
+          "User 2"
+        ],
+        "S8": [
+          "User 2"
+        ],
+        "S9+": [
+          "User 2"
+        ]
+      }
+    },
+    "COEX": {},
+    "CS Engineering": {},
+    "Electrical Engineering": {
+      "Scenario 1": {
+        "S8": [
+          "User 2"
+        ]
+      },
+      "Scenario 2": {
+        "A8": [
+          "User 2"
+        ],
+        "G7": [
+          "User 2"
+        ],
+        "S8": [
+          "User 2"
+        ],
+        "S9+": [
+          "User 2"
+        ]
+      }
+    },
+    "IACT": {
+      "Scenario 1": {
+        "LG G6": [
+          "User 2"
+        ],
+        "S8": [
+          "User 2"
+        ]
+      },
+      "Scenario 2": {
+        "A8": [
+          "User 2"
+        ],
+        "G7": [
+          "User 2"
+        ],
+        "S8": [
+          "User 2"
+        ],
+        "S9+": [
+          "User 2"
+        ]
+      }
+    },
+    "IT Engineering": {
+      "Scenario-1": {
+        "S8": [
+          "User 2",
+          "User 1",
+          "User 3"
+        ],
+        "A8": [
+          "User 1",
+          "User 2",
+          "User 3"
+        ],
+        "G7": [
+          "User 2"
+        ],
+        "S9+": [
+          "User2"
+        ]
+      },
+      "Scenario-2": {
+        "A8": [
+          "User 2"
+        ],
+        "Scenario-2": [
+          "G7"
+        ],
+        "S8": [
+          "User 2"
+        ],
+        "S9+": [
+          "User 2"
+        ]
+      },
+      "Scenario-3": {
+        "LG G6": [
+          "User 2"
+        ],
+        "LG Q6": [
+          "User 2"
+        ],
+        "S8": [
+          "User 2"
+        ]
+      }
+    }
+  },
+  "Continuous": {
+    "BE Building": {
+      "Scenario 1": {
+        "A8": [
+          "User 2"
+        ],
+        "G7": [
+          "User 2"
+        ],
+        "S8": [
+          "User 2"
+        ],
+        "S9+": [
+          "User 2"
+        ]
+      }
+    },
+    "CS Engineering": {
+      "Scenario 2": {
+        "A8": [
+          "User 1",
+          "User 2",
+          "User 3"
+        ],
+        "G7": [
+          "User 1",
+          "User 2",
+          "User 3"
+        ],
+        "S8": [
+          "User 1",
+          "User 2",
+          "User 3"
+        ],
+        "S9+": [
+          "User 1",
+          "User 2",
+          "User 3"
+        ]
+      }
+    },
+    "Electrical Engineering": {
+      "Scenario 1": {
+        "S8": [
+          "User 2"
+        ]
+      },
+      "Scenario 2": {
+        "A8": [
+          "User 1",
+          "User 2",
+          "User 3"
+        ],
+        "G7": [
+          "User 1",
+          "User 2",
+          "User 3"
+        ],
+        "S8": [
+          "User 1",
+          "User 2",
+          "User 3"
+        ],
+        "S9+": [
+          "User 1",
+          "User 2",
+          "User 3"
+        ]
+      }
+    },
+    "IACT": {
+      "Scenario 1": {
+        "S8": [
+          "User 2"
+        ]
+      },
+      "Scenario 2": {
+        "A8": [
+          "User 1",
+          "User 2",
+          "User 3"
+        ],
+        "G7": [
+          "User 1",
+          "User 2",
+          "User 3"
+        ],
+        "S8": [
+          "User 1",
+          "User 2",
+          "User 3"
+        ],
+        "S9+": [
+          "User 1",
+          "User 2",
+          "User 3"
+        ]
+      }
+    },
+    "IT Engineering": {
+      "Scenario-1": {
+        "A8": [
+          "User 1",
+          "User 3"
+        ],
+        "LG G6": [
+          "User 2"
+        ],
+        "LG Q6": [
+          "User 2"
+        ],
+        "S8": [
+          "User 1",
+          "User 2",
+          "User 3"
+        ]
+      }
+    }
+  },
+  "WiFi": {
+    "BE Engineering": {
+      "Scenario-1": {
+        "A8": [
+          "User 2"
+        ],
+        "G7": [
+          "User 2"
+        ],
+        "S8": [
+          "User 2"
+        ],
+        "S9+": [
+          "User 2"
+        ]
+      }
+    },
+    "COEX": {},
+    "CS Engineering": {
+      "Scenario-2": {
+        "A8": [
+          "User 2"
+        ],
+        "G7": [
+          "User 2"
+        ],
+        "S8": [
+          "User 2"
+        ],
+        "S9+": [
+          "User 2"
+        ]
+      }
+    },
+    "Electrical Engineering": {
+      "Scenario-2": {
+        "A8": [
+          "User 2"
+        ],
+        "G7": [
+          "User 2"
+        ],
+        "S8": [
+          "User 2"
+        ],
+        "S9+": [
+          "User 2"
+        ]
+      }
+    },
+    "IACT": {
+      "Scenario-2": {
+        "A8": [
+          "User 2"
+        ],
+        "G7": [
+          "User 2"
+        ],
+        "S8": [
+          "User 2"
+        ],
+        "S9+": [
+          "User 2"
+        ]
+      }
+    },
+    "IT Engineering": {
+      "Scenario 1": {
+        "S8": [
+          "User 2"
+        ]
+      },
+      "Scenario-1": {
+        "A8": [
+          "User 1",
+          "User 2",
+          "User 3"
+        ],
+        "G7": [
+          "User 2"
+        ],
+        "S8": [
+          "User 1",
+          "User 2",
+          "User 3"
+        ],
+        "S9+": [
+          "User 2"
+        ]
+      },
+      "Scenario-2": {
+        "A8": [
+          "User 2"
+        ],
+        "G7": [
+          "User 2"
+        ],
+        "S8": [
+          "User 2"
+        ],
+        "S9+": [
+          "User 2"
+        ]
+      },
+      "Scenario-3": {
+        "User 2": [
+          "2018-I",
+          "2018-II",
+          "2019",
+          "2020",
+          "2021"
+        ]
+      }
+    }
+  }
+}
