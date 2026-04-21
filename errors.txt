@@ -1,0 +1,30 @@
+positioning accuracy, several challenges for these technologies remain unresolved. However, the lack of
+So, the calculated position shows high error which may
+the last two decades and offer an average accuracy of 4 to
+positioning errors. Heterogeneity of hardware and antenna
+simplicity, and offered positioning accuracy. Despite being
+enhance the positioning accuracy when used with the mag-
+collected using several technologies to enhance the accuracy
+characteristics that can inuence indoor positioning accuracy
+To increase accuracy and reduce preprocessing the frame of
+ferent positioning accuracy even while the same positioning
+the user's height on the positioning accuracy.
+accuracy can be studied. For this purpose, this study considers
+the performance of the positioning accuracy. The purpose of
+errors than the absence of people [11], [54].
+tioning accuracy of indoor positioning approaches. Several
+of 10 Hz for 15 to 20 s. During the normalization, the average
+positioning error while a large value increases the computa-
+kD3;5;7 to analyze the positioning accuracy. Although
+using alone, the positioning accuracy of the magnetic eld
+accuracy is improved when magnetic eld and Wi-Fi data are
+to enhance the positioning accuracy. Positioning results are
+magnetic eld data, positioning accuracy is enhanced sub-
+stantially. For example, the mean value for the magnetic eld
+elevated with a mean value of 4.89 m; the maximum error
+and IMU data are fused, the mean error is further reduced
+ngerprinting gives a positioning error of 10 m for 90%. The
+positioning error at 90% is approximately 9 m when IMU
+limitations and enhance indoor positioning accuracy. How-
+accuracy and the data can easily get noisy and positioning
+sions for improving positioning system accuracy,'' in Proc. Int. Conf. Wire-
