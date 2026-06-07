@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.2) (preloaded format=pdflatex 2026.6.7)  7 JUN 2026 12:06
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.2) (preloaded format=pdflatex 2026.6.7)  7 JUN 2026 12:48
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -479,73 +479,69 @@ Package hyperref Info: Link coloring OFF on input line 38.
 \@outlinefile=\write3
 \openout3 = `Research_Paper.out'.
 
-LaTeX Font Info:    Trying to load font information for OT1+phv on input line 8
-0.
+LaTeX Font Info:    Trying to load font information for OT1+phv on input line 7
+1.
 
 (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ot1phv.fd
 File: ot1phv.fd 2020/03/25 scalable font definitions for OT1/phv.
 )
-LaTeX Font Info:    Calculating math sizes for size <11.04124> on input line 80
+LaTeX Font Info:    Calculating math sizes for size <11.04124> on input line 71
 .
-LaTeX Font Info:    Trying to load font information for U+msa on input line 80.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 71.
 
 
 (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 80.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 71.
 
 
 (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-LaTeX Font Info:    Calculating math sizes for size <8.03> on input line 80.
-LaTeX Font Info:    Calculating math sizes for size <9.03374> on input line 80.
+LaTeX Font Info:    Calculating math sizes for size <8.03> on input line 71.
+LaTeX Font Info:    Calculating math sizes for size <9.03374> on input line 71.
 
 
-Overfull \hbox (27.40045pt too wide) in paragraph at lines 80--80
+Overfull \hbox (27.40045pt too wide) in paragraph at lines 71--71
 []$  
  []
 
 
-Overfull \hbox (27.40045pt too wide) in paragraph at lines 80--80
+Overfull \hbox (27.40045pt too wide) in paragraph at lines 71--71
 []$ 
  []
 
-LaTeX Font Info:    Trying to load font information for U+pzd on input line 80.
 
-(C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\upzd.fd
-File: upzd.fd 2001/06/04 font definitions for U/pzd.
-)
-Overfull \hbox (27.40045pt too wide) in paragraph at lines 80--80
+Overfull \hbox (27.40045pt too wide) in paragraph at lines 71--71
 []$  
  []
 
 
-Overfull \hbox (27.40045pt too wide) in paragraph at lines 80--80
+Overfull \hbox (27.40045pt too wide) in paragraph at lines 71--71
 []$ 
  []
 
 
-Overfull \hbox (27.40045pt too wide) in paragraph at lines 80--80
+Overfull \hbox (27.40045pt too wide) in paragraph at lines 71--71
 []$  
  []
 
 
-Overfull \hbox (27.40045pt too wide) in paragraph at lines 80--80
+Overfull \hbox (27.40045pt too wide) in paragraph at lines 71--71
 []$ 
  []
 
-LaTeX Font Info:    Calculating math sizes for size <9.53561> on input line 85.
+LaTeX Font Info:    Calculating math sizes for size <9.53561> on input line 76.
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 90--91
+Underfull \hbox (badness 10000) in paragraph at lines 81--82
 []\OT1/ppl/b/n/9.53561 Magnetic Di-rec-tion De-pen-dency: \OT1/ppl/m/n/9.53561 
 Di-rect
  []
 
 
-Underfull \hbox (badness 5345) in paragraph at lines 90--91
+Underfull \hbox (badness 5345) in paragraph at lines 81--82
 \OT1/ppl/m/n/9.53561 con-cate-na-tion of raw mag-ne-tome-ter read-ings
  []
 
@@ -554,34 +550,31 @@ enovo/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}
 
 
 ]
-Underfull \hbox (badness 1502) in paragraph at lines 95--96
+Underfull \hbox (badness 1502) in paragraph at lines 86--87
 \OT1/ppl/m/n/9.53561 poses a com-pletely de-cou-pled, strictly causal Neural-
  []
 
 <IT_Engineering_Trajectories.pdf, id=91, 722.7pt x 722.7pt>
 File: IT_Engineering_Trajectories.pdf Graphic file (type pdf)
 <use IT_Engineering_Trajectories.pdf>
-Package pdftex.def Info: IT_Engineering_Trajectories.pdf  used on input line 99
+Package pdftex.def Info: IT_Engineering_Trajectories.pdf  used on input line 90
 .
 (pdftex.def)             Requested size: 440.2479pt x 440.25087pt.
 
-Underfull \hbox (badness 2564) in paragraph at lines 122--122
+Underfull \hbox (badness 2564) in paragraph at lines 113--113
  \OT1/phv/b/n/9.53561 4.1. Direction-Invariant WiFi Heatmap Mea-sure-ment
  []
 
-[2]
-Underfull \vbox (badness 2941) has occurred while \output is active []
-
- [3 <./IT_Engineering_Trajectories.pdf>]
+[2] [3 <./IT_Engineering_Trajectories.pdf>]
 <final_comparison_bar.png, id=237, 722.7pt x 433.62pt>
 File: final_comparison_bar.png Graphic file (type png)
 <use final_comparison_bar.png>
-Package pdftex.def Info: final_comparison_bar.png  used on input line 212.
+Package pdftex.def Info: final_comparison_bar.png  used on input line 203.
 (pdftex.def)             Requested size: 252.94499pt x 151.76265pt.
 <final_comparison_cdf.png, id=239, 624.1719pt x 462.528pt>
 File: final_comparison_cdf.png Graphic file (type png)
 <use final_comparison_cdf.png>
-Package pdftex.def Info: final_comparison_cdf.png  used on input line 219.
+Package pdftex.def Info: final_comparison_cdf.png  used on input line 210.
 (pdftex.def)             Requested size: 252.94499pt x 187.44278pt.
  [4 <./final_comparison_bar.png> <./final_comparison_cdf.png>] [5
 
@@ -594,13 +587,13 @@ Package rerunfilecheck Info: File `Research_Paper.out' has not changed.
 (rerunfilecheck)             Checksum: C64781D79A980C7D8DDF6E6E7A047D1F;4038.
  ) 
 Here is how much of TeX's memory you used:
- 11588 strings out of 467867
- 181625 string characters out of 5417851
- 610404 words of memory out of 5000000
- 40258 multiletter control sequences out of 15000+600000
- 686686 words of font info for 180 fonts, out of 8000000 for 9000
+ 11572 strings out of 467867
+ 181332 string characters out of 5417851
+ 611268 words of memory out of 5000000
+ 40247 multiletter control sequences out of 15000+600000
+ 684087 words of font info for 176 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,10n,79p,1753b,548s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,10n,79p,1753b,550s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm
 /cmbx10.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type1/public/a
 msfonts/cm/cmex10.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type
@@ -619,11 +612,10 @@ ms/MiKTeX/fonts/type1/urw/helvetic/uhvb8a.pfb><C:/Users/lenovo/AppData/Local/Pr
 ograms/MiKTeX/fonts/type1/urw/helvetic/uhvr8a.pfb><C:/Users/lenovo/AppData/Loca
 l/Programs/MiKTeX/fonts/type1/urw/palatino/uplb8a.pfb><C:/Users/lenovo/AppData/
 Local/Programs/MiKTeX/fonts/type1/urw/palatino/uplr8a.pfb><C:/Users/lenovo/AppD
-ata/Local/Programs/MiKTeX/fonts/type1/urw/palatino/uplri8a.pfb><C:/Users/lenovo
-/AppData/Local/Programs/MiKTeX/fonts/type1/urw/zapfding/uzdr.pfb>
-Output written on Research_Paper.pdf (5 pages, 701814 bytes).
+ata/Local/Programs/MiKTeX/fonts/type1/urw/palatino/uplri8a.pfb>
+Output written on Research_Paper.pdf (5 pages, 698134 bytes).
 PDF statistics:
- 347 PDF objects out of 1000 (max. 8388607)
+ 342 PDF objects out of 1000 (max. 8388607)
  46 named destinations out of 1000 (max. 500000)
  160 words of extra memory for PDF output out of 10000 (max. 10000000)
 
