@@ -64,11 +64,11 @@ A clean split between a learned **environment/measurement model** and a classica
                   pretrained on the STATIC fingerprint    not a single point)
                   DB. WiFi-anchored.                                │
                                                                     ▼
-   IMU stream ─►  MOTION MODEL (causal PDR)          ──►  ┌────────────────────┐
+   IMU stream ─►  MOTION MODEL (causal PDR)          ──►   ┌────────────────────┐
                   step detection + heading →               │  CAUSAL EKF FUSION │ ──► (x,y)_t
                   world-frame displacement                 │  measure = heatmap │
-                                                           │  predict = PDR      │
-   Magnetometer ► ONLINE SELF-CALIBRATION (relative          └────────────────────┘
+                                                           │  predict = PDR     │
+   Magnetometer ► ONLINE SELF-CALIBRATION (relative        └────────────────────┘
                   anomaly; feeds motion/fusion stage)
 ```
 
