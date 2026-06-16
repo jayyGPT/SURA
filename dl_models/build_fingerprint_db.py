@@ -89,10 +89,11 @@ def wifi_basename_for(mag_basename):
     return None
 
 
-def main(building="IT Engineering"):
+def main(building="IT Engineering", wifi_building=None):
     base = ".."
+    wifi_building = wifi_building or building  # WiFi folder name may differ (e.g. BE)
     mag_root = os.path.join(base, "Datasets", "Magnetic field dataset", "Static Data", building)
-    wifi_root = os.path.join(base, "Datasets", "WiFi dataset", building)
+    wifi_root = os.path.join(base, "Datasets", "WiFi dataset", wifi_building)
     slug = re.sub(r"[^A-Za-z0-9]+", "_", building).strip("_").lower()
     out_dir = os.path.join(base, "Datasets", "fingerprint_db", slug)
     os.makedirs(out_dir, exist_ok=True)
@@ -224,4 +225,21 @@ def main(building="IT Engineering"):
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    # building name -> (mag folder, wifi folder); COEX skipped (corrupt binary CSVs)
+    BUILDINGS = {
+        "IT Engineering": ("IT Engineering", "IT Engineering"),
+        "CS Engineering": ("CS Engineering", "CS Engineering"),
+        "Electrical Engineering": ("Electrical Engineering", "Electrical Engineering"),
+        "IACT": ("IACT", "IACT"),
+        "BE Building": ("BE Building", "BE Engineering"),
+    }
+    if len(sys.argv) > 1 and sys.argv[1] == "all":
+        for name, (mag, wifi) in BUILDINGS.items():
+            try:
+                main(mag, wifi)
+            except Exception as e:
+                print(f"!! {name} failed: {e}\n")
+            print()
+    else:
+        main()
