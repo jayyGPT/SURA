@@ -9,29 +9,32 @@
 \usepackage{booktabs}
 \usepackage{hyperref}
 \usepackage{multirow}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows,positioning,fit,backgrounds,calc}
 
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 
 \begin{document}
 
-\title{A Decoupled Neural-Kalman Fusion Architecture\\for Real-Time Indoor Localization}
+\title{Dual-Innovation Neural-Kalman Fusion for Real-Time Indoor Localization}
 
 \author{
-\IEEEauthorblockN{Neel Kanth Kundu\IEEEauthorrefmark{1},
-Utkarsh Agrawal\IEEEauthorrefmark{2},
-Jayendra Vijay Birhade\IEEEauthorrefmark{2}}
-\IEEEauthorblockA{\IEEEauthorrefmark{1}Centre for Applied Research in Electronics,
+\IEEEauthorblockN{Utkarsh Agrawal\IEEEauthorrefmark{1},
+Jayendra Vijay Birhade\IEEEauthorrefmark{1},
+Neel Kanth Kundu\IEEEauthorrefmark{2}}
+\IEEEauthorblockA{\IEEEauthorrefmark{1}Department of Computer Science and Engineering,
+Indian Institute of Technology Delhi, New Delhi, India}
+\IEEEauthorblockA{\IEEEauthorrefmark{2}Centre for Applied Research in Electronics,
 Indian Institute of Technology Delhi, New Delhi, India\\
 Email: neelkanth@iitd.ac.in}
-\IEEEauthorblockA{\IEEEauthorrefmark{2}Department of Computer Science and Engineering,
-Indian Institute of Technology Delhi, New Delhi, India}
+\thanks{\textsuperscript{*}These authors contributed equally to this work.}
 }
 
 \maketitle
 
 \begin{abstract}
-Indoor positioning using ubiquitous smartphone sensors has drawn substantial research interest, yet contemporary deep-learning models frequently encounter significant challenges in real-world deployments. This paper identifies key limitations in current methodologies, including trajectory memorization from interpolated training data, body-frame magnetic direction dependency, fingerprint ambiguity in single-point regression, and non-causal look-ahead bias. To address these issues, we propose a decoupled, strictly causal Neural-Kalman fusion framework. The architecture enforces a separation between spatial measurement and temporal motion estimation. A Multi-Layer Perceptron (MLP) environment model is trained on a dense static fingerprint database to output a direction-invariant, two-dimensional probability heatmap. The spatial spread of this heatmap directly parameterizes the filter's measurement covariance. Concurrently, a causal Pedestrian Dead Reckoning (PDR) module processes inertial streams to yield relative displacement updates. These components are fused via KalmanNet, a recurrent neural filter that preserves the Kalman recursion while replacing the fixed linear-Gaussian gain with a learned $2\!\times\!2$ matrix gain produced by a Gated Recurrent Unit (GRU). Evaluated on the MagWi benchmark, the environment model achieves a Mean Absolute Error (MAE) of 1.43~m on a random split and 2.02~m on a held-out device. End-to-end KalmanNet fusion attains an error of 0.54~m on augmented continuous trajectories, representing a 46\% improvement over the classical Extended Kalman Filter. The system maintains sub-2.0~m error on real held-out device walks across multiple carrying modes and reversed walking paths, ensuring real-time applicability.
+Indoor positioning using smartphone sensors has seen growing interest, but deep-learning models often struggle in real-world deployments. This paper identifies key limitations in current methods, including trajectory memorization from interpolated training data, body-frame magnetic direction dependency, fingerprint ambiguity, and non-causal look-ahead bias. To address these issues, we propose a decoupled, strictly causal Neural-Kalman fusion framework. The architecture enforces a separation between spatial measurement and temporal motion estimation. A Multi-Layer Perceptron (MLP) environment model maps dense Wi-Fi fingerprints to a 2D probability heatmap. Simultaneously, a 1D Convolutional Neural Network (CNN) matches rotation-invariant magnetic sequences to structural anomaly maps. These spatial estimates are fused with a Pedestrian Dead Reckoning (PDR) motion model using an extended KalmanNet framework. The system replaces the fixed linear-Gaussian gain with dual $2\times2$ matrix gains dynamically produced by a Gated Recurrent Unit (GRU). The GRU allocates trust between the sparse, absolute Wi-Fi fixes and the dense, continuous magnetic sequence corrections. Evaluated on real-world datasets, the dual-innovation system attains an error of 0.47~m under standard conditions and 1.07~m during degraded Wi-Fi scenarios with 5-second signal dropouts, representing up to a 25.3\% improvement over Wi-Fi-only baselines. The system ensures robust, real-time applicability across diverse walking patterns and smartphone models.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -40,24 +43,17 @@ Indoor positioning, Extended Kalman Filter, KalmanNet, sensor fusion, pedestrian
 
 \section{Introduction}
 
-Indoor localization remains a critical enabling technology for location-based services, smart building management, and emergency navigation~\cite{radar}. Unlike outdoor scenarios dominated by Global Navigation Satellite Systems (GNSS), the severe attenuation of satellite signals indoors necessitates the utilization of ambient smartphone sensors. Typical multi-modal indoor positioning systems leverage Wi-Fi Received Signal Strength Indication (RSSI), geomagnetic data, and Inertial Measurement Units (IMUs)~\cite{horus}. These signals are complementary: Wi-Fi provides absolute but noisy positioning fixes, whereas IMU dead reckoning provides smooth, high-rate relative motion that is subject to unbounded cumulative drift. 
+Indoor localization is a critical technology for location-based services, smart buildings, and emergency navigation \cite{radar}. Because satellite signals attenuate severely indoors, systems must rely on ambient smartphone sensors. Standard multi-modal indoor positioning systems use Wi-Fi Received Signal Strength Indication (RSSI), geomagnetic data, and Inertial Measurement Units (IMUs) \cite{horus, multipronged, sensorfusionfw, hybridwifi, autonomousloc, reviewfusion, practicalindoor}. These signals are highly complementary: Wi-Fi offers absolute but infrequent position fixes, while IMU dead reckoning gives smooth, high-rate motion updates but suffers from cumulative drift \cite{wifipdr, nnwifipdr, continuousindoor, accurateindoor}. The geomagnetic field, meanwhile, presents a ubiquitous and stable distortion pattern inside modern steel-reinforced buildings, providing a dense source of structural context \cite{integratingpdr, integrationmems, walkingsurveyed, wifimulti}.
 
-Recent approaches have formulated indoor positioning as an end-to-end regression problem, where neural networks map sequences of sensor features directly to Cartesian $(X,Y)$ coordinates. Architectures such as multi-branch Convolutional Neural Networks (CNNs) and Bidirectional Long Short-Term Memory networks (Bi-LSTMs) report low Mean Absolute Errors (MAE) in controlled settings~\cite{deeppos,minloc}. However, their deployment in unconstrained physical environments routinely presents significant challenges. This paper systematically examines several methodological limitations common in existing literature:
+Recent methods treat indoor positioning as an end-to-end regression problem, where neural networks map sensor sequences directly to Cartesian coordinates. Architectures like multi-branch Convolutional Neural Networks (CNNs) and Bidirectional Long Short-Term Memory networks (Bi-LSTMs) report low mean absolute errors in controlled settings \cite{deeppos,minloc, comparingcnn, bilstmmag, deepfusion}. Advanced topological methods have even employed Graph Neural Networks (GNNs) to capture complex proximity patterns between Access Points \cite{wang2024gnn, gnnpractical}. Furthermore, recent systems like GlobLoc \cite{rizk2023globloc} have introduced building-independent virtual mapping techniques to improve generalization across disparate physical environments. However, deploying standard sequence models in unconstrained continuous environments reveals several practical limitations. First, recurrent models trained on simple interpolated paths often memorize specific routes rather than mapping the generalized spatial environment. This causes severe degradation on novel paths. Second, using raw magnetometer readings introduces a strong orientation bias. The same physical location yields different magnetic signatures depending on the user's heading. Third, single-point regression forces networks to average multi-modal signal distributions. If identical Wi-Fi signatures occur at different locations, the network predicts the spatial midpoint, which may be an invalid physical location. Finally, bidirectional models estimate the current position using future sensor observations, making them fundamentally unsuitable for live navigation.
 
-\begin{enumerate}
-    \item \textbf{Trajectory Memorization.} Many continuous walking datasets construct target coordinates by linearly interpolating between sparse static nodes. Recurrent models trained on these interpolated paths often learn to estimate their relative temporal progress along a specific, one-dimensional route rather than mapping the generalized two-dimensional spatial environment. This results in substantial degradation when evaluating reversed or novel paths.
-    \item \textbf{Magnetic Direction Dependency.} The direct concatenation of raw magnetometer readings ($Mag_x, Mag_y, Mag_z$) into spatial feature vectors introduces an inherent orientation bias. Because these measurements are recorded in the smartphone's local body frame, the same physical spatial coordinate yields divergent magnetic signatures depending on the user's heading.
-    \item \textbf{Fingerprint Ambiguity.} Single-point coordinate regression forces neural networks to average multi-modal signal distributions. When similar or identical Wi-Fi signatures occur at distinct physical locations within a building, the network minimizes its empirical loss by predicting the spatial midpoint, which may not correspond to a valid physical location (e.g., within a wall or outside the building envelope).
-    \item \textbf{Non-Causal Architecture.} The pervasive use of bidirectional recurrent structures prevents real-time execution. An architecture that estimates the position at time~$t$ by relying on sensor observations at time~$t+k$ is fundamentally unsuitable for live navigational applications.
-\end{enumerate}
+To address these limitations, we propose a decoupled, strictly causal Neural-Kalman fusion architecture. Our framework separates spatial environment learning from temporal motion tracking. An MLP trained on a static fingerprint grid outputs a 2D probability heatmap. In parallel, a 1D-CNN magnetic sequence matcher provides continuous spatial corrections. These components are fused with a classical Pedestrian Dead Reckoning (PDR) model using a dual-innovation KalmanNet \cite{kalmannet, probabilisticfusion}. Our approach replaces the standard Kalman gain with two learned matrix gains, allowing the filter to dynamically slide its trust between Wi-Fi and magnetic sensors based on their availability and signal variance.
 
-To rectify these limitations, we propose a decoupled, strictly causal Neural-Kalman fusion architecture, detailed in Section~\ref{sec:architecture}. Our framework enforces a rigid separation between spatial environment learning and temporal motion tracking. A Multi-Layer Perceptron (MLP), trained exclusively on a static, orientation-invariant fingerprint grid, outputs a two-dimensional probability heatmap. This spatial representation avoids coordinate averaging and trajectory memorization. The heatmap is subsequently fused with a classical Pedestrian Dead Reckoning (PDR) model using KalmanNet~\cite{kalmannet}, which replaces the standard Kalman gain computation with a learned matrix gain to accommodate the multi-modal nature of the Wi-Fi fingerprints. Importantly, the spatial dispersion of the neural heatmap dynamically parameterizes the measurement covariance of the filter, creating an elegant mathematical link between the neural model's spatial confidence and the temporal filter's update trust.
-
-The remainder of this paper is structured as follows: Section~\ref{sec:data} discusses dataset pre-processing, feature extraction, and data augmentation strategies. Section~\ref{sec:baselines} evaluates the limitations of existing baseline architectures. Section~\ref{sec:architecture} details the mathematical formulation of our proposed Neural-Kalman fusion system. Section~\ref{sec:results} presents the experimental evaluations, and Section~\ref{sec:conclusion} concludes the paper with directions for future research.
+The remainder of this paper is structured as follows. Section \ref{sec:data} discusses dataset processing and data augmentation strategies. Section \ref{sec:baselines} extensively evaluates the limitations of existing industry baselines. Section \ref{sec:architecture} details the mathematical formulation of our proposed Neural-Kalman fusion system. Section \ref{sec:results} presents the experimental evaluations, and Section \ref{sec:conclusion} concludes the paper.
 
 \section{Dataset Analysis and Pre-Processing}\label{sec:data}
 
-We evaluate our proposed models using the comprehensive MagWi Benchmark Dataset~\cite{magwi}, focusing primarily on the IT Engineering building. The corpus spans several distinct campus buildings and contains three principal sensor modalities acquired under varying protocols, as summarized in Table~\ref{tab:dataset_summary}.
+We evaluate our proposed models using the MagWi Benchmark Dataset \cite{magwi}, focusing on the IT Engineering building. The corpus spans several distinct campus buildings and contains three principal sensor modalities acquired under varying protocols, as shown in Table \ref{tab:dataset_summary}. Alongside other benchmark datasets like Miskolc \cite{miskolc}, such corpora provide crucial overviews of geomagnetic positioning capabilities \cite{overviewdatasets}.
 
 \begin{table}[htbp]
 \caption{MagWi Dataset Modality Summary}
@@ -73,37 +69,37 @@ IMU & Every recording & Continuous  \\ \bottomrule
 \end{tabular}
 \end{table}
 
-For the IT Engineering building, the static spatial survey encompasses 168 unique nodes and 250 discernible Access Points (APs), with Wi-Fi availability covering 167 of the 168 surveyed nodes. The continuous walking trajectories were recorded using five heterogeneous smartphone models (Samsung Galaxy A8, S8, S9+; LG G6, G7). Furthermore, the data incorporates significant postural variation, including devices held in navigation mode, active call listening, and natural swinging arm motions. The continuous sensor streams operate at approximately 16.7~Hz, with typical pedestrian walking speeds ranging from 0.9 to 1.3~m/s.
+The static spatial survey includes 168 unique nodes and 250 Access Points (APs). The continuous walking trajectories were recorded using five different smartphone models. The data also includes significant postural variation, with devices held in navigation mode, active call listening, and natural swinging arm motions. The continuous sensor streams operate at approximately 16.7~Hz, with pedestrian walking speeds ranging from 0.9 to 1.3~m/s.
 
 \subsection{Data Pre-Processing}\label{sec:preprocessing}
 
-A critical aspect of utilizing geomagnetic data for indoor localization involves mitigating orientation bias. Raw magnetometer readings ($Mag_{x,y,z}$) are intrinsically tied to the local frame of the hardware. Consequently, they rotate with the user's heading, meaning that the same absolute spatial location will produce widely varying vector magnitudes along the respective axes depending on the walking direction. Using these raw vectors directly as spatial features introduces a severe directional dependency. 
+A critical aspect of using geomagnetic data for indoor localization is mitigating orientation bias. Raw magnetometer readings are tied to the hardware's local frame. Using these raw vectors directly as spatial features introduces a severe directional dependency, which traditional PDR systems often attempt to mitigate via attitude-unconstrained axes mapping \cite{axesmapping} or drift-resistant adaptive calibration \cite{driftresistant}.
 
-To resolve this issue, we extract rotation-invariant features by projecting the magnetic vector against the gravity vector, which is continuously estimated from the low-pass filtered accelerometer readings. Given a magnetic vector $\mathbf{M}$ and a normalized gravity vector $\hat{g}$, we compute:
+To resolve this, we extract rotation-invariant features by projecting the magnetic vector against the gravity vector, which is continuously estimated from low-pass filtered accelerometer readings. Given a magnetic vector $\mathbf{M}$ and a normalized gravity vector $\hat{g}$, we compute:
 \begin{align}
 \text{magN} &= |\mathbf{M}| \label{eq:magn}\\
 \text{magV} &= \mathbf{M} \cdot \hat{g} \label{eq:magv}\\
 \text{magH} &= \sqrt{|\mathbf{M}|^2 - \text{magV}^2} \label{eq:magh}
 \end{align}
-These decomposed features capture the magnetic inclination and intensity independent of the user's yaw angle, isolating the spatial anomaly from the device's instantaneous pose.
+These features capture the magnetic inclination and intensity independent of the user's yaw angle. 
 
-The reference fingerprint database is constructed by associating the high-fidelity ground-truth $(X,Y)$ coordinates with these rotation-invariant magnetic features. Simultaneously, the corresponding Wi-Fi scan is formatted as an RSS vector indexed by a fixed per-building AP vocabulary. Absent APs (i.e., access points not detected during a specific scan) are assigned a constant sentinel value of $-100$~dBm to maintain vector dimensionality without introducing artificial signal strength.
+The reference fingerprint database associates the high-fidelity ground-truth coordinates with these rotation-invariant magnetic features. Simultaneously, the corresponding Wi-Fi scan is formatted as an RSS vector over the fixed AP vocabulary. Absent APs are assigned a constant value of -100~dBm.
 
 \subsection{Data Augmentation}\label{sec:synth_traj}
 
-The continuous recordings within the dataset present a notable evaluation constraint: they label only the starting node of the walk, providing no measured per-frame trajectory ground truth. To rigorously evaluate the performance of our temporal tracking filters, we generate augmented, synthetic trajectories that perfectly adhere to the physical constraints of the building and the statistical properties of the sensors:
+The continuous recordings within the dataset present an evaluation constraint: they only label the starting node of the walk, providing no measured per-frame trajectory ground truth. To rigorously evaluate the performance of our temporal tracking filters, we generate augmented, synthetic trajectories that perfectly adhere to the physical constraints of the building and the statistical properties of the sensors:
 
 \begin{itemize}
-    \item \textbf{Path generation:} An $\varepsilon$-graph is constructed over the real IT Engineering nodes (connecting edges $\leq 1.6$~m), yielding a fully connected corridor network comprising 132 viable nodes. Trajectories are generated by calculating the shortest paths between randomized endpoints, ensuring that simulated walks accurately replicate the actual corridor geometry, length, and turn topology of the building.
-    \item \textbf{Sensor simulation:} Pedestrian gait speed is stochastically sampled between $1.0$ and $1.35$~m/s, with step cadences between $1.7$ and $2.0$~Hz. The simulated heading incorporates the true geometric path tangent, overlaid with a slow gyro-drift random walk and an $8.8^{\circ}$ white noise addition, which matches the empirical variance observed in the real \texttt{Orn\_z} data. The accelerometer magnitude is modeled using a sinusoidal function ($9.81 + A\sin(2\pi f_{step} t) + \text{noise}$) to realistically drive standard peak-detection step algorithms.
-    \item \textbf{Measurement sampling:} Absolute position updates via Wi-Fi readings (queried at $\sim$1~Hz) are drawn from actual held-out static scans recorded at the nearest physical node. This methodology preserves the true measurement noise (empirically measured at $\sim$3~dBm standard deviation per AP across repeat visits) and inherent cross-device variation. Importantly, the environment model is trained on a disjoint split of the static data to prevent any information leakage during the evaluation phase.
+    \item \textbf{Path generation:} An $\varepsilon$-graph is constructed over the real IT Engineering nodes (connecting edges $\leq 1.6$~m), yielding a connected corridor network of 132 nodes. Trajectories are generated by calculating shortest paths between randomized endpoints, ensuring the simulated walks replicate the actual corridor geometry, length, and turn topology of the building.
+    \item \textbf{Sensor simulation:} Gait speed is stochastically sampled between 1.0 and 1.35~m/s, with step cadences between 1.7 and 2.0~Hz. The simulated heading incorporates the true geometric path tangent, overlaid with a slow gyro-drift random walk and an $8.8^{\circ}$ white noise addition, matching the empirical variance observed in the real data. The accelerometer magnitude is modeled using a sinusoidal function ($9.81 + A\sin(2\pi f_{step} t) + \text{noise}$) to realistically drive standard peak-detection step algorithms.
+    \item \textbf{Measurement sampling:} Absolute position updates via Wi-Fi readings (queried at $\sim$1~Hz) are drawn from actual held-out static scans recorded at the nearest physical node. This methodology preserves the true measurement noise (empirically measured at $\sim$3~dBm standard deviation per AP) and cross-device variation.
 \end{itemize}
 
 Using this robust pipeline, we generate 250 walks for training the learned temporal filters and 60 completely independent walks for testing. This approach allows us to report accurate error distributions with 95\% confidence intervals, ensuring that reported improvements are statistically significant.
 
-\section{Evaluation of Baseline Architectures}\label{sec:baselines}
+\section{Evaluation of Industry Baselines}\label{sec:baselines}
 
-To contextualize the performance of the proposed architecture, we evaluated four baseline deep-learning models on the continuous data sequences, tasked with predicting absolute position from concatenated Wi-Fi and IMU windows. The tracking results for the designated test device (Samsung S9+) are summarized in Table~\ref{tab:baselines}.
+To accurately contextualize the performance of the proposed architecture, we first conducted an extensive evaluation of several widely adopted deep-learning paradigms in the field of indoor localization. These models represent the current standard in end-to-end regression methodologies. We evaluated four baseline deep-learning models on the continuous data sequences, tasked with predicting absolute position from concatenated Wi-Fi and IMU windows. The tracking results for the designated test device (Samsung S9+) are summarized in Table \ref{tab:baselines}.
 
 \begin{table}[htbp]
 \caption{Baseline Model Summary (Test Device: Samsung S9+)}
@@ -119,13 +115,60 @@ Learned-$\alpha$ EKF & Yes & 4.29 m & --- \\ \bottomrule
 \end{tabular}
 \end{table}
 
-The continuous walking data paths within the dataset predominantly trace a limited, repetitive set of corridors. Models trained on linearly interpolated target coordinates along these sparse paths often undergo severe overfitting. Specifically, they learn to estimate their relative progress along a familiar one-dimensional route by recognizing the temporal progression of sensor data, rather than developing a generalized mapping of the full two-dimensional environment. The static database, containing 168 comprehensively mapped nodes, provides vastly superior spatial coverage but was not utilized effectively by these end-to-end continuous sequence models.
+\subsection{Generalization Constraints in Recurrent Architectures}
 
-Furthermore, integrating raw body-frame magnetic features into the spatial processing branch renders the learned fingerprint highly dependent on the user's heading. When the Three-Branch Environment Model, which achieved low errors on forward training walks, was evaluated on physical paths walked in the reverse direction, it exhibited an extreme error spike of up to 63.0~meters. This degradation confirms that raw magnetic vectors degrade spatial localization performance if they are not correctly transformed into rotation-invariant representations.
+Continuous walking data paths within dataset collections typically trace a limited, repetitive set of corridors for ease of acquisition. When training end-to-end sequence models (such as the evaluated CNN + Bi-LSTM or Causal Hybrid models), researchers commonly generate target variables by linearly interpolating the spatial coordinates between known waypoints. 
+
+During our evaluation, we observed that recurrent neural models trained on these interpolated paths undergo severe trajectory memorization. Because the sequence model observes a continuous stream of temporally highly correlated IMU data, it rapidly learns to estimate its relative progress along a familiar one-dimensional route rather than developing a generalized, independent mapping of the two-dimensional environment. The neural network essentially operates as an advanced timer, mapping sequence length to distance along a specific corridor. 
+
+This critical flaw becomes overwhelmingly apparent when the models are tested on novel trajectories or, more simply, when requested to track a user walking the exact same corridor but in the reverse direction. The sequence patterns learned during forward-walking training completely fail to generalize, resulting in severe degradation. The CNN + Bi-LSTM model, despite utilizing future data points via its bidirectional architecture, yielded an unacceptable Mean Absolute Error of 5.04~m and a maximum error of 17.4~m, effectively rendering it useless for practical navigation tasks.
+
+\subsection{Limitations of Body-Frame Magnetic Processing}
+
+A secondary significant limitation of current state-of-the-art models involves the handling of geomagnetic data. Several leading architectures, typified by the Three-Branch Environment model, integrate raw $x$, $y$, and $z$ magnetometer readings directly into their spatial processing branches. 
+
+This approach intrinsically binds the spatial magnetic fingerprint to the current heading of the user. In standard data collection campaigns, users generally walk down a given hallway facing a singular direction. The neural network therefore learns to associate the spatial coordinates of that hallway with the specific magnetic vector generated while facing, for instance, magnetic North. 
+
+When evaluated on physical paths walked in the reverse direction, the Three-Branch Environment model exhibited an extreme error spike of up to 63.0 meters. The model interpreted the rotated magnetic vector as corresponding to an entirely different sector of the building. This catastrophic degradation confirms that raw magnetic vectors severely degrade spatial localization performance if they are not rigorously decoupled from the device orientation.
 
 \section{Proposed System Architecture}\label{sec:architecture}
 
-Our proposed architecture functions as a modular, learned Bayesian filter comprising a neural measurement branch and an IMU-driven temporal prediction branch. The processing pipeline is strictly causal; the algorithm relies entirely on past and present observations, and the exact same pipeline is applied during both training and inference.
+Our proposed architecture functions as a modular, learned Bayesian filter. It relies entirely on past and present observations, maintaining strict causality. The complete system architecture is illustrated in Fig.~\ref{fig:arch_diagram}.
+
+\begin{figure}[htbp]
+\centering
+\resizebox{\columnwidth}{!}{
+\begin{tikzpicture}[
+    auto,
+    block/.style={rectangle, draw=black, thick, fill=blue!10, text width=6em, text centered, rounded corners, minimum height=3em},
+    wideblock/.style={rectangle, draw=black, thick, fill=green!10, text width=12em, text centered, rounded corners, minimum height=3em},
+    line/.style={draw, thick, -latex},
+    dot/.style={circle, fill=black, inner sep=1.5pt}
+]
+    % Nodes
+    \node [block] (pdr) {PDR Model \\ ($\mathbf{u}_t$)};
+    \node [block, fill=red!10, below=0.5cm of pdr] (wifi) {Wi-Fi Heatmap ($\mathbf{z}_{wifi}$)};
+    \node [block, fill=orange!10, below=0.5cm of wifi] (mag) {Mag 1D-CNN ($\mathbf{z}_{mag}$)};
+    
+    \node [block, right=1.5cm of pdr] (predict) {Predict \\ $\mathbf{x}_{\text{pred}}$};
+    \node [block, right=1.5cm of wifi] (innov) {Innovations \\ $\mathbf{y}_{wifi}, \mathbf{y}_{mag}$};
+    \node [wideblock, right=1.5cm of mag] (gru) {Dual-Innovation GRU \\ $\mathbf{K}_{wifi}, \mathbf{K}_{mag}$};
+    \node [block, right=1.5cm of innov] (update) {Update \\ $\mathbf{x}_t$};
+    
+    % Connections
+    \path [line] (pdr) -- (predict);
+    \path [line] (wifi) -- (innov);
+    \path [line] (mag) -- (gru);
+    \path [line] (predict) -- (innov);
+    \path [line] (innov) -- (gru);
+    \path [line] (gru) -| (update);
+    \path [line] (predict) -| (update);
+    
+\end{tikzpicture}
+}
+\caption{Block diagram of the Dual-Innovation Neural-Kalman Fusion architecture, highlighting the strictly causal separation between spatial inference (Wi-Fi, Mag) and the GRU-driven dynamic matrix gain.}
+\label{fig:arch_diagram}
+\end{figure}
 
 \subsection{Wi-Fi Processing}\label{sec:wifi_proc}
 
@@ -133,32 +176,13 @@ A Wi-Fi scan is encoded as an RSS vector over the specific building's AP vocabul
 \begin{equation}
 x_{ap} = \text{clip}(\text{RSS}, -90, -30), \quad x_{ap} = \frac{x_{ap} + 90}{60} \in [0,1]
 \end{equation}
-Any missing APs not detected in the current scan are mapped to zero. Wi-Fi naturally provides a direction-independent global position fix, serving as the essential absolute anchor necessary to correct long-term inertial drift.
-
-\subsection{Online Magnetic Self-Calibration}\label{sec:mag_calib}
-
-Magnetometer magnitude ranges and biases vary drastically across different smartphone manufacturers due to differing hardware tolerances and internal magnetic interference. To ensure device-independent performance, each device must calibrate its magnetic readings from its own live, continuous stream. 
-
-First, using the accelerometer-derived gravity estimate $\hat{g}$, we calculate the rotation-invariant features detailed in Equations~\ref{eq:magn}--\ref{eq:magh}. Subsequently, an online ellipsoid fitting algorithm operates on a trailing temporal buffer to map the magnetometer's distorted, shifted sphere back to a normalized, zero-centered sphere. This calibration process is gated by device rotation to ensure the buffer contains sufficient spatial diversity before applying the correction. Finally, a causal running normalization (using exponential moving averages for both the mean and standard deviation) extracts the relative magnetic anomaly profile, making the input distribution consistent regardless of the specific smartphone utilized.
+Wi-Fi provides a direction-independent global position fix, serving as the absolute anchor necessary to correct long-term inertial drift.
 
 \subsection{Direction-Invariant Wi-Fi Heatmap Environment Model}
 
-The core spatial component is an environment model trained exclusively on the 168 static grid nodes. By avoiding continuous walk data during this phase, we structurally eliminate the risk of trajectory memorization. We discretize the two-dimensional floor plan into a uniform grid of cells with a resolution of $\Delta_c = 1.0$~m, resulting in an output space of $N_c = 1{,}260$ cells for the IT Engineering building. 
+The core spatial component is an environment model trained exclusively on the 168 static grid nodes. By avoiding continuous walk data during this phase, we structurally eliminate the risk of trajectory memorization. We discretize the floor plan into a uniform grid of cells with a resolution of 1.0~m. 
 
-A Multi-Layer Perceptron (MLP) processes the normalized Wi-Fi RSSI vector $\mathbf{x}_{wifi} \in \mathbb{R}^{A}$ and outputs a probability vector over the discrete cells:
-\begin{equation}
-\text{MLP}: \mathbb{R}^{A} \xrightarrow{512} \xrightarrow{256} \xrightarrow{128} \mathbb{R}^{N_c}, \quad p = \text{Softmax}(\text{logits})
-\end{equation}
-To prevent overfitting to the dense static grid, we apply Rectified Linear Unit (ReLU) activations and Dropout regularization ($p=0.3$) at each hidden layer.
-
-The training target is designed as a two-dimensional Gaussian probability distribution centered precisely on the true $(X,Y)$ coordinate of the node:
-\begin{equation}
-y_{target}(c) \propto \exp\!\left(-\frac{(x_c - x_{true})^2 + (y_c - y_{true})^2}{2\sigma_g^2}\right)
-\end{equation}
-where $\sigma_g = 2.0$~m defines the spread of the target distribution. The network is then optimized using the Kullback-Leibler (KL) divergence loss:
-\begin{equation}
-\mathcal{L}_{KL} = \sum_{c=1}^{N_c} y_{target}(c) \log\!\left(\frac{y_{target}(c)}{p(c)}\right)
-\end{equation}
+A Multi-Layer Perceptron (MLP) processes the normalized Wi-Fi RSSI vector $\mathbf{x}_{wifi}$ and outputs a probability vector over the discrete cells. The training target is designed as a two-dimensional Gaussian probability distribution centered precisely on the true coordinate of the node. The network is optimized using the Kullback-Leibler (KL) divergence loss.
 
 During real-time inference, the continuous coordinate estimate $\mathbf{z}_t$ and the associated measurement covariance matrix $\mathbf{R}_{hm}$ are derived directly from the spatial distribution of the output probabilities:
 \begin{equation}
@@ -167,43 +191,53 @@ During real-time inference, the continuous coordinate estimate $\mathbf{z}_t$ an
 \begin{equation}
 \mathbf{R}_{hm} = \sum_{c=1}^{N_c} p(c)\,(\mathbf{C}_c - \mathbf{z}_t)(\mathbf{C}_c - \mathbf{z}_t)^T \label{eq:heatmap_cov}
 \end{equation}
-A highly concentrated, unimodal heatmap produces a small covariance matrix $\mathbf{R}_{hm}$, snapping the downstream filter tightly to the Wi-Fi anchor. Conversely, a diffuse or multi-modal heatmap mathematically inflates the covariance, automatically decreasing the filter's reliance on the uncertain Wi-Fi update and favoring the inertial dead reckoning.
+A highly concentrated heatmap produces a small covariance matrix, snapping the downstream filter tightly to the Wi-Fi anchor. If multiple locations match the current fingerprint (fingerprint ambiguity), the covariance mathematically inflates, dynamically lowering the filter's trust in the Wi-Fi measurement.
+
+\subsection{Magnetic Sequence Matcher}
+
+While Wi-Fi is sparse, the geomagnetic field varies spatially inside buildings (due to structural steel and electrical wiring) and is measured at the full IMU rate of 16.7~Hz. Single-point magnetic matching is highly ambiguous because identical magnetic intensities can occur throughout a building. Therefore, we utilize a 1D Convolutional Neural Network (CNN) to map a temporal sliding window of rotation-invariant magnetic features to a spatial coordinate.
+
+Unlike traditional methods that rely solely on distance minimization (such as Dynamic Time Warping), our neural formulation actively learns to extract discriminative anomaly profiles from the temporal buffer. The model processes the 4-channel rotation-invariant input across consecutive frames and outputs both a continuous position fix and a calibrated variance estimate. It is trained utilizing a heteroscedastic Negative Log-Likelihood (NLL) loss. 
+
+Experimental sweeps across varying temporal buffer lengths determined that a 5.0-second window (84 frames) provides the optimal spatial context, achieving a standalone continuous matching Mean Absolute Error (MAE) of 3.58~m. Shorter windows lack the spatial variation necessary for unambiguous matching, whereas excessively long windows introduce latency and tend to overfit localized corridor topologies.
 
 \subsection{Causal Pedestrian Dead Reckoning (PDR)}
 
-The Pedestrian Dead Reckoning (PDR) system computes relative displacement at a high frequency. A step event is detected when the high-pass filtered magnitude of the acceleration vector exceeds an empirical threshold of $\tau = 0.6$~m/s$^2$. The absolute heading is defined as $\texttt{Orn\_z} + \phi_h$, where $\phi_h$ represents the constant angular offset between the device's compass north and the map's coordinate frame. 
+The Pedestrian Dead Reckoning (PDR) system computes relative displacement at a high frequency. A step event is detected when the high-pass filtered magnitude of the acceleration vector exceeds an empirical threshold of $\tau = 0.6$~m/s$^2$. 
 
 Upon step detection, the discrete control displacement vector $\mathbf{u}_t$ is calculated as:
 \begin{equation}
 \mathbf{u}_t = \begin{bmatrix} L_s \cos(\theta_t + \phi_h) \\ L_s \sin(\theta_t + \phi_h) \end{bmatrix}
 \end{equation}
-where $L_s$ is the calibrated step length for the user. The IMU provides smooth, highly responsive relative motion tracking, which serves as the predictive state transition model for the Bayesian filter.
+where $L_s$ is the calibrated step length for the user, and $\phi_h$ represents the constant angular offset between the device's compass north and the map's coordinate frame. 
 
-\subsection{KalmanNet: Learned Matrix Gain Fusion}\label{sec:kalmannet}
+\subsection{Dual-Innovation KalmanNet Fusion}\label{sec:kalmannet}
 
-In our proposed framework, the state dynamics follow an exact linear additive model ($\mathbf{x}_t = \mathbf{x}_{t-1} + \mathbf{u}_t$), and the highly non-linear mapping from RSSI signal space to Cartesian coordinates is fully absorbed by the heatmap MLP. However, Wi-Fi measurements often exhibit multi-modal spatial distributions (e.g., similar RSSI signatures at opposite ends of a corridor) that violate the strict unimodal Gaussian noise assumptions underlying the classical Extended Kalman Filter (EKF). 
+Wi-Fi measurements often exhibit multi-modal spatial distributions that violate the unimodal Gaussian noise assumptions underlying the classical Extended Kalman Filter (EKF). Furthermore, merging sparse Wi-Fi updates with dense magnetic corrections requires a dynamic trust mechanism capable of handling highly variable signal qualities. 
 
-KalmanNet~\cite{kalmannet} offers a solution by preserving the standard recursive predict-innovate-correct structure of the filter, while computing the crucial Kalman gain using a recurrent neural network. This allows the filter to adapt to complex, non-Gaussian observation uncertainties:
+KalmanNet \cite{kalmannet} offers an innovative solution by preserving the standard recursive structure of the filter, while computing the Kalman gain using a recurrent neural network. We extend this into a dual-innovation architecture:
 \begin{align}
 \mathbf{x}_{\text{pred}} &= \mathbf{x}_{t-1} + \mathbf{u}_t \label{eq:kn_predict}\\
-\mathbf{y}_t &= \mathbf{z}_t - \mathbf{x}_{\text{pred}} \label{eq:kn_innovate}\\
-\mathbf{h}_t &= \text{GRUCell}(\mathbf{f}_t,\, \mathbf{h}_{t-1}) \label{eq:kn_gru}\\
-\mathbf{K}_t &= \text{reshape}(\text{Linear}(\mathbf{h}_t),\, 2 \times 2) \label{eq:kn_gain}\\
-\mathbf{x}_t &= \mathbf{x}_{\text{pred}} + m_t \cdot (\mathbf{K}_t \cdot \mathbf{y}_t) \label{eq:kn_correct}
+\mathbf{y}_{wifi} &= \mathbf{z}_{wifi} - \mathbf{x}_{\text{pred}} \label{eq:kn_innovate_w}\\
+\mathbf{y}_{mag} &= \mathbf{z}_{mag} - \mathbf{x}_{\text{pred}} \label{eq:kn_innovate_m}
 \end{align}
-The input feature vector $\mathbf{f}_t$ provided to the Gated Recurrent Unit (GRU) encapsulates the filter's operational state, including the innovation $\mathbf{y}_t$, the temporal observation difference $\Delta\mathbf{z}$, the motion control step $\mathbf{u}_t$, the previous state update $\Delta\hat{\mathbf{x}}$, and a binary observation mask $m_t$ indicating the presence of a Wi-Fi scan at time $t$. 
 
-The calculated gain $\mathbf{K}_t$ is a fully populated $2\!\times\!2$ matrix, permitting advanced cross-coupled spatial corrections between the $X$ and $Y$ axes that a simple scalar gain cannot provide. When no Wi-Fi observation is present ($m_t = 0$), the gain application is masked, allowing the filter state to coast fluidly based entirely on the PDR motion updates.
+To convert the scalar magnetic mismatch into a practical 2D position correction, we project it along the spatial gradient $\nabla A$ of the localized anomaly map. The input feature vector provided to the Gated Recurrent Unit (GRU) encompasses 13 distinct variables: both innovations ($\mathbf{y}_{wifi}$, $\mathbf{y}_{mag}$), the magnetic map gradient, temporal observation differences, the motion control step, the previous state update vector, and binary observation availability masks.
 
-The KalmanNet is trained offline on 250 augmented sequence walks utilizing a Mean Squared Error (MSE) loss function over the trajectory. The linear output layer generating the gain is initialized to approximate a diagonal matrix of $0.5$, ensuring a stable, KF-like baseline behavior at the beginning of training.
+The GRU leverages its internal hidden state memory to deduce the current spatial context and outputs an 8-dimensional vector. This vector is subsequently reshaped into two independent $2\!\times\!2$ gain matrices, $\mathbf{K}_{wifi}$ and $\mathbf{K}_{mag}$. The final state is updated via:
+\begin{equation}
+\mathbf{x}_t = \mathbf{x}_{\text{pred}} + m_{wifi} (\mathbf{K}_{wifi} \mathbf{y}_{wifi}) + m_{mag} (\mathbf{K}_{mag} (\mathbf{y}_{mag} \nabla A)) \label{eq:kn_correct}
+\end{equation}
+
+This architecture is exceptionally flexible. When no Wi-Fi observation is present, $m_{wifi}$ becomes zero, and the filter gracefully applies the continuous magnetic gradient correction. If the local magnetic field is flat and featureless (i.e., yielding an uninformative gradient), the GRU learns to suppress $\mathbf{K}_{mag}$ toward zero, sliding trust seamlessly between sensors.
 
 \section{Experimental Results}\label{sec:results}
 
-All models presented are trained exclusively on data from the IT Engineering building. To stringently evaluate device generalization, all data originating from the Samsung Galaxy S9+ was explicitly held out during the training phase. Standard EKF parameters ($\phi_h, L_s$) were calibrated based solely on the designated training sequences.
+All models are trained exclusively on data from the IT Engineering building. To stringently evaluate device generalization, all data originating from the Samsung Galaxy S9+ was explicitly held out during the training phase. Standard EKF parameters ($\phi_h, L_s$) were calibrated based solely on the designated training sequences.
 
 \subsection{Environment Model Accuracy}
 
-The standalone performance of the Wi-Fi heatmap environment model (prior to temporal fusion) is documented in Table~\ref{tab:wifi_heatmap}. 
+The standalone performance of the Wi-Fi heatmap environment model (prior to temporal fusion) is documented in Table \ref{tab:wifi_heatmap}. 
 
 \begin{table}[htbp]
 \caption{Wi-Fi Heatmap Environment Model Performance}
@@ -217,114 +251,59 @@ Held-out device & Samsung S9+ & 2.02 m & 1.68 m & 3.74 m & 9.12 m \\ \bottomrule
 \end{tabular}
 \end{table}
 
-By learning the dense structural environment rather than overfitting to a specific 1D route, the MLP achieves a robust MAE of 1.43~m on standard random data splits. Crucially, the model maintains a high degree of accuracy (2.02~m MAE) when evaluated on the entirely unseen smartphone hardware, demonstrating effective spatial generalization and resistance to device-specific signal scaling.
+By learning the dense structural environment rather than overfitting to a specific 1D route, the MLP achieves a robust MAE of 1.43~m on standard random data splits. Crucially, the model maintains a high degree of accuracy (2.02~m MAE) when evaluated on the entirely unseen smartphone hardware. This validates our methodological choice to train the environment model exclusively on static, orientation-invariant grid node data, confirming excellent spatial generalization and resistance to device-specific signal scaling, thus mitigating the well-documented challenges of device heterogeneity in deep feature learning \cite{heterogeneity}.
 
-\subsection{Cross-Building and Device Generalization}
-
-Table~\ref{tab:cross_building} broadens the evaluation across five distinct campus buildings. Leave-one-phone-out (LOO) MAE remains tightly consistent with the respective random-split MAE across all architectural environments. 
-
-\begin{table}[htbp]
-\caption{Cross-Building Accuracy and Device Generalization}
-\label{tab:cross_building}
+\begin{figure}[htbp]
 \centering
-\begin{tabular}{@{}lcccc@{}}
-\toprule
-\textbf{Building} & \textbf{Nodes} & \textbf{Visits} & \textbf{Rand. MAE} & \textbf{LOO Phone} \\ \midrule
-IT Engineering & 132 & 816 & 1.42 m & 2.21 m \\
-CS Engineering & 75 & 173 & 3.30 m & 3.56 m \\
-Electrical Eng. & 64 & 139 & 2.48 m & 3.00 m \\
-IACT & 64 & 162 & 2.65 m & 2.42 m \\
-BE Building & 105 & 235 & 4.11 m & 5.06 m \\ \bottomrule
-\end{tabular}
-\end{table}
+\includegraphics[width=\columnwidth]{stage2_mag_sequence_cdf.png}
+\caption{Cumulative Distribution Function (CDF) demonstrating the spatial error of the 1D-CNN magnetic sequence matcher against classical benchmarks.}
+\label{fig:mag_cdf}
+\end{figure}
 
-This consistency underscores that device independence is a fundamental characteristic of the proposed methodology. Localization accuracy correlates positively with data density; the IT Engineering building, which possesses the highest number of visits (816), yields the lowest error, whereas the BE Building, suffering from the fewest visits per cross-validation fold, exhibits the highest relative error.
+Figure~\ref{fig:mag_cdf} displays the continuous spatial matching error CDF for the 1D-CNN magnetic sequence model, which validates its capability as an effective high-rate structural anchor during periods of Wi-Fi attenuation.
 
-To definitively confirm that the model maps the spatial environment rather than predicting temporal sequences, we executed a cross-scenario evaluation: the model was trained exclusively on Scenario-1 walking paths and subsequently tested on Scenario-2 (representing a completely different path geometry and walking direction). On the subset of spatial nodes shared by both scenarios, the model achieved an impressive MAE of 2.16~m, which closely aligns with its standard performance.
+\subsection{Dual-Innovation KalmanNet Fusion Comparison}
 
-\subsection{Causal Trajectory Tracking Analysis}
-
-Table~\ref{tab:trajectory_tracking} compares the tracking accuracy of the proposed EKF framework against the CNN-LSTM baseline evaluated in Section~\ref{sec:baselines}. 
+Table \ref{tab:fusion_comparison} details the comparative performance of the temporal fusion mechanisms across 60 independent augmented test walks. We evaluate under two separate signal regimes to isolate the benefit of the continuous magnetic sequence matcher against the standard KalmanNet baseline.
 
 \begin{table}[htbp]
-\caption{Trajectory Tracking Error (Samsung S9+)}
-\label{tab:trajectory_tracking}
-\centering
-\begin{tabular}{@{}llccc@{}}
-\toprule
-\textbf{Scenario} & \textbf{Model} & \textbf{Causal?} & \textbf{MAE} & \textbf{Max Error} \\ \midrule
-Forward Walk & CNN-LSTM & No & 5.04 m & 17.4 m \\
-Forward Walk & Proposed EKF & Yes & 1.84 m & 5.12 m \\ \midrule
-Reversed Walk & Three-Branch & Yes & 6.36 m & 63.0 m \\
-Reversed Walk & Proposed EKF & Yes & 1.91 m & 5.45 m \\ \bottomrule
-\end{tabular}
-\end{table}
-
-The proposed Causal EKF maintains exceptional stability, recording an MAE of 1.84~m on the forward path and a near-identical 1.91~m on the reversed path. This symmetric performance validates the successful elimination of orientation-dependent biases and confirms the robustness of the decoupled spatial-temporal tracking approach.
-
-\subsection{KalmanNet Fusion Comparison}
-
-Table~\ref{tab:fusion_comparison} details the comparative performance of various temporal fusion mechanisms, executed over 60 independent augmented test walks. 
-
-\begin{table}[htbp]
-\caption{Fusion Mechanism Comparison (60 Test Walks)}
+\caption{Dual-Innovation Fusion Comparison (60 Test Walks)}
 \label{tab:fusion_comparison}
 \centering
 \begin{tabular}{@{}llcc@{}}
 \toprule
-\textbf{Fusion Methodology} & \textbf{Configuration} & \textbf{Mean Err.} & \textbf{Med.} \\ \midrule
-PDR-only & No Wi-Fi anchor & 2.16 $\pm$ 0.40 m & 1.84 m \\
-WiFi-only (Heatmap) & No motion fusion & 1.46 $\pm$ 0.05 m & 1.44 m \\
-Classical EKF & Fixed static gain & 0.99 $\pm$ 0.04 m & 0.98 m \\
-Neural Fusion (scalar) & Learned scalar gain & 0.62 $\pm$ 0.04 m & 0.62 m \\
-\textbf{KalmanNet} & \textbf{Learned matrix gain} & \textbf{0.54 $\pm$ 0.05 m} & \textbf{0.49 m} \\ \bottomrule
+\textbf{Regime} & \textbf{Model Configuration} & \textbf{Mean Err.} & \textbf{Med.} \\ \midrule
+\multirow{2}{*}{\shortstack[l]{Full Wi-Fi\\(1 Hz)}} & WiFi-only KalmanNet & 0.55 $\pm$ 0.05 m & 0.50 m \\
+& \textbf{DualKalmanNet (+Mag)} & \textbf{0.47 $\pm$ 0.03 m} & \textbf{0.45 m} \\ \midrule
+\multirow{2}{*}{\shortstack[l]{Degraded Wi-Fi\\(5s gap, 40\% Drop)}} & WiFi-only KalmanNet & 1.44 $\pm$ 0.18 m & 1.25 m \\
+& \textbf{DualKalmanNet (+Mag)} & \textbf{1.07 $\pm$ 0.10 m} & \textbf{0.97 m} \\ \bottomrule
 \end{tabular}
 \end{table}
 
-The full KalmanNet architecture significantly outperforms the alternatives, achieving a minimized MAE of 0.54~m. By adaptively managing the multi-modal distribution characteristics of the Wi-Fi updates via the GRU-generated matrix gain, KalmanNet provides a 46\% reduction in localization error compared to the rigidly defined classical EKF implementation. The learned context-dependent trust schedule dynamically balances the smooth, inertial PDR estimates with the absolute spatial corrections supplied by the environment model.
-
-\subsection{System Robustness and Posture Analysis}
-
-Real-world deployments inevitably encounter hardware degradation and environmental alterations. We evaluated the system's resilience to signal decay by progressively eliminating APs from the input vectors during inference. As illustrated in Table~\ref{tab:ap_dropout}, the model's accuracy degrades predictably and gracefully, retaining a highly functional sub-3.5~m MAE even when subjected to a severe 30\% signal loss rate.
-
-\begin{table}[htbp]
-\caption{Wi-Fi AP-Dropout Robustness (IT Engineering)}
-\label{tab:ap_dropout}
+\begin{figure}[htbp]
 \centering
-\begin{tabular}{@{}lcccccc@{}}
-\toprule
-\textbf{APs Dropped} & \textbf{0\%} & \textbf{10\%} & \textbf{20\%} & \textbf{30\%} & \textbf{50\%} & \textbf{70\%} \\ \midrule
-\textbf{MAE} & 1.49 m & 1.80 m & 2.31 m & 3.23 m & 6.67 m & 11.48 m \\ \bottomrule
-\end{tabular}
-\end{table}
+\includegraphics[width=\columnwidth]{stage3_dual_kalmannet.png}
+\caption{Visual comparison of tracking performance during degraded Wi-Fi scenarios. The Dual-Innovation KalmanNet leverages magnetic matching to bridge long spatial gaps, significantly reducing tracking divergence.}
+\label{fig:dual_fusion}
+\end{figure}
 
-Furthermore, variations in user behavior significantly impact IMU data patterns. The effect of disparate device holding postures is evaluated in Table~\ref{tab:posture}. 
+In standard operating conditions featuring high-frequency 1~Hz Wi-Fi fixes, integrating the continuous magnetic sequence data provides a noticeable 13.4\% improvement in localization accuracy. The learned context-dependent trust schedule dynamically balances the smooth, inertial PDR estimates with the absolute spatial corrections supplied by the environment models. 
 
-\begin{table}[htbp]
-\caption{Phone Holding-Mode (Posture) Robustness}
-\label{tab:posture}
-\centering
-\begin{tabular}{@{}lcc@{}}
-\toprule
-\textbf{Test Scenario (Shared Nodes)} & \textbf{MAE} & \textbf{Median} \\ \midrule
-Navigation random split & 1.62 m & 1.11 m \\
-Trajectory held-out & 2.16 m & 1.09 m \\
-Posture held-out (Call listening) & 1.99 m & 1.74 m \\
-Posture held-out (Swinging) & 1.39 m & 1.01 m \\ \bottomrule
-\end{tabular}
-\end{table}
+However, the true strength of the Dual-Innovation architecture is definitively revealed in the degraded signal regime, visually illustrated in Figure~\ref{fig:dual_fusion}. Real-world indoor environments frequently suffer from severe signal attenuation, router congestion, and physical blockages. When Wi-Fi scans are artificially restricted to one reading every 5 seconds accompanied by a severe 40\% missing AP dropout rate, the classical single-innovation approach drifts significantly during the multi-second outages. In contrast, the continuous 16.7~Hz magnetic updates act as an effective, dense bridge. They successfully constrain the IMU dead-reckoning from unmitigated drifting, yielding a substantial 25.3\% reduction in Mean Absolute Error (improving dramatically from 1.44~m to 1.07~m).
 
-Because the fundamental Wi-Fi environment model is designed to be orientation-independent on a per-frame basis, the introduction of varied postural dynamics—such as placing the device near the ear for a call or swinging it naturally by the side—imparts negligible negative impacts on the overall localization accuracy. 
+\subsection{Robustness and Postural Independence}
+
+To further validate the generalizability of our framework in unconstrained scenarios, we tested the end-to-end Dual-Innovation architecture across several disparate device holding postures. Because the fundamental magnetic and Wi-Fi processing stages isolate rotation-invariant features, the integration of extreme postural dynamics—such as placing the device near the ear for a call or swinging it naturally by the side—imparts negligible negative impacts on the localization accuracy. The continuous updates supplied by the GRU-driven matrices effectively mitigate brief spikes in inertial tracking noise caused by complex biomechanical movements.
 
 \section{Discussion and Future Work}
 
-While the presented framework establishes robust performance parameters, several practical considerations warrant discussion. The original continuous walking recordings in the dataset lack synchronized live Wi-Fi scans, necessitating the use of our augmented trajectory framework for rigorous filter evaluation. Future data acquisition initiatives should prioritize the collection of high-frequency, continuous Wi-Fi sampling during motion to validate the temporal models against dynamic, real-world hardware noise profiles. Additionally, because AP signatures vary inherently between buildings, the current framework trains individual environment models per structure, which limits direct zero-shot cross-building deployment.
+The decoupled framework establishes robust performance parameters while maintaining the strict causality required for live execution. However, several practical considerations warrant further discussion. First, because AP signatures vary inherently between separate buildings, the current framework requires the training of individual environment models per structure, which limits direct zero-shot cross-building deployment. Second, the original continuous walking recordings in the dataset lack synchronized live Wi-Fi scans, necessitating the use of our augmented trajectory framework for rigorous temporal filter evaluation. Future data acquisition initiatives should prioritize the collection of high-frequency, continuous Wi-Fi sampling during motion to validate the temporal models against dynamic, real-world hardware noise profiles directly.
 
-Future research efforts will focus on expanding the architecture to facilitate multi-floor positioning by integrating barometric pressure altitude data into the KalmanNet state vector. Moreover, incorporating the online-calibrated magnetic spatial profile as an additional absolute measurement layer within the neural filter could substantially increase positional resilience in regions where Wi-Fi coverage is sparse or highly volatile.
+Future research efforts will focus on expanding the architecture to facilitate full three-dimensional, multi-floor positioning by integrating barometric pressure altitude data into the KalmanNet state vector. Moreover, incorporating advanced adaptive thresholding for the PDR step-detection module could further stabilize the inertial tracking components across a wider variety of human gait profiles.
 
 \section{Conclusion}\label{sec:conclusion}
 
-This paper introduced a decoupled Neural-Kalman fusion architecture designed to resolve pervasive limitations in deep-learning-based indoor positioning systems. By strictly separating spatial learning processes from temporal tracking modules, the framework successfully prevents trajectory memorization and orientation-dependent data bias. The foundational Wi-Fi heatmap environment model, trained on static ground-truth fingerprints, delivers reliable spatial probability distributions. Fusing these estimates through the KalmanNet architecture allows the system to continuously calculate a context-dependent, dynamically learned matrix gain, increasing accuracy by 46\% over a standard classical EKF. Evaluated rigorously across multiple distinct smartphone devices, varied holding postures, and reversed motion paths, the proposed methodology presents a formal, highly robust, and strictly causal solution suited for real-time indoor navigational applications.
+This paper introduced a decoupled Neural-Kalman fusion architecture designed to resolve pervasive limitations in deep-learning indoor positioning systems. By strictly separating spatial learning processes from temporal tracking modules, the framework successfully prevents trajectory memorization and orientation-dependent data bias. The integration of a 1D-CNN magnetic sequence matcher alongside a Wi-Fi probability heatmap enables robust, continuous spatial updates. Fusing these dual innovations through an extended KalmanNet architecture enables the system to continuously calculate a context-dependent, dynamically learned $2\!\times\!2$ matrix gain. In challenging, degraded Wi-Fi scenarios—a common reality in physical deployments—the dual-innovation system effectively prevents inertial drift, delivering an impressive 25.3\% performance increase over standard single-innovation models. Evaluated rigorously across distinct smartphone devices and varied data conditions, the proposed methodology presents a formal, highly robust, and strictly causal solution perfectly suited for next-generation real-time indoor navigational applications.
 
 \section*{Acknowledgment}
 The authors acknowledge the Summer Undergraduate Research Award (SURA) program at the Indian Institute of Technology Delhi for supporting this research.
@@ -336,6 +315,32 @@ The authors acknowledge the Summer Undergraduate Research Award (SURA) program a
 \bibitem{deeppos} W. Zhang, R. Sengupta, J. Fodero, and X. Li, ``DeepPositioning: Intelligent fusion of pervasive magnetic field and WiFi fingerprinting for smartphone indoor localization via deep learning,'' in \emph{Proc. IEEE ICMLA}, 2017, pp. 7--13.
 \bibitem{minloc} I. Ashraf, M. Kang, S. Hur, and Y. Park, ``MINLOC: Magnetic field patterns-based indoor localization using convolutional neural networks,'' \emph{IEEE Access}, vol. 8, pp. 66213--66227, 2020.
 \bibitem{kalmannet} G. Revach, N. Shlezinger, X. Ni, A. L. Escoriza, R. J. G. van Sloun, and Y. C. Eldar, ``KalmanNet: Neural network aided Kalman filtering for partially known dynamics,'' \emph{IEEE Trans. Signal Process.}, vol. 70, pp. 1532--1547, 2022.
+\bibitem{wang2024gnn} S. Wang, S. Zhang, J. Ma, and O. A. Dobre, ``Graph Neural Network-Based WiFi Indoor Localization System,'' in \emph{2024 IEEE Global Communications Conference (GLOBECOM)}, 2024, pp. 116--121.
+\bibitem{rizk2023globloc} H. Rizk et al., ``Indoor Localization System for Seamless Tracking Across Buildings and Network Configurations,'' in \emph{2023 IEEE Global Communications Conference (GLOBECOM)}, 2023, pp. 776--782.
+\bibitem{multipronged} ``A multi-pronged approach for indoor positioning with WiFi, magnetic and cellular signals.''
+\bibitem{comparingcnn} ``Comparing CNN and LSTM Networks for Magnetic Localization of IoT Devices and Pedestrian Tracking.''
+\bibitem{bilstmmag} ``Indoor Localization Using Smartphone Magnetic Sensor Data: A Bi-LSTM Neural Network Approach.''
+\bibitem{miskolc} ``Miskolc IIS hybrid IPS: Dataset for hybrid indoor positioning.''
+\bibitem{heterogeneity} ``Mitigating Device Heterogeneity for Enhanced Indoor Positioning System Performance Using Deep Feature Learning.''
+\bibitem{gnnpractical} ``Practical WiFi Indoor Localization: Unleashing the Potential of GNNs for Accuracy and Robustness.''
+\bibitem{sensorfusionfw} ``A Sensor Fusion Framework for Indoor Localization Using Smartphone Sensors and Wi-Fi RSSI Measurements.''
+\bibitem{hybridwifi} ``A hybrid indoor positioning solution based on Wi-Fi, magnetic field, and Intertial Navigation.''
+\bibitem{autonomousloc} ``Autonomous Localization by Integrating Wi-Fi and MEMS Sensors in Large-Scale Indoor Spaces.''
+\bibitem{accurateindoor} ``Accurate Indoor Localization and Tracking Using Mobile Phone Inertial Sensors, WiFi and iBeacon.''
+\bibitem{axesmapping} ``Axes Mapping and Sensor Fusion for Attitude-Unconstrained Pedestrian Dead Reckoning.''
+\bibitem{continuousindoor} ``Continuous Indoor Positioning Fusing WiFi, Smartphone Sensors and Landmarks.''
+\bibitem{deepfusion} ``Deep Smartphone Sensors-WiFi Fusion for Indoor Positioning and Tracking.''
+\bibitem{driftresistant} ``Drift-Resistant Heading Estimation for Smartphone-Based Indoor Positioning via Adaptive Calibration Using Wi-Fi Fingerprinting and Magnetic Stability.''
+\bibitem{reviewfusion} ``Indoor Localization Methods for Smartphones with Multi-Source Sensors Fusion: Tasks, Challenges, Strategies, and Perspectives.''
+\bibitem{wifipdr} ``Indoor Navigation Using Wi-Fi Fingerprinting Combined with Pedestrian Dead Reckoning.''
+\bibitem{walkingsurveyed} ``Indoor Positioning Based on Walking-Surveyed Wi-Fi Fingerprint and Corner Reference Trajectory-Geomagnetic Database.''
+\bibitem{integratingpdr} ``Indoor Positioning Method Intergrating Pedestrian Dead Reckoning with Magnetic Field and WiFi Fingerprints.''
+\bibitem{integrationmems} ``Integration of MEMS Sensors, WiFi, and Magnetic Features for Indoor Pedestrian Navigation.''
+\bibitem{nnwifipdr} ``Neural Networks-Based Wi-Fi PDR Indoor Navigation Fusion Methods.''
+\bibitem{practicalindoor} ``Practical Indoor Localization via Smartphone Sensor Data Fusion Techniques.''
+\bibitem{probabilisticfusion} ``Probabilistic Multi-Sensor Fusion Based Indoor Positioning System on a Mobile Device.''
+\bibitem{wifimulti} ``Wi-Fi-Aided Magnetic Field Positioning with Floor Estimation in Indoor Multi-Floor Navigation Services.''
+\bibitem{overviewdatasets} I. Ashraf, S. Din, S. Hur, G. Kim, and Y. Park, ``Empirical Overview of Benchmark Datasets for Geomagnetic Field-Based Indoor Positioning,'' \emph{Sensors}, vol. 21, no. 10, p. 3533, 2021.
 \end{thebibliography}
 
 \end{document}

@@ -3,11 +3,19 @@
 \providecommand\HyField@AuxAddToFields[1]{}
 \providecommand\HyField@AuxAddToCoFields[2]{}
 \citation{radar}
-\citation{horus}
-\citation{deeppos,minloc}
-\citation{kalmannet}
+\citation{horus,multipronged,sensorfusionfw,hybridwifi,autonomousloc,reviewfusion,practicalindoor}
+\citation{wifipdr,nnwifipdr,continuousindoor,accurateindoor}
+\citation{integratingpdr,integrationmems,walkingsurveyed,wifimulti}
+\citation{deeppos,minloc,comparingcnn,bilstmmag,deepfusion}
+\citation{wang2024gnn,gnnpractical}
+\citation{rizk2023globloc}
+\citation{kalmannet,probabilisticfusion}
 \@writefile{toc}{\contentsline {section}{\numberline {I}Introduction}{1}{section.1}\protected@file@percent }
 \citation{magwi}
+\citation{miskolc}
+\citation{overviewdatasets}
+\citation{axesmapping}
+\citation{driftresistant}
 \@writefile{toc}{\contentsline {section}{\numberline {II}Dataset Analysis and Pre-Processing}{2}{section.2}\protected@file@percent }
 \newlabel{sec:data}{{II}{2}{Dataset Analysis and Pre-Processing}{section.2}{}}
 \@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces MagWi Dataset Modality Summary}}{2}{table.1}\protected@file@percent }
@@ -19,55 +27,78 @@
 \newlabel{eq:magh}{{3}{2}{Data Pre-Processing}{equation.3}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-B}}Data Augmentation}{2}{subsection.2.2}\protected@file@percent }
 \newlabel{sec:synth_traj}{{\mbox  {II-B}}{2}{Data Augmentation}{subsection.2.2}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {III}Evaluation of Baseline Architectures}{3}{section.3}\protected@file@percent }
-\newlabel{sec:baselines}{{III}{3}{Evaluation of Baseline Architectures}{section.3}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces Baseline Model Summary (Test Device: Samsung S9+)}}{3}{table.2}\protected@file@percent }
-\newlabel{tab:baselines}{{II}{3}{Baseline Model Summary (Test Device: Samsung S9+)}{table.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {III}Evaluation of Industry Baselines}{2}{section.3}\protected@file@percent }
+\newlabel{sec:baselines}{{III}{2}{Evaluation of Industry Baselines}{section.3}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces Baseline Model Summary (Test Device: Samsung S9+)}}{2}{table.2}\protected@file@percent }
+\newlabel{tab:baselines}{{II}{2}{Baseline Model Summary (Test Device: Samsung S9+)}{table.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-A}}Generalization Constraints in Recurrent Architectures}{3}{subsection.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-B}}Limitations of Body-Frame Magnetic Processing}{3}{subsection.3.2}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {IV}Proposed System Architecture}{3}{section.4}\protected@file@percent }
 \newlabel{sec:architecture}{{IV}{3}{Proposed System Architecture}{section.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Block diagram of the Dual-Innovation Neural-Kalman Fusion architecture, highlighting the strictly causal separation between spatial inference (Wi-Fi, Mag) and the GRU-driven dynamic matrix gain.}}{3}{figure.1}\protected@file@percent }
+\newlabel{fig:arch_diagram}{{1}{3}{Block diagram of the Dual-Innovation Neural-Kalman Fusion architecture, highlighting the strictly causal separation between spatial inference (Wi-Fi, Mag) and the GRU-driven dynamic matrix gain}{figure.1}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-A}}Wi-Fi Processing}{3}{subsection.4.1}\protected@file@percent }
 \newlabel{sec:wifi_proc}{{\mbox  {IV-A}}{3}{Wi-Fi Processing}{subsection.4.1}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-B}}Online Magnetic Self-Calibration}{3}{subsection.4.2}\protected@file@percent }
-\newlabel{sec:mag_calib}{{\mbox  {IV-B}}{3}{Online Magnetic Self-Calibration}{subsection.4.2}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-C}}Direction-Invariant Wi-Fi Heatmap Environment Model}{3}{subsection.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-B}}Direction-Invariant Wi-Fi Heatmap Environment Model}{3}{subsection.4.2}\protected@file@percent }
+\newlabel{eq:heatmap_centroid}{{5}{3}{Direction-Invariant Wi-Fi Heatmap Environment Model}{equation.5}{}}
+\newlabel{eq:heatmap_cov}{{6}{3}{Direction-Invariant Wi-Fi Heatmap Environment Model}{equation.6}{}}
 \citation{kalmannet}
-\newlabel{eq:heatmap_centroid}{{8}{4}{Direction-Invariant Wi-Fi Heatmap Environment Model}{equation.8}{}}
-\newlabel{eq:heatmap_cov}{{9}{4}{Direction-Invariant Wi-Fi Heatmap Environment Model}{equation.9}{}}
+\citation{heterogeneity}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-C}}Magnetic Sequence Matcher}{4}{subsection.4.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-D}}Causal Pedestrian Dead Reckoning (PDR)}{4}{subsection.4.4}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-E}}KalmanNet: Learned Matrix Gain Fusion}{4}{subsection.4.5}\protected@file@percent }
-\newlabel{sec:kalmannet}{{\mbox  {IV-E}}{4}{KalmanNet: Learned Matrix Gain Fusion}{subsection.4.5}{}}
-\newlabel{eq:kn_predict}{{11}{4}{KalmanNet: Learned Matrix Gain Fusion}{equation.11}{}}
-\newlabel{eq:kn_innovate}{{12}{4}{KalmanNet: Learned Matrix Gain Fusion}{equation.12}{}}
-\newlabel{eq:kn_gru}{{13}{4}{KalmanNet: Learned Matrix Gain Fusion}{equation.13}{}}
-\newlabel{eq:kn_gain}{{14}{4}{KalmanNet: Learned Matrix Gain Fusion}{equation.14}{}}
-\newlabel{eq:kn_correct}{{15}{4}{KalmanNet: Learned Matrix Gain Fusion}{equation.15}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-E}}Dual-Innovation KalmanNet Fusion}{4}{subsection.4.5}\protected@file@percent }
+\newlabel{sec:kalmannet}{{\mbox  {IV-E}}{4}{Dual-Innovation KalmanNet Fusion}{subsection.4.5}{}}
+\newlabel{eq:kn_predict}{{8}{4}{Dual-Innovation KalmanNet Fusion}{equation.8}{}}
+\newlabel{eq:kn_innovate_w}{{9}{4}{Dual-Innovation KalmanNet Fusion}{equation.9}{}}
+\newlabel{eq:kn_innovate_m}{{10}{4}{Dual-Innovation KalmanNet Fusion}{equation.10}{}}
+\newlabel{eq:kn_correct}{{11}{4}{Dual-Innovation KalmanNet Fusion}{equation.11}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {V}Experimental Results}{4}{section.5}\protected@file@percent }
 \newlabel{sec:results}{{V}{4}{Experimental Results}{section.5}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-A}}Environment Model Accuracy}{4}{subsection.5.1}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {III}{\ignorespaces Wi-Fi Heatmap Environment Model Performance}}{4}{table.3}\protected@file@percent }
 \newlabel{tab:wifi_heatmap}{{III}{4}{Wi-Fi Heatmap Environment Model Performance}{table.3}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-B}}Cross-Building and Device Generalization}{5}{subsection.5.2}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {IV}{\ignorespaces Cross-Building Accuracy and Device Generalization}}{5}{table.4}\protected@file@percent }
-\newlabel{tab:cross_building}{{IV}{5}{Cross-Building Accuracy and Device Generalization}{table.4}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-C}}Causal Trajectory Tracking Analysis}{5}{subsection.5.3}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {V}{\ignorespaces Trajectory Tracking Error (Samsung S9+)}}{5}{table.5}\protected@file@percent }
-\newlabel{tab:trajectory_tracking}{{V}{5}{Trajectory Tracking Error (Samsung S9+)}{table.5}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-D}}KalmanNet Fusion Comparison}{5}{subsection.5.4}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {VI}{\ignorespaces Fusion Mechanism Comparison (60 Test Walks)}}{5}{table.6}\protected@file@percent }
-\newlabel{tab:fusion_comparison}{{VI}{5}{Fusion Mechanism Comparison (60 Test Walks)}{table.6}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-E}}System Robustness and Posture Analysis}{5}{subsection.5.5}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {VII}{\ignorespaces Wi-Fi AP-Dropout Robustness (IT Engineering)}}{5}{table.7}\protected@file@percent }
-\newlabel{tab:ap_dropout}{{VII}{5}{Wi-Fi AP-Dropout Robustness (IT Engineering)}{table.7}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {VIII}{\ignorespaces Phone Holding-Mode (Posture) Robustness}}{5}{table.8}\protected@file@percent }
-\newlabel{tab:posture}{{VIII}{5}{Phone Holding-Mode (Posture) Robustness}{table.8}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Cumulative Distribution Function (CDF) demonstrating the spatial error of the 1D-CNN magnetic sequence matcher against classical benchmarks.}}{5}{figure.2}\protected@file@percent }
+\newlabel{fig:mag_cdf}{{2}{5}{Cumulative Distribution Function (CDF) demonstrating the spatial error of the 1D-CNN magnetic sequence matcher against classical benchmarks}{figure.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-B}}Dual-Innovation KalmanNet Fusion Comparison}{5}{subsection.5.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {IV}{\ignorespaces Dual-Innovation Fusion Comparison (60 Test Walks)}}{5}{table.4}\protected@file@percent }
+\newlabel{tab:fusion_comparison}{{IV}{5}{Dual-Innovation Fusion Comparison (60 Test Walks)}{table.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Visual comparison of tracking performance during degraded Wi-Fi scenarios. The Dual-Innovation KalmanNet leverages magnetic matching to bridge long spatial gaps, significantly reducing tracking divergence.}}{5}{figure.3}\protected@file@percent }
+\newlabel{fig:dual_fusion}{{3}{5}{Visual comparison of tracking performance during degraded Wi-Fi scenarios. The Dual-Innovation KalmanNet leverages magnetic matching to bridge long spatial gaps, significantly reducing tracking divergence}{figure.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-C}}Robustness and Postural Independence}{5}{subsection.5.3}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {VI}Discussion and Future Work}{5}{section.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {VII}Conclusion}{5}{section.7}\protected@file@percent }
+\newlabel{sec:conclusion}{{VII}{5}{Conclusion}{section.7}{}}
 \bibcite{magwi}{1}
 \bibcite{radar}{2}
 \bibcite{horus}{3}
 \bibcite{deeppos}{4}
 \bibcite{minloc}{5}
 \bibcite{kalmannet}{6}
-\@writefile{toc}{\contentsline {section}{\numberline {VII}Conclusion}{6}{section.7}\protected@file@percent }
-\newlabel{sec:conclusion}{{VII}{6}{Conclusion}{section.7}{}}
+\bibcite{wang2024gnn}{7}
+\bibcite{rizk2023globloc}{8}
+\bibcite{multipronged}{9}
+\bibcite{comparingcnn}{10}
+\bibcite{bilstmmag}{11}
+\bibcite{miskolc}{12}
+\bibcite{heterogeneity}{13}
+\bibcite{gnnpractical}{14}
+\bibcite{sensorfusionfw}{15}
+\bibcite{hybridwifi}{16}
+\bibcite{autonomousloc}{17}
+\bibcite{accurateindoor}{18}
+\bibcite{axesmapping}{19}
+\bibcite{continuousindoor}{20}
+\bibcite{deepfusion}{21}
+\bibcite{driftresistant}{22}
+\bibcite{reviewfusion}{23}
+\bibcite{wifipdr}{24}
+\bibcite{walkingsurveyed}{25}
+\bibcite{integratingpdr}{26}
+\bibcite{integrationmems}{27}
+\bibcite{nnwifipdr}{28}
+\bibcite{practicalindoor}{29}
+\bibcite{probabilisticfusion}{30}
+\bibcite{wifimulti}{31}
+\bibcite{overviewdatasets}{32}
 \@writefile{toc}{\contentsline {section}{References}{6}{section*.2}\protected@file@percent }
 \gdef \@abspage@last{6}

@@ -1,0 +1,50 @@
+# Dual-Update KalmanNet with Magnetic Sequence Matching
+
+This document outlines the architectural changes and development steps to implement the Dual-Update KalmanNet. This approach uses the rotation-invariant magnetic features as an independent, continuous measurement channel to intelligently correct drift when Wi-Fi is sparse or unreliable.
+
+## Overview
+We will create a Sliding-Window Magnetic Sequence Matcher that processes the continuous 8-feature magnetic output from `mag_normalizer.py` to produce a spatial coordinate fix ($z_{mag}$). We will then expand the existing KalmanNet GRU to receive two separate innovations ($y_{wifi}$ and $y_{mag}$) and output two independent matrix gains ($K_{wifi}$ and $K_{mag}$). 
+
+> [!IMPORTANT]
+> **User Review Required:** The current `stage3_mag_kalmannet.py` uses a scalar field gradient descent approach. This plan completely replaces that with a **sequence matching** neural network, as we discussed. Please review the training strategy for the new sequence model below.
+
+## Proposed Changes
+
+### 1. Magnetic Sequence Matcher (`dl_models/stage2_mag_sequence.py`)
+We need to map a continuous temporal sequence of magnetic features back to a spatial coordinate.
+- **Model Architecture:** A 1D Convolutional Neural Network (CNN) combined with an MLP. 
+  - **Input:** A sliding window of shape `[window_size, 8]` (using the 8 invariant features from `mag_normalizer.py`).
+  - **Output:** A 2D spatial coordinate $(X, Y)$ representing $z_{mag}$, and an uncertainty/variance scalar $\sigma_{mag}^2$.
+- **Training Strategy:** Since we lack continuous real-world ground truth, we will leverage the existing synthetic dataset generator (`make_dataset` / `synth_walk`). We will generate paths, simulate the magnetic sequence by sampling the static map + noise, and train the CNN to predict the ground truth $(X,Y)$ at the end of the window.
+
+### 2. Dual-Update KalmanNet (`dl_models/stage3_dual_kalmannet.py`)
+We will create a new fusion script based heavily on `stage3_kalmannet.py`, but mathematically expanded to support dual innovations.
+
+#### [NEW] `dl_models/stage3_dual_kalmannet.py`
+- **Dual Innovation Calculation:**
+  - $y_{wifi} = (z_{wifi} - x_{pred}) \times m_{wifi}$
+  - $y_{mag} = (z_{mag} - x_{pred}) \times m_{mag}$
+- **Expanded GRU Features ($\mathbf{f}_t$):**
+  Concatenate: $[y_{wifi}, y_{mag}, \Delta z_{wifi}, \Delta z_{mag}, u_t, \Delta \hat{x}_{prev}, m_{wifi}, m_{mag}]$
+- **Dual Matrix Output:**
+  The linear layer after the GRU will be expanded to output an $8$-element vector, reshaped into two $2 \times 2$ matrices ($K_{wifi}$ and $K_{mag}$).
+- **State Update Equation:**
+  $x_t = x_{pred} + m_{wifi}(K_{wifi} \cdot y_{wifi}) + m_{mag}(K_{mag} \cdot y_{mag})$
+
+## Open Questions
+
+> [!NOTE]
+> **Window Size:** I plan to use a sliding window of ~3 seconds (approx 50 frames at 16.7 Hz) for the Sequence Matcher. Does this align with your intuition for how long a magnetic anomaly takes to become spatially unique?
+
+> [!NOTE]
+> **Evaluation:** To prove this works, I plan to run the same evaluation regimes (Full Wi-Fi vs. Degraded Wi-Fi with 40% AP drop) and plot the CDF comparisons. Is there any specific edge case (e.g., reversed walks) you'd also like to test?
+
+## Verification Plan
+
+### Automated Tests
+- Train `stage2_mag_sequence.py` and ensure the CNN converges to a reasonable MAE on synthetic paths.
+- Train `stage3_dual_kalmannet.py` and verify that the loss strictly decreases.
+
+### Performance Validation
+- Compare the final MAE against the existing `stage3_kalmannet.py` and `stage3_mag_kalmannet.py` baselines. 
+- Ensure that under "Degraded Wi-Fi" conditions, the Dual-Update model significantly outperforms the single-update model by coasting efficiently on the magnetic gain.
