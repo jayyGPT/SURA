@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.2) (preloaded format=pdflatex 2026.6.7)  16 JUN 2026 20:01
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.2) (preloaded format=pdflatex 2026.6.7)  19 JUN 2026 06:53
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -496,80 +496,46 @@ LaTeX Font Info:    Trying to load font information for U+msb on input line 32.
 (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-Underfull \hbox (badness 3872) in paragraph at lines 49--50
-\OT1/ptm/m/n/10 rect con-cate-na-tion of raw mag-ne-tome-ter read-ings
+Underfull \hbox (badness 10000) in paragraph at lines 49--50
+[]\OT1/ptm/b/n/10 Magnetic Di-rec-tion De-pen-dency. \OT1/ptm/m/n/10 The di-rec
+t
  []
 
 
-LaTeX Warning: Citation `kalmannet' on page 1 undefined on input line 54.
+Underfull \hbox (badness 10000) in paragraph at lines 49--50
+\OT1/ptm/m/n/10 con-cate-na-tion of raw mag-ne-tome-ter read-ings
+ []
+
+
+Underfull \hbox (badness 5607) in paragraph at lines 49--50
+\OT1/ptm/m/n/10 ($\OML/cmm/m/it/10 Mag[]; Mag[]; Mag[]$\OT1/ptm/m/n/10 ) into s
+pa-tial fea-ture vec-tors
+ []
 
 [1{C:/Users/lenovo/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}{C:/Users/l
 enovo/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}
 
 
 ]
+LaTeX Font Info:    Trying to load font information for OT1+pcr on input line 9
+8.
 
-LaTeX Warning: Reference `tab:dataset_summary' on page 2 undefined on input lin
-e 58.
-
-
-Overfull \hbox (29.00655pt too wide) in paragraph at lines 64--72
- [][] 
- []
-
-LaTeX Font Info:    Trying to load font information for OT1+pcr on input line 8
-0.
 (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ot1pcr.fd
 File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
 )
-
-LaTeX Warning: Reference `sec:mag_calib' on page 2 undefined on input line 82.
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 84--85
-[]\OT1/ptm/m/n/10 The fin-ger-print database
- []
-
-
-Underfull \hbox (badness 2042) in paragraph at lines 84--85
-\OT1/ptm/m/n/10 (\OT1/pcr/m/n/10 build_fingerprint_db.py\OT1/ptm/m/n/10 ) store
-s, for each static
- []
-
-
-Underfull \hbox (badness 1596) in paragraph at lines 84--85
-\OT1/ptm/m/n/10 fea-tures, and the matched real Wi-Fi scan as an RSS
- []
-
-
-LaTeX Warning: Reference `sec:baselines' on page 2 undefined on input line 88.
-
-
-LaTeX Warning: Reference `tab:baselines' on page 2 undefined on input line 100.
-
-
-[2]
-Underfull \hbox (badness 2653) in paragraph at lines 135--137
-\OT1/ptm/m/n/10 with ab-sent APs mapped to zero. Wi-Fi is direction-
- []
-
-
-Underfull \hbox (badness 8019) in paragraph at lines 140--141
-[]\OT1/ptm/m/n/10 Raw mag-ne-tome-ter mag-ni-tudes are heav-ily device-
- []
-
-[3] [4]
-Overfull \hbox (8.9996pt too wide) in paragraph at lines 293--298
+[2] [3] [4]
+Overfull \hbox (3.618pt too wide) in paragraph at lines 273--282
  [][] 
  []
 
 
-LaTeX Warning: Reference `sec:synth_traj' on page 5 undefined on input line 326
-.
+Underfull \hbox (badness 1831) in paragraph at lines 288--289
+[]\OT1/ptm/m/n/10 Real-world de-ploy-ments in-evitably en-counter hard-ware
+ []
 
 
-Underfull \hbox (badness 1715) in paragraph at lines 338--339
-\OT1/ptm/m/n/10 in de-ploy-ing end-to-end deep learn-ing for in-door po-si-
+Overfull \hbox (8.9996pt too wide) in paragraph at lines 294--299
+ [][] 
  []
 
 [5]
@@ -584,65 +550,46 @@ Before submitting the final camera ready copy, remember to:
  uses only Type 1 fonts and that every step in the generation
  process uses the appropriate paper size.
 
-[6
-
-] (Paper.aux)
+[6] (Paper.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
  ***********
-
-
-LaTeX Warning: There were undefined references.
-
-
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
-
-
-Package rerunfilecheck Warning: File `Paper.out' has changed.
-(rerunfilecheck)                Rerun to get outlines right
-(rerunfilecheck)                or use package `bookmark'.
-
-Package rerunfilecheck Info: Checksums for `Paper.out':
-(rerunfilecheck)             Before: ABC40155B3C8B942841F79C0DAA14616;5199
-(rerunfilecheck)             After:  23707EBAF35E07284EA401A8054FFE5E;5636.
+Package rerunfilecheck Info: File `Paper.out' has not changed.
+(rerunfilecheck)             Checksum: 7A5EFAB4FF0FEB5E900E7913E129299D;3940.
  ) 
 Here is how much of TeX's memory you used:
- 11561 strings out of 467867
- 180289 string characters out of 5417851
- 617280 words of memory out of 5000000
- 40224 multiletter control sequences out of 15000+600000
+ 11565 strings out of 467867
+ 180321 string characters out of 5417851
+ 617562 words of memory out of 5000000
+ 40232 multiletter control sequences out of 15000+600000
  675421 words of font info for 142 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,14n,79p,1852b,576s stack positions out of 10000i,1000n,20000p,200000b,200000s
-
-pdfTeX warning (dest): name{subsection.3.2} has been referenced but does not ex
-ist, replaced by a fixed one
-
-<C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/c
-mbx10.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type1/public/ams
-fonts/cm/cmex10.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type1/
-public/amsfonts/cm/cmmi10.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fo
-nts/type1/public/amsfonts/cm/cmmi5.pfb><C:/Users/lenovo/AppData/Local/Programs/
-MiKTeX/fonts/type1/public/amsfonts/cm/cmmi7.pfb><C:/Users/lenovo/AppData/Local/
-Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi8.pfb><C:/Users/lenovo/AppDa
-ta/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/len
-ovo/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/U
-sers/lenovo/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr9.p
-fb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/c
-m/cmsy10.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type1/public/
-amsfonts/cm/cmsy7.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type
-1/public/amsfonts/cm/cmsy8.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/f
-onts/type1/public/amsfonts/cm/cmsy9.pfb><C:/Users/lenovo/AppData/Local/Programs
-/MiKTeX/fonts/type1/public/amsfonts/symbols/msbm10.pfb><C:/Users/lenovo/AppData
-/Local/Programs/MiKTeX/fonts/type1/urw/courier/ucrr8a.pfb><C:/Users/lenovo/AppD
-ata/Local/Programs/MiKTeX/fonts/type1/urw/times/utmb8a.pfb><C:/Users/lenovo/App
-Data/Local/Programs/MiKTeX/fonts/type1/urw/times/utmbi8a.pfb><C:/Users/lenovo/A
-ppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmr8a.pfb><C:/Users/lenovo/
-AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmri8a.pfb>
-Output written on Paper.pdf (6 pages, 274004 bytes).
+ 75i,14n,79p,1824b,530s stack positions out of 10000i,1000n,20000p,200000b,200000s
+<C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm
+/cmbx10.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type1/public/a
+msfonts/cm/cmex10.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type
+1/public/amsfonts/cm/cmmi10.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/
+fonts/type1/public/amsfonts/cm/cmmi5.pfb><C:/Users/lenovo/AppData/Local/Program
+s/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi7.pfb><C:/Users/lenovo/AppData/Loca
+l/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi8.pfb><C:/Users/lenovo/App
+Data/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/l
+enovo/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:
+/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr9
+.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts
+/cm/cmsy10.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type1/publi
+c/amsfonts/cm/cmsy7.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/ty
+pe1/public/amsfonts/cm/cmsy8.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX
+/fonts/type1/public/amsfonts/cm/cmsy9.pfb><C:/Users/lenovo/AppData/Local/Progra
+ms/MiKTeX/fonts/type1/public/amsfonts/symbols/msbm10.pfb><C:/Users/lenovo/AppDa
+ta/Local/Programs/MiKTeX/fonts/type1/urw/courier/ucrr8a.pfb><C:/Users/lenovo/Ap
+pData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmb8a.pfb><C:/Users/lenovo/A
+ppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmbi8a.pfb><C:/Users/lenovo
+/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmr8a.pfb><C:/Users/lenov
+o/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmri8a.pfb>
+Output written on Paper.pdf (6 pages, 267375 bytes).
 PDF statistics:
  279 PDF objects out of 1000 (max. 8388607)
- 65 named destinations out of 1000 (max. 500000)
- 185 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 61 named destinations out of 1000 (max. 500000)
+ 161 words of extra memory for PDF output out of 10000 (max. 10000000)
 
