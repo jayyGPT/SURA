@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.2) (preloaded format=pdflatex 2026.6.7)  19 JUN 2026 18:49
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.2) (preloaded format=pdflatex 2026.6.7)  21 JUN 2026 01:24
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -201,26 +201,13 @@ LaTeX Font Info:    Redeclaring math symbol \hbar on input line 98.
 LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
 (Font)                  U/euf/m/n --> U/euf/b/n on input line 106.
 ))
-(C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/latex/algorithms\algorithmic
-.sty
-Package: algorithmic 2009/08/24 v0.1 Document Style `algorithmic'
- (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/latex/base\ifthen.sty
-Package: ifthen 2024/03/16 v1.1e Standard LaTeX ifthen package (DPC)
-)
+(C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/latex/graphics\graphicx.sty
+Package: graphicx 2024/12/31 v1.2e Enhanced LaTeX Graphics (DPC,SPQR)
+
 (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/latex/graphics\keyval.sty
 Package: keyval 2022/05/29 v1.15 key=value parser (DPC)
 \KV@toks@=\toks23
 )
-\c@ALC@unique=\count302
-\c@ALC@line=\count303
-\c@ALC@rem=\count304
-\c@ALC@depth=\count305
-\ALC@tlm=\skip55
-\algorithmicindent=\skip56
-)
-(C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/latex/graphics\graphicx.sty
-Package: graphicx 2024/12/31 v1.2e Enhanced LaTeX Graphics (DPC,SPQR)
-
 (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/latex/graphics\graphics.sty
 Package: graphics 2024/08/06 v1.4g Standard LaTeX Graphics (DPC,SPQR)
 
@@ -239,8 +226,6 @@ File: pdftex.def 2025/09/29 v1.2d Graphics/color driver for pdftex
 ))
 \Gin@req@height=\dimen181
 \Gin@req@width=\dimen182
-) (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/latex/base\textcomp.sty
-Package: textcomp 2024/04/24 v2.1b Standard LaTeX package
 ) (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/latex/xcolor\xcolor.sty
 Package: xcolor 2024/09/29 v3.02 LaTeX color extensions (UK)
 
@@ -273,12 +258,12 @@ Package: booktabs 2020/01/12 v1.61803398 Publication quality tables
 \cmidrulesep=\dimen190
 \cmidrulekern=\dimen191
 \defaultaddspace=\dimen192
-\@cmidla=\count306
-\@cmidlb=\count307
+\@cmidla=\count302
+\@cmidlb=\count303
 \@aboverulesep=\dimen193
 \@belowrulesep=\dimen194
-\@thisruleclass=\count308
-\@lastruleclass=\count309
+\@thisruleclass=\count304
+\@lastruleclass=\count305
 \@thisrulewidth=\dimen195
 ) (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\hyperref.st
 y
@@ -331,11 +316,11 @@ Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
 y
 Package: kvoptions 2022-06-15 v3.15 Key value format for package options (HO)
 ))
-\c@section@level=\count310
+\c@section@level=\count306
 )
 (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/latex/etoolbox\etoolbox.sty
 Package: etoolbox 2025/10/02 v2.5m e-TeX tools for LaTeX (JAW)
-\etb@tempcnta=\count311
+\etb@tempcnta=\count307
 )
 (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/generic/stringenc\stringenc.
 sty
@@ -343,8 +328,8 @@ Package: stringenc 2019/11/29 v1.12 Convert strings between diff. encodings (HO
 )
 )
 \@linkdim=\dimen196
-\Hy@linkcounter=\count312
-\Hy@pagecounter=\count313
+\Hy@linkcounter=\count308
+\Hy@pagecounter=\count309
 
 (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\pd1enc.def
 File: pd1enc.def 2026-01-29 v7.01p Hyperref: PDFDocEncoding definition (HO)
@@ -354,7 +339,7 @@ Now handling font encoding PD1 ...
 (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/generic/intcalc\intcalc.sty
 Package: intcalc 2019/12/15 v1.3 Expandable calculations with integers (HO)
 )
-\Hy@SavedSpaceFactor=\count314
+\Hy@SavedSpaceFactor=\count310
 (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\puenc.def
 File: puenc.def 2026-01-29 v7.01p Hyperref: PDF Unicode definition (HO)
 Now handling font encoding PU ...
@@ -367,7 +352,7 @@ Package hyperref Info: Plain pages OFF on input line 4216.
 Package hyperref Info: Backreferencing OFF on input line 4221.
 Package hyperref Info: Implicit mode ON; LaTeX internals redefined.
 Package hyperref Info: Bookmarks ON on input line 4468.
-\c@Hy@tempcnt=\count315
+\c@Hy@tempcnt=\count311
 
 (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/latex/url\url.sty
 \Urlmuskip=\muskip18
@@ -384,7 +369,7 @@ c.sty
 Package: bigintcalc 2019/12/15 v1.5 Expandable calculations on big integers (HO
 )
 ))
-\Fld@menulength=\count316
+\Fld@menulength=\count312
 \Field@Width=\dimen198
 \Fld@charsize=\dimen199
 Package hyperref Info: Hyper figures OFF on input line 6084.
@@ -394,16 +379,16 @@ Package hyperref Info: backreferencing OFF on input line 6099.
 Package hyperref Info: Link coloring OFF on input line 6104.
 Package hyperref Info: Link coloring with OCG OFF on input line 6109.
 Package hyperref Info: PDF/A mode OFF on input line 6114.
-\Hy@abspage=\count317
-\c@Item=\count318
-\c@Hfootnote=\count319
+\Hy@abspage=\count313
+\c@Item=\count314
+\c@Hfootnote=\count315
 )
 Package hyperref Info: Driver (autodetected): hpdftex.
 
 (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\hpdftex.def
 File: hpdftex.def 2026-01-29 v7.01p Hyperref driver for pdfTeX
-\Fld@listcount=\count320
-\c@bookmark@seq@number=\count321
+\Fld@listcount=\count316
+\c@bookmark@seq@number=\count317
 
 (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/latex/rerunfilecheck\rerunfi
 lecheck.sty
@@ -416,13 +401,13 @@ Package: uniquecounter 2019/12/15 v1.4 Provide unlimited unique counter (HO)
 Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 2
 84.
 )
-\Hy@SectionHShift=\skip57
+\Hy@SectionHShift=\skip55
 )
 (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/latex/multirow\multirow.sty
 Package: multirow 2024/11/12 v2.9 Span multiple rows of a table
-\multirow@colwidth=\skip58
-\multirow@cntb=\count322
-\multirow@dima=\skip59
+\multirow@colwidth=\skip56
+\multirow@cntb=\count318
+\multirow@dima=\skip57
 \bigstrutjot=\dimen256
 )
 (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/latex/pgf/frontendlayer\tikz
@@ -478,14 +463,14 @@ slibraryfiltered.code.tex
 \pgf@yd=\dimen268
 \w@pgf@writea=\write3
 \r@pgf@reada=\read2
-\c@pgf@counta=\count323
-\c@pgf@countb=\count324
-\c@pgf@countc=\count325
-\c@pgf@countd=\count326
+\c@pgf@counta=\count319
+\c@pgf@countb=\count320
+\c@pgf@countc=\count321
+\c@pgf@countd=\count322
 \t@pgf@toka=\toks28
 \t@pgf@tokb=\toks29
 \t@pgf@tokc=\toks30
-\pgf@sys@id@count=\count327
+\pgf@sys@id@count=\count323
 
 (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgf.
 cfg
@@ -504,8 +489,8 @@ File: pgfsys-common-pdf.def 2025-08-29 v3.1.11a (3.1.11a)
 (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfs
 yssoftpath.code.tex
 File: pgfsyssoftpath.code.tex 2025-08-29 v3.1.11a (3.1.11a)
-\pgfsyssoftpath@smallbuffer@items=\count328
-\pgfsyssoftpath@bigbuffer@items=\count329
+\pgfsyssoftpath@smallbuffer@items=\count324
+\pgfsyssoftpath@bigbuffer@items=\count325
 )
 (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfs
 ysprotocol.code.tex
@@ -522,7 +507,7 @@ e.tex
 (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathpars
 er.code.tex
 \pgfmath@dimen=\dimen269
-\pgfmath@count=\count330
+\pgfmath@count=\count326
 \pgfmath@box=\box58
 \pgfmath@toks=\toks31
 \pgfmath@stack@operand=\toks32
@@ -550,7 +535,7 @@ tions.integerarithmetics.code.tex)
 .code.tex)
 (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfloa
 t.code.tex
-\c@pgfmathroundto@lastzeros=\count331
+\c@pgfmathroundto@lastzeros=\count327
 ))
 (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfint.code
 .tex)
@@ -590,7 +575,7 @@ File: pgfcorescopes.code.tex 2025-08-29 v3.1.11a (3.1.11a)
 \pgfpic=\box59
 \pgf@hbox=\box60
 \pgf@layerbox@main=\box61
-\pgf@picture@serial@count=\count332
+\pgf@picture@serial@count=\count328
 )
 (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
 regraphicstate.code.tex
@@ -625,8 +610,8 @@ File: pgfcorearrows.code.tex 2025-08-29 v3.1.11a (3.1.11a)
 reshade.code.tex
 File: pgfcoreshade.code.tex 2025-08-29 v3.1.11a (3.1.11a)
 \pgf@max=\dimen293
-\pgf@sys@shading@range@num=\count333
-\pgf@shadingcount=\count334
+\pgf@sys@shading@range@num=\count329
+\pgf@shadingcount=\count330
 )
 (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfco
 reimage.code.tex
@@ -696,7 +681,7 @@ Package: tikz 2025-08-29 v3.1.11a (3.1.11a)
 (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries\pgflib
 raryplothandlers.code.tex
 File: pgflibraryplothandlers.code.tex 2025-08-29 v3.1.11a (3.1.11a)
-\pgf@plot@mark@count=\count335
+\pgf@plot@mark@count=\count331
 \pgfplotmarksize=\dimen298
 )
 \tikz@lastx=\dimen299
@@ -711,19 +696,19 @@ File: pgflibraryplothandlers.code.tex 2025-08-29 v3.1.11a (3.1.11a)
 \tikz@figbox@bg=\box65
 \tikz@tempbox=\box66
 \tikz@tempbox@bg=\box67
-\tikztreelevel=\count336
-\tikznumberofchildren=\count337
-\tikznumberofcurrentchild=\count338
-\tikz@fig@count=\count339
+\tikztreelevel=\count332
+\tikznumberofchildren=\count333
+\tikznumberofcurrentchild=\count334
+\tikz@fig@count=\count335
 
 (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/generic/pgf/modules\pgfmodul
 ematrix.code.tex
 File: pgfmodulematrix.code.tex 2025-08-29 v3.1.11a (3.1.11a)
-\pgfmatrixcurrentrow=\count340
-\pgfmatrixcurrentcolumn=\count341
-\pgf@matrix@numberofcolumns=\count342
+\pgfmatrixcurrentrow=\count336
+\pgfmatrixcurrentcolumn=\count337
+\pgf@matrix@numberofcolumns=\count338
 )
-\tikz@expandcount=\count343
+\tikz@expandcount=\count339
 
 (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/ti
 kz/libraries\tikzlibrarytopaths.code.tex
@@ -827,44 +812,44 @@ File: tikzlibrarycalc.code.tex 2025-08-29 v3.1.11a (3.1.11a)
 (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/latex/l3backend\l3backend-pd
 ftex.def
 File: l3backend-pdftex.def 2025-10-09 L3 backend support: PDF output (pdfTeX)
-\l__color_backend_stack_int=\count344
+\l__color_backend_stack_int=\count340
 ) (Paper.aux)
 \openout1 = `Paper.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 18.
-LaTeX Font Info:    ... okay on input line 18.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 15.
+LaTeX Font Info:    ... okay on input line 15.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 15.
+LaTeX Font Info:    ... okay on input line 15.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 15.
+LaTeX Font Info:    ... okay on input line 15.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 15.
+LaTeX Font Info:    ... okay on input line 15.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 15.
+LaTeX Font Info:    ... okay on input line 15.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 15.
+LaTeX Font Info:    ... okay on input line 15.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 15.
+LaTeX Font Info:    ... okay on input line 15.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 15.
+LaTeX Font Info:    ... okay on input line 15.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 15.
+LaTeX Font Info:    ... okay on input line 15.
 
 -- Lines per column: 56 (exact).
 
 (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/context/base/mkii\supp-pdf.m
 kii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count345
+\scratchcounter=\count341
 \scratchdimen=\dimen308
 \scratchbox=\box90
-\nofMPsegments=\count346
-\nofMParguments=\count347
+\nofMPsegments=\count342
+\nofMParguments=\count343
 \everyMPshowfont=\toks36
-\MPscratchCnt=\count348
+\MPscratchCnt=\count344
 \MPscratchDim=\dimen309
-\MPnumerator=\count349
-\makeMPintoPDFobject=\count350
+\MPnumerator=\count345
+\makeMPintoPDFobject=\count346
 \everyMPtoPDFconversion=\toks37
 )
 (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/latex/epstopdf-pkg\epstopdf-
@@ -877,19 +862,19 @@ Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
 cfg
 File: epstopdf-sys.cfg 2021/03/18 v2.0 Configuration of epstopdf for MiKTeX
 ))
-Package hyperref Info: Link coloring OFF on input line 18.
+Package hyperref Info: Link coloring OFF on input line 15.
  (Paper.out) (Paper.out)
 \@outlinefile=\write4
 \openout4 = `Paper.out'.
 
-LaTeX Font Info:    Calculating math sizes for size <11> on input line 35.
-LaTeX Font Info:    Trying to load font information for U+msa on input line 35.
+LaTeX Font Info:    Calculating math sizes for size <11> on input line 32.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 32.
 
 
 (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 35.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 32.
 
 
 (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsb.fd
@@ -900,23 +885,24 @@ enovo/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}
 
 
 ] [2] [3]
-<stage2_mag_sequence_cdf.png, id=194, 578.16pt x 361.35pt>
+<stage2_mag_sequence_cdf.png, id=164, 578.16pt x 361.35pt>
 File: stage2_mag_sequence_cdf.png Graphic file (type png)
 <use stage2_mag_sequence_cdf.png>
-Package pdftex.def Info: stage2_mag_sequence_cdf.png  used on input line 258.
+Package pdftex.def Info: stage2_mag_sequence_cdf.png  used on input line 255.
 (pdftex.def)             Requested size: 252.0pt x 157.50026pt.
 
-[4]
-Overfull \hbox (7.8345pt too wide) in paragraph at lines 273--281
+Overfull \hbox (7.8345pt too wide) in paragraph at lines 270--278
  [][] 
  []
 
-<stage3_dual_kalmannet.png, id=210, 1011.78pt x 361.35pt>
+[4]
+<stage3_dual_kalmannet.png, id=180, 1011.78pt x 361.35pt>
 File: stage3_dual_kalmannet.png Graphic file (type png)
 <use stage3_dual_kalmannet.png>
-Package pdftex.def Info: stage3_dual_kalmannet.png  used on input line 285.
+Package pdftex.def Info: stage3_dual_kalmannet.png  used on input line 282.
 (pdftex.def)             Requested size: 252.0pt x 90.00093pt.
-[5 <./stage2_mag_sequence_cdf.png> <./stage3_dual_kalmannet.png>]
+ [5 <./stage2_mag_sequence_cdf.png> <./stage3_dual_kalmannet.png>]
+(Paper.bbl)
 
 ** Conference Paper **
 Before submitting the final camera ready copy, remember to:
@@ -928,7 +914,9 @@ Before submitting the final camera ready copy, remember to:
  uses only Type 1 fonts and that every step in the generation
  process uses the appropriate paper size.
 
-[6] (Paper.aux)
+[6
+
+] (Paper.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
@@ -937,13 +925,13 @@ Package rerunfilecheck Info: File `Paper.out' has not changed.
 (rerunfilecheck)             Checksum: 11068FE8BFF933AAF4BDAB13C6B4AFE7;4045.
  ) 
 Here is how much of TeX's memory you used:
- 24215 strings out of 467867
- 478836 string characters out of 5417851
- 898652 words of memory out of 5000000
- 52608 multiletter control sequences out of 15000+600000
+ 23978 strings out of 467867
+ 475081 string characters out of 5417851
+ 895890 words of memory out of 5000000
+ 52395 multiletter control sequences out of 15000+600000
  676059 words of font info for 140 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 84i,14n,94p,1682b,821s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 84i,14n,94p,1642b,821s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm
 /cmbx10.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type1/public/a
 msfonts/cm/cmex10.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type
@@ -963,9 +951,9 @@ ms/MiKTeX/fonts/type1/urw/times/utmb8a.pfb><C:/Users/lenovo/AppData/Local/Progr
 ams/MiKTeX/fonts/type1/urw/times/utmbi8a.pfb><C:/Users/lenovo/AppData/Local/Pro
 grams/MiKTeX/fonts/type1/urw/times/utmr8a.pfb><C:/Users/lenovo/AppData/Local/Pr
 ograms/MiKTeX/fonts/type1/urw/times/utmri8a.pfb>
-Output written on Paper.pdf (6 pages, 414840 bytes).
+Output written on Paper.pdf (6 pages, 408695 bytes).
 PDF statistics:
- 316 PDF objects out of 1000 (max. 8388607)
- 78 named destinations out of 1000 (max. 500000)
+ 281 PDF objects out of 1000 (max. 8388607)
+ 61 named destinations out of 1000 (max. 500000)
  183 words of extra memory for PDF output out of 10000 (max. 10000000)
 

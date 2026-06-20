@@ -2,9 +2,7 @@
 \IEEEoverridecommandlockouts
 \usepackage{cite}
 \usepackage{amsmath,amssymb,amsfonts}
-\usepackage{algorithmic}
 \usepackage{graphicx}
-\usepackage{textcomp}
 \usepackage{xcolor}
 \usepackage{booktabs}
 \usepackage{hyperref}
@@ -12,8 +10,7 @@
 \usepackage{tikz}
 \usetikzlibrary{shapes,arrows,positioning,fit,backgrounds,calc}
 
-\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
-    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
 
 \begin{document}
 
@@ -43,11 +40,11 @@ Indoor positioning, Extended Kalman Filter, KalmanNet, sensor fusion, pedestrian
 
 \section{Introduction}
 
-Indoor localization is a critical technology for location-based services, smart buildings, and emergency navigation \cite{radar}. Because satellite signals attenuate severely indoors, systems must rely on ambient smartphone sensors. Standard multi-modal indoor positioning systems use Wi-Fi Received Signal Strength Indication (RSSI), geomagnetic data, and Inertial Measurement Units (IMUs) \cite{horus, multipronged, sensorfusionfw, hybridwifi, autonomousloc, reviewfusion, practicalindoor}. These signals are highly complementary: Wi-Fi offers absolute but infrequent position fixes, while IMU dead reckoning gives smooth, high-rate motion updates but suffers from cumulative drift \cite{wifipdr, nnwifipdr, continuousindoor, accurateindoor}. The geomagnetic field, meanwhile, presents a ubiquitous and stable distortion pattern inside modern steel-reinforced buildings, providing a dense source of structural context \cite{integratingpdr, integrationmems, walkingsurveyed, wifimulti}.
+Indoor localization is a critical technology for location-based services, smart buildings, and emergency navigation \cite{radar}. Because satellite signals attenuate severely indoors, systems must rely on ambient smartphone sensors. Standard multi-modal indoor positioning systems use Wi-Fi Received Signal Strength Indication (RSSI), geomagnetic data, and Inertial Measurement Units (IMUs) \cite{horus, hybridwifi}. These signals are highly complementary: Wi-Fi offers absolute but infrequent position fixes, while IMU dead reckoning gives smooth, high-rate motion updates but suffers from cumulative drift \cite{nnwifipdr}. The geomagnetic field, meanwhile, presents a ubiquitous and stable distortion pattern inside modern steel-reinforced buildings, providing a dense source of structural context \cite{overviewdatasets}.
 
-Recent methods treat indoor positioning as an end-to-end regression problem, where neural networks map sensor sequences directly to Cartesian coordinates. Architectures like multi-branch Convolutional Neural Networks (CNNs) and Bidirectional Long Short-Term Memory networks (Bi-LSTMs) report low mean absolute errors in controlled settings \cite{deeppos,minloc, comparingcnn, bilstmmag, deepfusion}. Advanced topological methods have even employed Graph Neural Networks (GNNs) to capture complex proximity patterns between Access Points \cite{wang2024gnn, gnnpractical}. Furthermore, recent systems like GlobLoc \cite{rizk2023globloc} have introduced building-independent virtual mapping techniques to improve generalization across disparate physical environments. However, deploying standard sequence models in unconstrained continuous environments reveals several practical limitations. First, recurrent models trained on simple interpolated paths often memorize specific routes rather than mapping the generalized spatial environment. This causes severe degradation on novel paths. Second, using raw magnetometer readings introduces a strong orientation bias. The same physical location yields different magnetic signatures depending on the user's heading. Third, single-point regression forces networks to average multi-modal signal distributions. If identical Wi-Fi signatures occur at different locations, the network predicts the spatial midpoint, which may be an invalid physical location. Finally, bidirectional models estimate the current position using future sensor observations, making them fundamentally unsuitable for live navigation.
+Recent methods treat indoor positioning as an end-to-end regression problem, where neural networks map sensor sequences directly to Cartesian coordinates. Architectures like multi-branch Convolutional Neural Networks (CNNs) and Bidirectional Long Short-Term Memory networks (Bi-LSTMs) report low mean absolute errors in controlled settings \cite{deeppos,minloc, bilstmmag}. Advanced topological methods have even employed Graph Neural Networks (GNNs) to capture complex proximity patterns between Access Points \cite{wang2024gnn}. Furthermore, recent systems like GlobLoc \cite{rizk2023globloc} have introduced building-independent virtual mapping techniques to improve generalization across disparate physical environments. However, deploying standard sequence models in unconstrained continuous environments reveals several practical limitations. First, recurrent models trained on simple interpolated paths often memorize specific routes rather than mapping the generalized spatial environment. This causes severe degradation on novel paths. Second, using raw magnetometer readings introduces a strong orientation bias. The same physical location yields different magnetic signatures depending on the user's heading. Third, single-point regression forces networks to average multi-modal signal distributions. If identical Wi-Fi signatures occur at different locations, the network predicts the spatial midpoint, which may be an invalid physical location. Finally, bidirectional models estimate the current position using future sensor observations, making them fundamentally unsuitable for live navigation.
 
-To address these limitations, we propose a decoupled, strictly causal Neural-Kalman fusion architecture. Our framework separates spatial environment learning from temporal motion tracking. An MLP trained on a static fingerprint grid outputs a 2D probability heatmap. In parallel, a 1D-CNN magnetic sequence matcher provides continuous spatial corrections. These components are fused with a classical Pedestrian Dead Reckoning (PDR) model using a dual-innovation KalmanNet \cite{kalmannet, probabilisticfusion}. Our approach replaces the standard Kalman gain with two learned matrix gains, allowing the filter to dynamically slide its trust between Wi-Fi and magnetic sensors based on their availability and signal variance.
+To address these limitations, we propose a decoupled, strictly causal Neural-Kalman fusion architecture. Our framework separates spatial environment learning from temporal motion tracking. An MLP trained on a static fingerprint grid outputs a 2D probability heatmap. In parallel, a 1D-CNN magnetic sequence matcher provides continuous spatial corrections. These components are fused with a classical Pedestrian Dead Reckoning (PDR) model using a dual-innovation KalmanNet \cite{kalmannet}. Our approach replaces the standard Kalman gain with two learned matrix gains, allowing the filter to dynamically slide its trust between Wi-Fi and magnetic sensors based on their availability and signal variance.
 
 The remainder of this paper is structured as follows. Section \ref{sec:data} discusses dataset processing and data augmentation strategies. Section \ref{sec:baselines} extensively evaluates the limitations of existing industry baselines. Section \ref{sec:architecture} details the mathematical formulation of our proposed Neural-Kalman fusion system. Section \ref{sec:results} presents the experimental evaluations, and Section \ref{sec:conclusion} concludes the paper.
 
@@ -59,7 +56,7 @@ We evaluate our proposed models using the MagWi Benchmark Dataset \cite{magwi}, 
 \caption{MagWi Dataset Modality Summary}
 \label{tab:dataset_summary}
 \centering
-\begin{tabular}{@{}llll@{}}
+\begin{tabular}{@{}lll@{}}
 \toprule
 \textbf{Modality} & \textbf{Acquisition} & \textbf{Coverage} \\ \midrule
 Mag (static) & Dwell on grid node & Dense grid  \\
@@ -145,7 +142,7 @@ Our proposed architecture functions as a modular, learned Bayesian filter. It re
     line/.style={draw, thick, -latex},
     dot/.style={circle, fill=black, inner sep=1.5pt}
 ]
-    % Nodes
+
     \node [block] (pdr) {PDR Model \\ ($\mathbf{u}_t$)};
     \node [block, fill=red!10, below=0.5cm of pdr] (wifi) {Wi-Fi Heatmap ($\mathbf{z}_{wifi}$)};
     \node [block, fill=orange!10, below=0.5cm of wifi] (mag) {Mag 1D-CNN ($\mathbf{z}_{mag}$)};
@@ -155,7 +152,7 @@ Our proposed architecture functions as a modular, learned Bayesian filter. It re
     \node [wideblock, right=1.5cm of mag] (gru) {Dual-Innovation GRU \\ $\mathbf{K}_{wifi}, \mathbf{K}_{mag}$};
     \node [block, right=1.5cm of innov] (update) {Update \\ $\mathbf{x}_t$};
     
-    % Connections
+
     \path [line] (pdr) -- (predict);
     \path [line] (wifi) -- (innov);
     \path [line] (mag) -- (gru);
@@ -251,7 +248,7 @@ Held-out device & Samsung S9+ & 2.02 m & 1.68 m & 3.74 m & 9.12 m \\ \bottomrule
 \end{tabular}
 \end{table}
 
-By learning the dense structural environment rather than overfitting to a specific 1D route, the MLP achieves a robust MAE of 1.43~m on standard random data splits. Crucially, the model maintains a high degree of accuracy (2.02~m MAE) when evaluated on the entirely unseen smartphone hardware. This validates our methodological choice to train the environment model exclusively on static, orientation-invariant grid node data, confirming excellent spatial generalization and resistance to device-specific signal scaling, thus mitigating the well-documented challenges of device heterogeneity in deep feature learning \cite{heterogeneity}.
+By learning the dense structural environment rather than overfitting to a specific 1D route, the MLP achieves a robust MAE of 1.43~m on standard random data splits. Crucially, the model maintains a high degree of accuracy (2.02~m MAE) when evaluated on the entirely unseen smartphone hardware. This validates our methodological choice to train the environment model exclusively on static, orientation-invariant grid node data, confirming excellent spatial generalization and resistance to device-specific signal scaling, thus mitigating the well-documented challenges of device heterogeneity in deep feature learning.
 
 \begin{figure}[htbp]
 \centering
@@ -308,39 +305,7 @@ This paper introduced a decoupled Neural-Kalman fusion architecture designed to 
 \section*{Acknowledgment}
 The authors acknowledge the Summer Undergraduate Research Award (SURA) program at the Indian Institute of Technology Delhi for supporting this research.
 
-\begin{thebibliography}{00}
-\bibitem{magwi} I. Ashraf, S. Din, M. U. Ali, S. Hur, Y. B. Zikria, and Y. Park, ``MagWi: Benchmark dataset for long term magnetic field and Wi-Fi data involving heterogeneous smartphones, multiple orientations, spatial diversity and multi-floor buildings,'' \emph{IEEE Access}, vol. 9, pp. 77976--77996, 2021.
-\bibitem{radar} P. Bahl and V. N. Padmanabhan, ``RADAR: An in-building RF-based user location and tracking system,'' in \emph{Proc. IEEE INFOCOM}, 2000, pp. 775--784.
-\bibitem{horus} M. Youssef and A. Agrawala, ``The Horus WLAN location determination system,'' in \emph{Proc. ACM MobiSys}, 2005, pp. 205--218.
-\bibitem{deeppos} W. Zhang, R. Sengupta, J. Fodero, and X. Li, ``DeepPositioning: Intelligent fusion of pervasive magnetic field and WiFi fingerprinting for smartphone indoor localization via deep learning,'' in \emph{Proc. IEEE ICMLA}, 2017, pp. 7--13.
-\bibitem{minloc} I. Ashraf, M. Kang, S. Hur, and Y. Park, ``MINLOC: Magnetic field patterns-based indoor localization using convolutional neural networks,'' \emph{IEEE Access}, vol. 8, pp. 66213--66227, 2020.
-\bibitem{kalmannet} G. Revach, N. Shlezinger, X. Ni, A. L. Escoriza, R. J. G. van Sloun, and Y. C. Eldar, ``KalmanNet: Neural network aided Kalman filtering for partially known dynamics,'' \emph{IEEE Trans. Signal Process.}, vol. 70, pp. 1532--1547, 2022.
-\bibitem{wang2024gnn} S. Wang, S. Zhang, J. Ma, and O. A. Dobre, ``Graph Neural Network-Based WiFi Indoor Localization System,'' in \emph{2024 IEEE Global Communications Conference (GLOBECOM)}, 2024, pp. 116--121.
-\bibitem{rizk2023globloc} H. Rizk et al., ``Indoor Localization System for Seamless Tracking Across Buildings and Network Configurations,'' in \emph{2023 IEEE Global Communications Conference (GLOBECOM)}, 2023, pp. 776--782.
-\bibitem{multipronged} ``A multi-pronged approach for indoor positioning with WiFi, magnetic and cellular signals.''
-\bibitem{comparingcnn} ``Comparing CNN and LSTM Networks for Magnetic Localization of IoT Devices and Pedestrian Tracking.''
-\bibitem{bilstmmag} ``Indoor Localization Using Smartphone Magnetic Sensor Data: A Bi-LSTM Neural Network Approach.''
-\bibitem{miskolc} ``Miskolc IIS hybrid IPS: Dataset for hybrid indoor positioning.''
-\bibitem{heterogeneity} ``Mitigating Device Heterogeneity for Enhanced Indoor Positioning System Performance Using Deep Feature Learning.''
-\bibitem{gnnpractical} ``Practical WiFi Indoor Localization: Unleashing the Potential of GNNs for Accuracy and Robustness.''
-\bibitem{sensorfusionfw} ``A Sensor Fusion Framework for Indoor Localization Using Smartphone Sensors and Wi-Fi RSSI Measurements.''
-\bibitem{hybridwifi} ``A hybrid indoor positioning solution based on Wi-Fi, magnetic field, and Intertial Navigation.''
-\bibitem{autonomousloc} ``Autonomous Localization by Integrating Wi-Fi and MEMS Sensors in Large-Scale Indoor Spaces.''
-\bibitem{accurateindoor} ``Accurate Indoor Localization and Tracking Using Mobile Phone Inertial Sensors, WiFi and iBeacon.''
-\bibitem{axesmapping} ``Axes Mapping and Sensor Fusion for Attitude-Unconstrained Pedestrian Dead Reckoning.''
-\bibitem{continuousindoor} ``Continuous Indoor Positioning Fusing WiFi, Smartphone Sensors and Landmarks.''
-\bibitem{deepfusion} ``Deep Smartphone Sensors-WiFi Fusion for Indoor Positioning and Tracking.''
-\bibitem{driftresistant} ``Drift-Resistant Heading Estimation for Smartphone-Based Indoor Positioning via Adaptive Calibration Using Wi-Fi Fingerprinting and Magnetic Stability.''
-\bibitem{reviewfusion} ``Indoor Localization Methods for Smartphones with Multi-Source Sensors Fusion: Tasks, Challenges, Strategies, and Perspectives.''
-\bibitem{wifipdr} ``Indoor Navigation Using Wi-Fi Fingerprinting Combined with Pedestrian Dead Reckoning.''
-\bibitem{walkingsurveyed} ``Indoor Positioning Based on Walking-Surveyed Wi-Fi Fingerprint and Corner Reference Trajectory-Geomagnetic Database.''
-\bibitem{integratingpdr} ``Indoor Positioning Method Intergrating Pedestrian Dead Reckoning with Magnetic Field and WiFi Fingerprints.''
-\bibitem{integrationmems} ``Integration of MEMS Sensors, WiFi, and Magnetic Features for Indoor Pedestrian Navigation.''
-\bibitem{nnwifipdr} ``Neural Networks-Based Wi-Fi PDR Indoor Navigation Fusion Methods.''
-\bibitem{practicalindoor} ``Practical Indoor Localization via Smartphone Sensor Data Fusion Techniques.''
-\bibitem{probabilisticfusion} ``Probabilistic Multi-Sensor Fusion Based Indoor Positioning System on a Mobile Device.''
-\bibitem{wifimulti} ``Wi-Fi-Aided Magnetic Field Positioning with Floor Estimation in Indoor Multi-Floor Navigation Services.''
-\bibitem{overviewdatasets} I. Ashraf, S. Din, S. Hur, G. Kim, and Y. Park, ``Empirical Overview of Benchmark Datasets for Geomagnetic Field-Based Indoor Positioning,'' \emph{Sensors}, vol. 21, no. 10, p. 3533, 2021.
-\end{thebibliography}
+\bibliographystyle{ieeetr}
+\bibliography{Ref}
 
 \end{document}
