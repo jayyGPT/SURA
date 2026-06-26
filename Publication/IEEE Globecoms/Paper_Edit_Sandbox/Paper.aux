@@ -1,0 +1,73 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{radar}
+\citation{horus,hybridwifi}
+\citation{nnwifipdr}
+\citation{overviewdatasets}
+\citation{deeppos,minloc,bilstmmag}
+\citation{wang2024gnn}
+\citation{rizk2023globloc}
+\citation{kalmannet}
+\@writefile{toc}{\contentsline {section}{\numberline {I}Introduction}{1}{section.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {II}Proposed System Architecture}{1}{section.2}\protected@file@percent }
+\newlabel{sec:architecture}{{II}{1}{Proposed System Architecture}{section.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-A}}General Problem Formulation}{1}{subsection.2.1}\protected@file@percent }
+\citation{kalmannet}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces The proposed Neural-Kalman Fusion Architecture. Both the Wi-Fi probability heatmap and the continuous 1D-CNN magnetic fix generate innovations against the PDR prediction. A recurrent Dual GRU observes these innovations to compute optimal Kalman gain matrices for the state update.}}{2}{figure.1}\protected@file@percent }
+\newlabel{fig:arch_diagram}{{1}{2}{The proposed Neural-Kalman Fusion Architecture. Both the Wi-Fi probability heatmap and the continuous 1D-CNN magnetic fix generate innovations against the PDR prediction. A recurrent Dual GRU observes these innovations to compute optimal Kalman gain matrices for the state update}{figure.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-B}}Wi-Fi Processing and Heatmap Model}{2}{subsection.2.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Architecture of the Wi-Fi Multi-Layer Perceptron (MLP) environment model. Dense layers sequentially extract features from the RSSI vector to compute an $M$-dimensional probability heatmap.}}{2}{figure.2}\protected@file@percent }
+\newlabel{fig:mlp_arch}{{2}{2}{Architecture of the Wi-Fi Multi-Layer Perceptron (MLP) environment model. Dense layers sequentially extract features from the RSSI vector to compute an $M$-dimensional probability heatmap}{figure.2}{}}
+\newlabel{eq:kl_loss}{{1}{2}{Wi-Fi Processing and Heatmap Model}{equation.1}{}}
+\newlabel{eq:heatmap_centroid}{{2}{2}{Wi-Fi Processing and Heatmap Model}{equation.2}{}}
+\newlabel{eq:heatmap_cov}{{3}{2}{Wi-Fi Processing and Heatmap Model}{equation.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-C}}Magnetic Sequence Matcher}{2}{subsection.2.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Architecture of the 1D-CNN Magnetic Sequence Matcher. A shared convolutional encoder with BatchNorm extracts temporal features, which are processed by two independent heads: a position head (with Dropout) predicting a 2D coordinate, and a variance head estimating heteroscedastic uncertainty.}}{2}{figure.3}\protected@file@percent }
+\newlabel{fig:cnn_arch}{{3}{2}{Architecture of the 1D-CNN Magnetic Sequence Matcher. A shared convolutional encoder with BatchNorm extracts temporal features, which are processed by two independent heads: a position head (with Dropout) predicting a 2D coordinate, and a variance head estimating heteroscedastic uncertainty}{figure.3}{}}
+\newlabel{eq:nll_loss}{{4}{2}{Magnetic Sequence Matcher}{equation.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-D}}Causal Pedestrian Dead Reckoning (PDR)}{2}{subsection.2.4}\protected@file@percent }
+\newlabel{eq:pdr}{{5}{2}{Causal Pedestrian Dead Reckoning (PDR)}{equation.5}{}}
+\citation{magwi}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {II-E}}Dual-Innovation KalmanNet Fusion}{3}{subsection.2.5}\protected@file@percent }
+\newlabel{sec:kalmannet}{{\mbox  {II-E}}{3}{Dual-Innovation KalmanNet Fusion}{subsection.2.5}{}}
+\newlabel{eq:kn_predict}{{6}{3}{Dual-Innovation KalmanNet Fusion}{equation.6}{}}
+\newlabel{eq:kn_innovate_w}{{7}{3}{Dual-Innovation KalmanNet Fusion}{equation.7}{}}
+\newlabel{eq:kn_innovate_m}{{8}{3}{Dual-Innovation KalmanNet Fusion}{equation.8}{}}
+\newlabel{eq:kn_correct}{{9}{3}{Dual-Innovation KalmanNet Fusion}{equation.9}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {III}Experimental Setup and Dataset}{3}{section.3}\protected@file@percent }
+\newlabel{sec:setup}{{III}{3}{Experimental Setup and Dataset}{section.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-A}}Dataset Augmentation}{3}{subsection.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-B}}Training Details}{3}{subsection.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {IV}Experimental Results}{3}{section.4}\protected@file@percent }
+\newlabel{sec:results}{{IV}{3}{Experimental Results}{section.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-A}}Environment Model Accuracy}{3}{subsection.4.1}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces Wi-Fi Heatmap Environment Model Performance}}{3}{table.1}\protected@file@percent }
+\newlabel{tab:wifi_heatmap}{{I}{3}{Wi-Fi Heatmap Environment Model Performance}{table.1}{}}
+\bibstyle{ieeetr}
+\bibdata{Ref}
+\bibcite{radar}{1}
+\bibcite{horus}{2}
+\bibcite{hybridwifi}{3}
+\bibcite{nnwifipdr}{4}
+\bibcite{overviewdatasets}{5}
+\bibcite{deeppos}{6}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Cumulative Distribution Function (CDF) demonstrating the spatial error of the 1D-CNN magnetic sequence matcher.}}{4}{figure.4}\protected@file@percent }
+\newlabel{fig:mag_cdf}{{4}{4}{Cumulative Distribution Function (CDF) demonstrating the spatial error of the 1D-CNN magnetic sequence matcher}{figure.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-B}}Dual-Innovation KalmanNet Fusion Comparison}{4}{subsection.4.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces Dual-Innovation Fusion Comparison (60 Test Walks)}}{4}{table.2}\protected@file@percent }
+\newlabel{tab:fusion_comparison}{{II}{4}{Dual-Innovation Fusion Comparison (60 Test Walks)}{table.2}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Visual comparison of tracking performance during degraded Wi-Fi scenarios. The Dual-Innovation KalmanNet leverages magnetic matching to bridge long spatial gaps, significantly reducing tracking divergence.}}{4}{figure.5}\protected@file@percent }
+\newlabel{fig:dual_fusion}{{5}{4}{Visual comparison of tracking performance during degraded Wi-Fi scenarios. The Dual-Innovation KalmanNet leverages magnetic matching to bridge long spatial gaps, significantly reducing tracking divergence}{figure.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {IV-C}}Robustness and Postural Independence}{4}{subsection.4.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {V}Conclusion}{4}{section.5}\protected@file@percent }
+\newlabel{sec:conclusion}{{V}{4}{Conclusion}{section.5}{}}
+\@writefile{toc}{\contentsline {section}{References}{4}{section*.2}\protected@file@percent }
+\bibcite{minloc}{7}
+\bibcite{bilstmmag}{8}
+\bibcite{wang2024gnn}{9}
+\bibcite{rizk2023globloc}{10}
+\bibcite{kalmannet}{11}
+\bibcite{magwi}{12}
+\gdef \@abspage@last{5}

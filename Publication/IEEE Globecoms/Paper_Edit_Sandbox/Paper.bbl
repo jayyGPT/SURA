@@ -1,0 +1,64 @@
+\begin{thebibliography}{10}
+
+\bibitem{radar}
+P.~Bahl and V.~N. Padmanabhan, ``Radar: An in-building rf-based user location
+  and tracking system,'' in {\em Proc. IEEE INFOCOM}, vol.~2, pp.~775--784,
+  2000.
+
+\bibitem{horus}
+M.~Youssef and A.~Agrawala, ``The horus wlan location determination system,''
+  in {\em Proc. ACM MobiSys}, pp.~205--218, 2005.
+
+\bibitem{hybridwifi}
+U.~Bolat and M.~Akcakoca, ``A hybrid indoor positioning solution based on
+  wi-fi, magnetic field, and inertial navigation,'' in {\em Proc. 14th Workshop
+  on Positioning, Navigation and Communications (WPNC)}, pp.~1--6, 2017.
+
+\bibitem{nnwifipdr}
+D.~Yu, C.~Li, and J.~Xiao, ``Neural networks-based wi-fi/pdr indoor navigation
+  fusion methods,'' {\em IEEE Trans. Instrum. Meas.}, vol.~72, pp.~1--14, 2023.
+
+\bibitem{overviewdatasets}
+I.~Ashraf, S.~Din, S.~Hur, G.~Kim, and Y.~Park, ``Empirical overview of
+  benchmark datasets for geomagnetic field-based indoor positioning,'' {\em
+  Sensors}, vol.~21, no.~10, p.~3533, 2021.
+
+\bibitem{deeppos}
+W.~Zhang, R.~Sengupta, J.~Fodero, and X.~Li, ``Deeppositioning: Intelligent
+  fusion of pervasive magnetic field and wifi fingerprinting for smartphone
+  indoor localization via deep learning,'' in {\em Proc. IEEE Int. Conf.
+  Machine Learning and Applications (ICMLA)}, pp.~7--13, 2017.
+
+\bibitem{minloc}
+I.~Ashraf, M.~Kang, S.~Hur, and Y.~Park, ``Minloc: Magnetic field
+  patterns-based indoor localization using convolutional neural networks,''
+  {\em IEEE Access}, vol.~8, pp.~66213--66227, 2020.
+
+\bibitem{bilstmmag}
+M.~Zardkoohi, Y.~Seifi~Kavian, and K.~Ansari-Asl, ``Indoor localization using
+  smartphone magnetic sensor data: A bi-lstm neural network approach,'' {\em
+  IEEE Access}, vol.~13, pp.~165795--165809, 2025.
+
+\bibitem{wang2024gnn}
+S.~Wang, S.~Zhang, J.~Ma, and O.~A. Dobre, ``Graph neural network-based wifi
+  indoor localization system,'' in {\em Proc. IEEE Global Communications Conf.
+  (GLOBECOM)}, pp.~116--120, 2024.
+
+\bibitem{rizk2023globloc}
+H.~Rizk, A.~Sakr, A.~Ghazal, M.~Hemdan, O.~Shaheen, H.~Sharara, H.~Yamaguchi,
+  and M.~Youssef, ``Indoor localization system for seamless tracking across
+  buildings and network configurations,'' in {\em Proc. IEEE Global
+  Communications Conf. (GLOBECOM)}, pp.~776--782, 2023.
+
+\bibitem{kalmannet}
+G.~Revach, N.~Shlezinger, X.~Ni, A.~L. Escoriza, R.~J.~G. van Sloun, and Y.~C.
+  Eldar, ``Kalmannet: Neural network aided kalman filtering for partially known
+  dynamics,'' {\em IEEE Trans. Signal Process.}, vol.~70, pp.~1532--1547, 2022.
+
+\bibitem{magwi}
+I.~Ashraf, S.~Din, M.~U. Ali, S.~Hur, Y.~B. Zikria, and Y.~Park, ``Magwi:
+  Benchmark dataset for long term magnetic field and wi-fi data involving
+  heterogeneous smartphones, multiple orientations, spatial diversity and
+  multi-floor buildings,'' {\em IEEE Access}, vol.~9, pp.~77976--77996, 2021.
+
+\end{thebibliography}
