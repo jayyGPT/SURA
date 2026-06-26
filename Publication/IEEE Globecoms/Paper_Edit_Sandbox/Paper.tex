@@ -52,7 +52,7 @@ Our proposed architecture functions as a modular, learned Bayesian filter design
 
 \begin{figure}[htbp]
 \centering
-\resizebox{0.9\columnwidth}{!}{
+\resizebox{\columnwidth}{!}{
 \begin{tikzpicture}[
     block/.style={rectangle, draw=black!70, thick, fill=blue!10, text width=6.5em, text centered, rounded corners=2pt, minimum height=3em, drop shadow},
     line/.style={draw, -latex, thick, color=black!80}
@@ -99,7 +99,7 @@ To map this highly non-linear signal to spatial coordinates, we employ a Multi-L
 \centering
 \resizebox{\columnwidth}{!}{
 \begin{tikzpicture}[
-    layer/.style={rectangle, draw=black!60, thick, fill=blue!10, text centered, rounded corners=2pt, minimum height=1.5cm, drop shadow, text width=1.8cm},
+    layer/.style={rectangle, draw=black!60, thick, fill=blue!10, text centered, rounded corners=2pt, minimum height=1.5cm, drop shadow, text width=2.2cm},
     arrow/.style={draw, thick, -latex, color=black!70},
     label/.style={font=\small\sffamily}
 ]
@@ -114,9 +114,9 @@ To map this highly non-linear signal to spatial coordinates, we employ a Multi-L
     \node[label, right=0.8cm of softmax] (output) {$\mathbf{p} \in \mathbb{R}^M$};
 
     % Arrows
-    \path [arrow] (input) -- (fc1) node[midway, above, label] {$\mathbf{W}^{(1)}$};
-    \path [arrow] (fc1) -- (fc2) node[midway, above, label] {$\mathbf{W}^{(2)}$};
-    \path [arrow] (fc2) -- (fc3) node[midway, above, label] {$\mathbf{W}^{(3)}$};
+    \path [arrow] (input) -- (fc1) node[midway, above, label] {$\mathbb{R}^{256}$};
+    \path [arrow] (fc1) -- (fc2) node[midway, above, label] {$\mathbb{R}^{256}$};
+    \path [arrow] (fc2) -- (fc3) node[midway, above, label] {$\mathbb{R}^{M}$};
     \path [arrow] (fc3) -- (softmax);
     \path [arrow] (softmax) -- (output);
 \end{tikzpicture}
@@ -158,11 +158,11 @@ To mitigate orientation bias inherent in raw $\mathbf{M}_t$ vectors, we extract 
     
     % Encoder
     \node[conv, right=0.5cm of input] (conv1) {Conv1D(32)\\$k\!=\!7$, BN, ReLU};
-    \node[pool, right=0.25cm of conv1] (pool1) {MaxPool};
-    \node[conv, right=0.25cm of pool1] (conv2) {Conv1D(64)\\$k\!=\!5$, BN, ReLU};
-    \node[pool, right=0.25cm of conv2] (pool2) {MaxPool};
-    \node[conv, right=0.25cm of pool2] (conv3) {Conv1D(128)\\$k\!=\!3$, BN, ReLU};
-    \node[pool, right=0.25cm of conv3] (gap) {Adaptive\\AvgPool};
+    \node[pool, right=0.35cm of conv1] (pool1) {MaxPool};
+    \node[conv, right=0.35cm of pool1] (conv2) {Conv1D(64)\\$k\!=\!5$, BN, ReLU};
+    \node[pool, right=0.35cm of conv2] (pool2) {MaxPool};
+    \node[conv, right=0.35cm of pool2] (conv3) {Conv1D(128)\\$k\!=\!3$, BN, ReLU};
+    \node[pool, right=0.35cm of conv3] (gap) {Adaptive\\AvgPool};
     
     % Group Encoder
     \begin{scope}[on background layer]
@@ -282,14 +282,7 @@ Held-out device & Samsung S9+ & 2.02 m & 1.68 m & 3.74 m & 9.12 m \\ \bottomrule
 
 The MLP achieves a robust MAE of 1.43~m on standard splits. Crucially, it maintains a high degree of accuracy (2.02~m MAE) on entirely unseen smartphone hardware. 
 
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=\columnwidth]{stage2_mag_sequence_cdf.png}
-\caption{Cumulative Distribution Function (CDF) demonstrating the spatial error of the 1D-CNN magnetic sequence matcher.}
-\label{fig:mag_cdf}
-\end{figure}
-
-Figure~\ref{fig:mag_cdf} displays the continuous spatial matching error CDF for the 1D-CNN magnetic sequence model (MAE of 3.58~m), validating its capability as an effective high-rate structural anchor during periods of Wi-Fi attenuation.
+Figure~\ref{fig:merged_cdfs} (top) displays the continuous spatial matching error CDF for the 1D-CNN magnetic sequence model (MAE of 3.58~m), validating its capability as an effective high-rate structural anchor during periods of Wi-Fi attenuation.
 
 \subsection{Dual-Innovation KalmanNet Fusion Comparison}
 
@@ -311,12 +304,21 @@ Table \ref{tab:fusion_comparison} details the comparative performance of the tem
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=\columnwidth]{stage3_dual_kalmannet.png}
-\caption{Visual comparison of tracking performance during degraded Wi-Fi scenarios. The Dual-Innovation KalmanNet leverages magnetic matching to bridge long spatial gaps, significantly reducing tracking divergence.}
-\label{fig:dual_fusion}
+\includegraphics[width=0.85\columnwidth]{mag_cdf_cropped.png}\vspace{0.15cm}
+\includegraphics[width=0.85\columnwidth]{kalman_full_wifi.png}\vspace{0.15cm}
+\includegraphics[width=0.85\columnwidth]{kalman_degraded_wifi.png}
+\caption{Cumulative Distribution Functions (CDF) of the tracking models. Top: standalone 1D-CNN magnetic sequence matcher error. Middle: Temporal fusion performance under full Wi-Fi conditions (1 Hz). Bottom: Temporal fusion performance under degraded Wi-Fi scenarios (5s gap, 40\% AP dropout), highlighting the significant impact of the magnetic innovation.}
+\label{fig:merged_cdfs}
 \end{figure}
 
-In standard operating conditions featuring high-frequency 1~Hz Wi-Fi fixes, integrating the continuous magnetic sequence data provides a noticeable 13.4\% improvement in localization accuracy. However, the true strength of the architecture is definitively revealed in the degraded signal regime (Figure~\ref{fig:dual_fusion}). When Wi-Fi scans are artificially restricted to one reading every 5 seconds accompanied by a severe 40\% missing AP dropout rate, the classical single-innovation approach drifts significantly. In contrast, the continuous 16.7~Hz magnetic updates act as an effective, dense bridge, yielding a substantial 25.3\% reduction in Mean Absolute Error (improving from 1.44~m to 1.07~m).
+In standard operating conditions featuring high-frequency 1~Hz Wi-Fi fixes, integrating the continuous magnetic sequence data provides a noticeable 13.4\% improvement in localization accuracy. However, the true strength of the architecture is definitively revealed in the degraded signal regime (Figure~\ref{fig:merged_cdfs}, bottom). When Wi-Fi scans are artificially restricted to one reading every 5 seconds accompanied by a severe 40\% missing AP dropout rate, the classical single-innovation approach drifts significantly. In contrast, the continuous 16.7~Hz magnetic updates act as an effective, dense bridge, yielding a substantial 25.3\% reduction in Mean Absolute Error (improving from 1.44~m to 1.07~m).
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.9\columnwidth]{trajectory_example.png}
+\caption{Example trajectory visualization illustrating tracking divergence. Without frequent Wi-Fi spatial anchors, the standard PDR path (dashed red) drifts due to heading accumulation errors. The Dual-Innovation KalmanNet (solid green) tightly tracks the ground truth (solid blue) by integrating structural magnetic sequence measurements continuously.}
+\label{fig:trajectory}
+\end{figure}
 
 \subsection{Robustness and Postural Independence}
 

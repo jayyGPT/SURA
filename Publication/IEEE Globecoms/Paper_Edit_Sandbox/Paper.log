@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.2) (preloaded format=pdflatex 2026.6.7)  26 JUN 2026 17:22
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.2) (preloaded format=pdflatex 2026.6.7)  26 JUN 2026 19:42
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -897,38 +897,40 @@ enovo/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}
 
 
 ]
-Overfull \hbox (1.27469pt too wide) in paragraph at lines 123--123
- []\OT1/ptm/m/n/10 Dropout(0.3) 
- []
-
-
-Overfull \hbox (1.27469pt too wide) in paragraph at lines 123--123
- []\OT1/ptm/m/n/10 Dropout(0.3) 
- []
-
 LaTeX Font Info:    Trying to load font information for OT1+phv on input line 1
 23.
+
 (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ot1phv.fd
 File: ot1phv.fd 2020/03/25 scalable font definitions for OT1/phv.
 )
 [2]
-<stage2_mag_sequence_cdf.png, id=161, 578.16pt x 361.35pt>
-File: stage2_mag_sequence_cdf.png Graphic file (type png)
-<use stage2_mag_sequence_cdf.png>
-Package pdftex.def Info: stage2_mag_sequence_cdf.png  used on input line 287.
-(pdftex.def)             Requested size: 252.0pt x 157.50026pt.
-
-Overfull \hbox (7.8345pt too wide) in paragraph at lines 302--310
+Overfull \hbox (7.8345pt too wide) in paragraph at lines 295--303
  [][] 
  []
 
 [3]
-<stage3_dual_kalmannet.png, id=176, 1011.78pt x 361.35pt>
-File: stage3_dual_kalmannet.png Graphic file (type png)
-<use stage3_dual_kalmannet.png>
-Package pdftex.def Info: stage3_dual_kalmannet.png  used on input line 314.
-(pdftex.def)             Requested size: 252.0pt x 90.00093pt.
- (Paper.bbl [4 <./stage2_mag_sequence_cdf.png> <./stage3_dual_kalmannet.png>])
+<mag_cdf_cropped.png, id=174, 1365.1pt x 853.1875pt>
+File: mag_cdf_cropped.png Graphic file (type png)
+<use mag_cdf_cropped.png>
+Package pdftex.def Info: mag_cdf_cropped.png  used on input line 307.
+(pdftex.def)             Requested size: 214.20154pt x 133.87001pt.
+<kalman_full_wifi.png, id=176, 1194.4625pt x 853.1875pt>
+File: kalman_full_wifi.png Graphic file (type png)
+<use kalman_full_wifi.png>
+Package pdftex.def Info: kalman_full_wifi.png  used on input line 308.
+(pdftex.def)             Requested size: 214.20154pt x 152.99431pt.
+<kalman_degraded_wifi.png, id=177, 1194.4625pt x 853.1875pt>
+File: kalman_degraded_wifi.png Graphic file (type png)
+<use kalman_degraded_wifi.png>
+Package pdftex.def Info: kalman_degraded_wifi.png  used on input line 309.
+(pdftex.def)             Requested size: 214.20154pt x 152.99431pt.
+<trajectory_example.png, id=179, 433.62pt x 361.35pt>
+File: trajectory_example.png Graphic file (type png)
+<use trajectory_example.png>
+Package pdftex.def Info: trajectory_example.png  used on input line 318.
+(pdftex.def)             Requested size: 226.79846pt x 189.00032pt.
+ (Paper.bbl [4 <./mag_cdf_cropped.png> <./kalman_full_wifi.png> <./kalman_degra
+ded_wifi.png>])
 
 ** Conference Paper **
 Before submitting the final camera ready copy, remember to:
@@ -942,7 +944,7 @@ Before submitting the final camera ready copy, remember to:
 
 [5
 
-] (Paper.aux)
+ <./trajectory_example.png>] (Paper.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
@@ -951,10 +953,10 @@ Package rerunfilecheck Info: File `Paper.out' has not changed.
 (rerunfilecheck)             Checksum: 55D5E916313D882A1B0B2F89570BA6CA;2967.
  ) 
 Here is how much of TeX's memory you used:
- 24287 strings out of 467867
- 482057 string characters out of 5417851
- 937889 words of memory out of 5000000
- 52699 multiletter control sequences out of 15000+600000
+ 24303 strings out of 467867
+ 482591 string characters out of 5417851
+ 938260 words of memory out of 5000000
+ 52715 multiletter control sequences out of 15000+600000
  678051 words of font info for 143 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  84i,14n,94p,1589b,958s stack positions out of 10000i,1000n,20000p,200000b,200000s
@@ -982,9 +984,9 @@ pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmb8a
 8a.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utm
 r8a.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/ut
 mri8a.pfb>
-Output written on Paper.pdf (5 pages, 448775 bytes).
+Output written on Paper.pdf (5 pages, 609863 bytes).
 PDF statistics:
- 292 PDF objects out of 1000 (max. 8388607)
+ 296 PDF objects out of 1000 (max. 8388607)
  51 named destinations out of 1000 (max. 500000)
- 247 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 257 words of extra memory for PDF output out of 10000 (max. 10000000)
 
