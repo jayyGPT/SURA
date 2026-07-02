@@ -163,7 +163,7 @@ story.append(HR())
 
 # Main title
 story.append(Spacer(1, 0.4*cm))
-story.append(Paragraph("Hybrid Sensor Fused KalmanNet<br/>for Indoor Localisation", title_style))
+story.append(Paragraph("Machine Learning-Based User Localization Using Hybrid<br/>Magnetic Sensor and Wi-Fi Received Signal Strength (RSS)<br/>Data in GPS-Denied Scenarios", title_style))
 story.append(HR())
 story.append(Spacer(1, 0.5*cm))
 
@@ -471,7 +471,7 @@ t6_data = [
     row(["3", "Evaluate on held-out devices and unseen sessions", "Step 2"]),
     row(["4", "Deploy on-device and benchmark inference latency", "Step 3"]),
 ]
-t6 = Table(t6_data, colWidths=[1.0*cm, 9.0*cm, W - 10.0*cm])
+t6 = Table(t6_data, colWidths=[1.5*cm, 8.5*cm, W - 10.0*cm])
 t6.setStyle(table_style_base())
 story.append(t6)
 story.append(Paragraph("Table 6. Planned steps toward full system deployment.", caption))
