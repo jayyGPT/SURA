@@ -88,23 +88,26 @@ Our proposed architecture functions as a modular, learned Bayesian filter design
 \end{figure}
 
 \subsection{General Problem Formulation}
-Assume a targeted indoor environment characterized by $N$ uniquely identifiable Wi-Fi Access Points (APs) and a discrete reference grid containing $M$ surveyed spatial nodes (Reference Points). At any discrete time step $t$, the smartphone yields a subset of sensory data: an IMU vector sequence (acceleration and gyroscope), a 3D magnetic field vector $\mathbf{M}_t \in \mathbb{R}^3$, and a sparsely sampled Wi-Fi RSSI vector $\mathbf{s}_t \in \mathbb{R}^N$. Our objective is to continuously estimate the user's 2D Cartesian spatial state $\mathbf{x}_t = [x_t, y_t]^T \in \mathbb{R}^2$.
+Assume a targeted indoor environment characterized by $N$ uniquely identifiable Wi-Fi Access Points (APs) and a discrete reference grid containing $M$ surveyed spatial nodes (Reference Points). At any discrete time step $t$, the smartphone yields a subset of sensory data: an IMU vector sequence (acceleration and gyroscope), a 3D magnetic field vector $\mathbf{m}_t \in \mathbb{R}^3$, and a sparsely sampled Wi-Fi RSSI vector $\mathbf{s}_t \in \mathbb{R}^N$. Our objective is to continuously estimate the user's 2D Cartesian spatial state $\mathbf{x}_t = [x_t, y_t]^T \in \mathbb{R}^2$.
 
 \subsection{Wi-Fi Processing and Heatmap Model}
 
-The Wi-Fi scan $\mathbf{s}_t$ is normalized into $\mathbf{x}_{wifi} \in [0,1]^N$ by clipping to [-90, -30]~dBm and rescaling. Absent APs are assigned a constant floor value of $-100$~dBm. 
+The raw Wi-Fi scan $\mathbf{s}_t \in \mathbb{R}^N$ is preprocessed into a normalized input $\tilde{\mathbf{s}}_t \in [0,1]^N$. Absent APs (those not detected by the device) are assigned a constant floor value of $-100$~dBm. Each element is then clipped and linearly rescaled:
+\begin{equation}
+\tilde{s}_{t,i} = \begin{cases} 0 & \text{if } s_{t,i} \leq -100 \text{ (AP absent)} \\ \frac{\text{clip}(s_{t,i},\, -90,\, -30) + 90}{60} & \text{otherwise} \end{cases} \label{eq:wifi_norm}
+\end{equation}
 
-To map this highly non-linear signal to spatial coordinates, we employ a Multi-Layer Perceptron (MLP) with Dropout regularization ($p=0.3$). The MLP processes $\mathbf{x}_{wifi}$ and outputs a probability vector $\mathbf{p} \in \mathbb{R}^M$ over the discrete grid cells. 
-\begin{figure}[htbp]
+To map this highly non-linear signal to spatial coordinates, we employ a Multi-Layer Perceptron (MLP) with Dropout regularization. The MLP processes $\tilde{\mathbf{s}}_t$ and outputs a probability vector $\mathbf{p} \in \mathbb{R}^M$ over the discrete grid cells. 
+\begin{figure*}[htbp]
 \centering
-\resizebox{\columnwidth}{!}{
+\resizebox{\textwidth}{!}{
 \begin{tikzpicture}[
-    layer/.style={rectangle, draw=black!60, thick, fill=blue!10, text centered, rounded corners=2pt, minimum height=1.5cm, drop shadow, text width=2.2cm},
+    layer/.style={rectangle, draw=black!60, thick, fill=blue!10, text centered, rounded corners=2pt, minimum height=1.5cm, drop shadow, text width=1.8cm},
     arrow/.style={draw, thick, -latex, color=black!70},
     label/.style={font=\small\sffamily}
 ]
     % Nodes (Horizontal layout)
-    \node[layer, fill=gray!10] (input) {Input\\$\mathbf{x}_{wifi} \in \mathbb{R}^N$};
+    \node[layer, fill=gray!10] (input) {Input\\$\tilde{\mathbf{s}}_t \in \mathbb{R}^N$};
     
     \node[layer, right=1.2cm of input, fill=blue!15] (fc1) {FC(256), ReLU\\Dropout(0.3)};
     \node[layer, right=1.2cm of fc1, fill=blue!15] (fc2) {FC(256), ReLU\\Dropout(0.3)};
@@ -114,38 +117,43 @@ To map this highly non-linear signal to spatial coordinates, we employ a Multi-L
     \node[label, right=0.8cm of softmax] (output) {$\mathbf{p} \in \mathbb{R}^M$};
 
     % Arrows
-    \path [arrow] (input) -- (fc1) node[midway, above, label] {$\mathbb{R}^{256}$};
-    \path [arrow] (fc1) -- (fc2) node[midway, above, label] {$\mathbb{R}^{256}$};
-    \path [arrow] (fc2) -- (fc3) node[midway, above, label] {$\mathbb{R}^{M}$};
+    \path [arrow] (input) -- (fc1) node[midway, above, label] {$\mathbf{W}^{(1)}$};
+    \path [arrow] (fc1) -- (fc2) node[midway, above, label] {$\mathbf{W}^{(2)}$};
+    \path [arrow] (fc2) -- (fc3) node[midway, above, label] {$\mathbf{W}^{(3)}$};
     \path [arrow] (fc3) -- (softmax);
     \path [arrow] (softmax) -- (output);
 \end{tikzpicture}
 }
 \caption{Architecture of the Wi-Fi Multi-Layer Perceptron (MLP) environment model. Dense layers sequentially extract features from the RSSI vector to compute an $M$-dimensional probability heatmap.}
 \label{fig:mlp_arch}
-\end{figure}
+\end{figure*}
 
-The training target is defined as a two-dimensional Gaussian probability distribution $\mathbf{q} \in \mathbb{R}^M$ centered precisely on the true coordinate of the surveyed node (with spatial standard deviation $\sigma = 2.0$~m). The network is optimized using the Kullback-Leibler (KL) divergence loss:
+The training target is defined as a two-dimensional Gaussian probability distribution $\mathbf{q} \in \mathbb{R}^M$ centered precisely on the true coordinate of the surveyed node. The network is optimized using the Kullback-Leibler (KL) divergence loss:
 \begin{equation}
 \mathcal{L}_{MLP} = D_{KL}(\mathbf{q} \parallel \mathbf{p}) = \sum_{c=1}^{M} q_c \log \left( \frac{q_c}{p_c} \right) \label{eq:kl_loss}
 \end{equation}
 
 During real-time inference, the continuous coordinate estimate $\mathbf{z}_{wifi}$ and the associated measurement covariance matrix $\mathbf{R}_{hm}$ are computed as the probability-weighted expectation (soft-argmax):
 \begin{equation}
-\mathbf{z}_{wifi} = \sum_{c=1}^{M} p_c \cdot \mathbf{C}_c \label{eq:heatmap_centroid}
+\mathbf{z}_{wifi} = \sum_{c=1}^{M} p_c \cdot \mathbf{c}_c \label{eq:heatmap_centroid}
 \end{equation}
 \begin{equation}
-\mathbf{R}_{hm} = \sum_{c=1}^{M} p_c\,(\mathbf{C}_c - \mathbf{z}_{wifi})(\mathbf{C}_c - \mathbf{z}_{wifi})^T \label{eq:heatmap_cov}
+\mathbf{R}_{hm} = \sum_{c=1}^{M} p_c\,(\mathbf{c}_c - \mathbf{z}_{wifi})(\mathbf{c}_c - \mathbf{z}_{wifi})^T \label{eq:heatmap_cov}
 \end{equation}
-where $\mathbf{C}_c \in \mathbb{R}^2$ denotes the physical coordinates of grid cell $c$. A concentrated heatmap yields a tightly bounded covariance, providing an honest, per-scan confidence estimate to the downstream filter.
+where $\mathbf{c}_c \in \mathbb{R}^2$ denotes the physical coordinates of grid cell $c$. A concentrated heatmap yields a tightly bounded covariance, providing an honest, per-scan confidence estimate to the downstream filter.
 
 \subsection{Magnetic Sequence Matcher}
 
-To mitigate orientation bias inherent in raw $\mathbf{M}_t$ vectors, we extract 4 rotation-invariant features per frame: the field magnitude $||\mathbf{M}_t||$, the vertical projection against estimated gravity, the horizontal component magnitude, and the magnetic dip angle. Because single-point magnetic matching is highly ambiguous, we utilize a 1D Convolutional Neural Network (CNN) to map a temporal sliding window (length $T$) of these 4-channel features to a spatial coordinate.
+To mitigate orientation bias inherent in raw $\mathbf{m}_t$ vectors, we extract 4 rotation-invariant scalar features per frame from the magnetic field vector and the estimated gravity direction $\hat{\mathbf{g}}_t$ (obtained from the low-pass filtered accelerometer):
+\begin{align}
+m_N &= \|\mathbf{m}_t\|, \quad m_V = \frac{\mathbf{m}_t \cdot \hat{\mathbf{g}}_t}{\|\hat{\mathbf{g}}_t\|} \nonumber \\
+m_H &= \|\mathbf{m}_t - m_V \hat{\mathbf{g}}_t\|, \quad \delta = \arctan\!\left(\frac{m_V}{m_H}\right) \label{eq:mag_features}
+\end{align}
+where $m_N$ is the field magnitude, $m_V$ the vertical projection, $m_H$ the horizontal component, and $\delta$ the magnetic dip angle. All four are scalar and invariant to device orientation. Because single-point magnetic matching is highly ambiguous, we utilize a 1D Convolutional Neural Network (CNN) to map a temporal sliding window (length $T$) of these 4-channel features to a spatial coordinate.
 
-\begin{figure}[htbp]
+\begin{figure*}[htbp]
 \centering
-\resizebox{\columnwidth}{!}{
+\resizebox{\textwidth}{!}{
 \begin{tikzpicture}[
     conv/.style={rectangle, draw=black!60, thick, fill=orange!15, text centered, rounded corners=2pt, minimum height=1cm, drop shadow, text width=2cm},
     pool/.style={rectangle, draw=black!60, thick, fill=yellow!15, text centered, rounded corners=2pt, minimum height=1cm, drop shadow, text width=1.6cm},
@@ -158,11 +166,11 @@ To mitigate orientation bias inherent in raw $\mathbf{M}_t$ vectors, we extract 
     
     % Encoder
     \node[conv, right=0.5cm of input] (conv1) {Conv1D(32)\\$k\!=\!7$, BN, ReLU};
-    \node[pool, right=0.35cm of conv1] (pool1) {MaxPool};
-    \node[conv, right=0.35cm of pool1] (conv2) {Conv1D(64)\\$k\!=\!5$, BN, ReLU};
-    \node[pool, right=0.35cm of conv2] (pool2) {MaxPool};
-    \node[conv, right=0.35cm of pool2] (conv3) {Conv1D(128)\\$k\!=\!3$, BN, ReLU};
-    \node[pool, right=0.35cm of conv3] (gap) {Adaptive\\AvgPool};
+    \node[pool, right=0.25cm of conv1] (pool1) {MaxPool};
+    \node[conv, right=0.25cm of pool1] (conv2) {Conv1D(64)\\$k\!=\!5$, BN, ReLU};
+    \node[pool, right=0.25cm of conv2] (pool2) {MaxPool};
+    \node[conv, right=0.25cm of pool2] (conv3) {Conv1D(128)\\$k\!=\!3$, BN, ReLU};
+    \node[pool, right=0.25cm of conv3] (gap) {Adaptive\\AvgPool};
     
     % Group Encoder
     \begin{scope}[on background layer]
@@ -195,7 +203,7 @@ To mitigate orientation bias inherent in raw $\mathbf{M}_t$ vectors, we extract 
 }
 \caption{Architecture of the 1D-CNN Magnetic Sequence Matcher. A shared convolutional encoder with BatchNorm extracts temporal features, which are processed by two independent heads: a position head (with Dropout) predicting a 2D coordinate, and a variance head estimating heteroscedastic uncertainty.}
 \label{fig:cnn_arch}
-\end{figure}
+\end{figure*}
 
 The CNN processes the input to yield both a continuous position fix $\mathbf{z}_{mag} \in \mathbb{R}^2$ and a calibrated scalar log-variance $\log(\sigma^2_{mag})$. It is optimized using a heteroscedastic Negative Log-Likelihood (NLL) loss, which balances coordinate accuracy against self-reported confidence:
 \begin{equation}
@@ -225,7 +233,7 @@ The Wi-Fi innovation is a standard spatial residual:
 \mathbf{y}_{wifi} = \mathbf{z}_{wifi} - \mathbf{x}_{\text{pred}} \in \mathbb{R}^2 \label{eq:kn_innovate_w}
 \end{equation}
 
-The magnetic innovation, however, operates in the scalar anomaly domain rather than Cartesian space. The observed magnetic anomaly value at the current position is compared to the pre-surveyed map value $A(\mathbf{x}_{\text{pred}})$:
+The magnetic innovation, however, operates in the scalar anomaly domain rather than Cartesian space. The observed magnetic anomaly value at the current position, mathematically defined as the field magnitude $A_{\text{obs}} = \|\mathbf{m}_t\|$, is compared to the pre-surveyed map value $A(\mathbf{x}_{\text{pred}})$:
 \begin{equation}
 y_{mag} = A_{\text{obs}} - A(\mathbf{x}_{\text{pred}}) \in \mathbb{R} \label{eq:kn_innovate_m}
 \end{equation}
@@ -258,7 +266,7 @@ Using this robust pipeline, we generated 250 trajectories for training and 60 in
 
 \subsection{Training Details}
 
-All neural components were developed using the PyTorch framework. The MLP and CNN were optimized via Adam ($\beta_1 = 0.9, \beta_2 = 0.999$, weight decay $10^{-4}$) with an initial learning rate of $10^{-3}$, dynamically decayed via a ReduceLROnPlateau scheduler (patience 8, factor 0.5). The MLP was trained for 80 epochs; the CNN for 60 epochs. The 1D-CNN magnetic sequence matcher utilized an empirically optimal temporal window of $T = 84$ frames (5.0~s at 16.7~Hz), selected via a sweep over candidates $\{50, 84, 134, 167\}$ frames, providing sufficient spatial variation for unambiguous matching without overfitting long topological routes. The KalmanNet GRU was trained for 150 epochs via Adam (lr $2 \times 10^{-3}$, weight decay $10^{-5}$) with MSE loss against ground-truth trajectories.
+All neural components were developed using the PyTorch framework. The MLP and CNN were optimized via Adam ($\beta_1 = 0.9, \beta_2 = 0.999$, weight decay $10^{-4}$) with an initial learning rate of $10^{-3}$, dynamically decayed via a ReduceLROnPlateau scheduler (patience 8, factor 0.5). The MLP uses a Dropout rate of $p = 0.3$ and a Gaussian target with spatial standard deviation $\sigma = 2.0$~m. The MLP was trained for 80 epochs; the CNN for 60 epochs. The 1D-CNN magnetic sequence matcher utilized an empirically optimal temporal window of $T = 84$ frames (5.0~s at 16.7~Hz), selected via a sweep over candidates $\{50, 84, 134, 167\}$ frames, providing sufficient spatial variation for unambiguous matching without overfitting long topological routes. The KalmanNet GRU was trained for 150 epochs via Adam (lr $2 \times 10^{-3}$, weight decay $10^{-5}$) with MSE loss against ground-truth trajectories.
 
 To stringently evaluate device generalization, data originating from the Samsung Galaxy S9+ was explicitly held out during the training phase and reserved solely for evaluation.
 
