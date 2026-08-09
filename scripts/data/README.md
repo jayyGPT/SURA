@@ -1,5 +1,13 @@
 # Data workflows
 
-Canonical data scripts will read raw material from `data/raw/`, write intermediate conversions to `data/interim/`, and write model-ready fingerprint databases to `data/processed/`.
+Use the package commands rather than archived one-off scripts:
 
-The original dataset scanner and fingerprint builders are preserved under `archive/legacy_experiments/` until their hard-coded paths are migrated and verified against a local dataset checkout.
+```bash
+python -m sura data init
+python -m sura data migrate-legacy
+python -m sura data build-fingerprint
+python -m sura data check
+python -m sura data analyze
+```
+
+The complete placement and output structure is documented in [`../../data/README.md`](../../data/README.md).

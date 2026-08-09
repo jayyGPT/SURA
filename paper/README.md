@@ -4,14 +4,18 @@
 
 ## Build
 
+From the repository root:
+
 ```bash
-latexmk -pdf -outdir=build main.tex
+python -m sura paper build
+# or
+make paper
 ```
 
-or:
+From this directory:
 
 ```bash
-make
+latexmk -pdf -outdir=build main.tex
 ```
 
 The generated PDF and auxiliary files remain under ignored `paper/build/`.
