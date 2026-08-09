@@ -1,0 +1,13 @@
+dataset: magwi
+building: it_engineering
+fingerprint_db: processed/fingerprint_db/it_engineering
+sampling_hz: 16.7
+single_floor: true
+included_modes:
+  - Navigation
+  - Call listening
+  - Swinging
+excluded_modes:
+  - Room
+  - Stairs
+held_out_device: S9+

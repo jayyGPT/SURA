@@ -1,0 +1,15 @@
+model: wifi_heatmap
+seed: 0
+grid_cell_m: 1.0
+gaussian_sigma_m: 2.0
+rss_absent_dbm: -100.0
+rss_clip_min_dbm: -90.0
+rss_clip_max_dbm: -30.0
+hidden_size: 256
+dropout: 0.3
+batch_size: 64
+epochs: 80
+optimizer:
+  name: adam
+  learning_rate: 0.001
+  weight_decay: 0.0001

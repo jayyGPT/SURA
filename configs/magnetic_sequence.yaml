@@ -1,0 +1,18 @@
+model: magnetic_sequence_cnn
+seed: 42
+features: [magN, magV, magH, dip]
+window_frames: 84
+window_sweep_frames: [50, 84, 134, 167]
+hidden_size: 128
+position_dropout: 0.2
+minimum_variance: 0.01
+batch_size: 128
+epochs: 60
+optimizer:
+  name: adam
+  learning_rate: 0.001
+  weight_decay: 0.0001
+scheduler:
+  name: reduce_on_plateau
+  patience: 8
+  factor: 0.5
