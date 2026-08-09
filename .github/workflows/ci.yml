@@ -1,0 +1,71 @@
+name: Repository checks
+
+on:
+  push:
+    branches:
+      - main
+      - agent/repository-renovation
+  pull_request:
+
+jobs:
+  quality:
+    name: Python quality and CLI preflight
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+      - name: Compile Python sources
+        run: python -m compileall -q src tests
+      - name: Run Ruff
+        run: python -m ruff check src tests
+      - name: Validate command wiring on tracked sample data
+        run: |
+          python -m sura commands
+          python -m sura doctor --data-root data/sample --strict
+          python -m sura data check --data-root data/sample
+          python -m sura data analyze --data-root data/sample --no-write
+          python -m sura train wifi \
+            --data-root data/sample \
+            --config configs/testing/wifi_heatmap_smoke.yaml \
+            --split random \
+            --dry-run
+          python -m sura train magnetic \
+            --data-root data/sample \
+            --config configs/testing/magnetic_sequence_smoke.yaml \
+            --dry-run
+
+  unit-tests:
+    name: Unit and training smoke tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+      - name: Run tests
+        run: pytest
+
+  paper:
+    name: Compile paper
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install LaTeX
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y latexmk texlive-latex-base texlive-latex-extra texlive-pictures texlive-fonts-recommended
+      - name: Compile manuscript
+        working-directory: paper
+        run: latexmk -pdf -interaction=nonstopmode -halt-on-error -outdir=build main.tex

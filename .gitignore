@@ -1,1 +1,53 @@
+# Original local dataset directory
 Datasets/
+
+# Canonical data layout: keep directory markers, ignore all local contents
+data/raw/*
+!data/raw/.gitkeep
+data/interim/*
+!data/interim/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+data/local/*
+!data/local/.gitkeep
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+
+# Training and experiment outputs
+experiments/runs/
+*.pth
+*.pt
+*.ckpt
+wandb/
+mlruns/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# LaTeX build products
+paper/build/
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.toc
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
