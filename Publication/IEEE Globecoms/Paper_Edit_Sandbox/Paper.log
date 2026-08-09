@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.2) (preloaded format=pdflatex 2026.6.7)  15 JUL 2026 15:57
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.2) (preloaded format=pdflatex 2026.6.7)  8 AUG 2026 00:16
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -897,47 +897,58 @@ enovo/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}
 
 
 ]
-Overfull \hbox (1.27469pt too wide) in paragraph at lines 126--126
+Overfull \hbox (1.27469pt too wide) in paragraph at lines 128--128
  []\OT1/ptm/m/n/10 Dropout(0.3) 
  []
 
 
-Overfull \hbox (1.27469pt too wide) in paragraph at lines 126--126
+Overfull \hbox (1.27469pt too wide) in paragraph at lines 128--128
  []\OT1/ptm/m/n/10 Dropout(0.3) 
  []
 
 LaTeX Font Info:    Trying to load font information for OT1+phv on input line 1
-26.
+28.
 (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ot1phv.fd
 File: ot1phv.fd 2020/03/25 scalable font definitions for OT1/phv.
 )
-[2] [3]
-Overfull \hbox (7.8345pt too wide) in paragraph at lines 303--311
+[2]
+LaTeX Font Info:    Trying to load font information for OT1+pcr on input line 2
+40.
+ (C:\Users\lenovo\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ot1pcr.fd
+File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
+)
+
+LaTeX Warning: Reference `fig:pdr_geometry' on page 3 undefined on input line 2
+48.
+
+[3]
+Overfull \hbox (7.8345pt too wide) in paragraph at lines 385--393
  [][] 
  []
 
-<mag_cdf_cropped.png, id=175, 1365.1pt x 853.1875pt>
+<mag_cdf_cropped.png, id=184, 1365.1pt x 853.1875pt>
 File: mag_cdf_cropped.png Graphic file (type png)
 <use mag_cdf_cropped.png>
-Package pdftex.def Info: mag_cdf_cropped.png  used on input line 315.
+Package pdftex.def Info: mag_cdf_cropped.png  used on input line 397.
 (pdftex.def)             Requested size: 214.20154pt x 133.87001pt.
-<kalman_full_wifi.png, id=177, 1194.4625pt x 853.1875pt>
+<kalman_full_wifi.png, id=186, 1194.4625pt x 853.1875pt>
 File: kalman_full_wifi.png Graphic file (type png)
 <use kalman_full_wifi.png>
-Package pdftex.def Info: kalman_full_wifi.png  used on input line 316.
+Package pdftex.def Info: kalman_full_wifi.png  used on input line 398.
 (pdftex.def)             Requested size: 214.20154pt x 152.99431pt.
-<kalman_degraded_wifi.png, id=178, 1194.4625pt x 853.1875pt>
+<kalman_degraded_wifi.png, id=187, 1194.4625pt x 853.1875pt>
 File: kalman_degraded_wifi.png Graphic file (type png)
 <use kalman_degraded_wifi.png>
-Package pdftex.def Info: kalman_degraded_wifi.png  used on input line 317.
+Package pdftex.def Info: kalman_degraded_wifi.png  used on input line 399.
 (pdftex.def)             Requested size: 214.20154pt x 152.99431pt.
-<trajectory_example.png, id=180, 433.62pt x 361.35pt>
+[4]
+<trajectory_example.png, id=197, 433.62pt x 361.35pt>
 File: trajectory_example.png Graphic file (type png)
 <use trajectory_example.png>
-Package pdftex.def Info: trajectory_example.png  used on input line 326.
+Package pdftex.def Info: trajectory_example.png  used on input line 408.
 (pdftex.def)             Requested size: 226.79846pt x 189.00032pt.
-[4 <./mag_cdf_cropped.png> <./kalman_full_wifi.png> <./kalman_degraded_wifi.png
->] (Paper.bbl)
+ [5 <./mag_cdf_cropped.png> <./kalman_full_wifi.png> <./kalman_degraded_wifi.pn
+g> <./trajectory_example.png>] (Paper.bbl)
 
 ** Conference Paper **
 Before submitting the final camera ready copy, remember to:
@@ -949,50 +960,62 @@ Before submitting the final camera ready copy, remember to:
  uses only Type 1 fonts and that every step in the generation
  process uses the appropriate paper size.
 
-[5 <./trajectory_example.png>] (Paper.aux)
+[6
+
+] (Paper.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
  ***********
+
+
+LaTeX Warning: There were undefined references.
+
+
+LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
+
 Package rerunfilecheck Info: File `Paper.out' has not changed.
 (rerunfilecheck)             Checksum: 55D5E916313D882A1B0B2F89570BA6CA;2967.
  ) 
 Here is how much of TeX's memory you used:
- 24311 strings out of 467867
- 482758 string characters out of 5417851
- 934588 words of memory out of 5000000
- 52721 multiletter control sequences out of 15000+600000
- 678051 words of font info for 143 fonts, out of 8000000 for 9000
+ 24491 strings out of 467867
+ 486215 string characters out of 5417851
+ 937547 words of memory out of 5000000
+ 52886 multiletter control sequences out of 15000+600000
+ 679644 words of font info for 146 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  84i,14n,94p,1589b,962s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm
 /cmbx10.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type1/public/a
-msfonts/cm/cmbx9.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type1
-/public/amsfonts/cm/cmex10.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/f
-onts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/lenovo/AppData/Local/Program
-s/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi5.pfb><C:/Users/lenovo/AppData/Loca
-l/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi6.pfb><C:/Users/lenovo/App
-Data/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi7.pfb><C:/Users/l
-enovo/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi8.pfb><C
+msfonts/cm/cmbx8.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type1
+/public/amsfonts/cm/cmbx9.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fo
+nts/type1/public/amsfonts/cm/cmex10.pfb><C:/Users/lenovo/AppData/Local/Programs
+/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/lenovo/AppData/Loca
+l/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi5.pfb><C:/Users/lenovo/App
+Data/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi6.pfb><C:/Users/l
+enovo/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi7.pfb><C
 :/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmm
-i9.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfon
-ts/cm/cmr10.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type1/publ
-ic/amsfonts/cm/cmr6.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/ty
-pe1/public/amsfonts/cm/cmr7.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/
-fonts/type1/public/amsfonts/cm/cmr9.pfb><C:/Users/lenovo/AppData/Local/Programs
-/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/lenovo/AppData/Loca
-l/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Users/lenovo/App
-Data/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy8.pfb><C:/Users/l
-enovo/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy9.pfb><C
-:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symbol
-s/msbm10.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type1/urw/tim
-es/utmb8a.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type1/urw/ti
-mes/utmbi8a.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type1/urw/
-times/utmr8a.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type1/urw
-/times/utmri8a.pfb>
-Output written on Paper.pdf (5 pages, 624534 bytes).
+i8.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfon
+ts/cm/cmmi9.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type1/publ
+ic/amsfonts/cm/cmr10.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/t
+ype1/public/amsfonts/cm/cmr6.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX
+/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/lenovo/AppData/Local/Program
+s/MiKTeX/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/lenovo/AppData/Local
+/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr9.pfb><C:/Users/lenovo/AppDa
+ta/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/le
+novo/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:
+/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy
+8.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfont
+s/cm/cmsy9.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fonts/type1/publi
+c/amsfonts/symbols/msbm10.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX/fo
+nts/type1/urw/courier/ucrr8a.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTeX
+/fonts/type1/urw/times/utmb8a.pfb><C:/Users/lenovo/AppData/Local/Programs/MiKTe
+X/fonts/type1/urw/times/utmbi8a.pfb><C:/Users/lenovo/AppData/Local/Programs/MiK
+TeX/fonts/type1/urw/times/utmr8a.pfb><C:/Users/lenovo/AppData/Local/Programs/Mi
+KTeX/fonts/type1/urw/times/utmri8a.pfb>
+Output written on Paper.pdf (6 pages, 666416 bytes).
 PDF statistics:
- 303 PDF objects out of 1000 (max. 8388607)
- 53 named destinations out of 1000 (max. 500000)
+ 332 PDF objects out of 1000 (max. 8388607)
+ 62 named destinations out of 1000 (max. 500000)
  257 words of extra memory for PDF output out of 10000 (max. 10000000)
 

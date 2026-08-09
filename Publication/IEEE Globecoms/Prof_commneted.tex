@@ -96,10 +96,7 @@ The raw Wi-Fi scan $\mathbf{s}_t \in \mathbb{R}^N$ is preprocessed into a normal
 \begin{equation}
 \tilde{s}_{t,i} = \begin{cases} 0 & \text{if } s_{t,i} \leq -100 \text{ (AP absent)} \\ \frac{\text{clip}(s_{t,i},\, -90,\, -30) + 90}{60} & \text{otherwise} \end{cases} \label{eq:wifi_norm}
 \end{equation}
-To map this highly non-linear signal to spatial coordinates, we employ a Multi-Layer Perceptron (MLP) with Dropout regularization. The MLP processes $\tilde{\mathbf{s}}_t$ and outputs a probability vector $\mathbf{p} \in \mathbb{R}^M$ via a Softmax layer. Each element $p_c$ represents the posterior probability that the device occupies grid cell $c$ given the observed RSSI vector:
-\begin{equation}
-p_c = P(\mathbf{x}_t \in \text{cell } c \mid \tilde{\mathbf{s}}_t), \quad \sum_{c=1}^{M} p_c = 1 \label{eq:softmax_def}
-\end{equation}
+To map this highly non-linear signal to spatial coordinates, we employ a Multi-Layer Perceptron (MLP) with Dropout regularization. The MLP processes $\tilde{\mathbf{s}}_t$ and outputs a probability vector $\mathbf{p} \in \mathbb{R}^M$ over the discrete grid cells \textbf{\color{red}[It appears that $\mathbf{p}$ is the discrete probability distribution over the grid cells. How is it related to Gaussian distribution?]}. 
 \begin{figure*}[htbp]
 \centering
 \resizebox{\textwidth}{!}{
@@ -129,12 +126,7 @@ p_c = P(\mathbf{x}_t \in \text{cell } c \mid \tilde{\mathbf{s}}_t), \quad \sum_{
 \caption{Architecture of the Wi-Fi Multi-Layer Perceptron (MLP) environment model. Dense layers sequentially extract features from the RSSI vector to compute an $M$-dimensional probability heatmap.}
 \label{fig:mlp_arch}
 \end{figure*}
-
-The training target $\mathbf{q} \in \mathbb{R}^M$ is a discrete probability distribution constructed by evaluating a 2D isotropic Gaussian, centered at the true position $\mathbf{x}_{true}$, at each of the $M$ grid cell coordinates $\mathbf{c}_c$, and normalizing the result to sum to unity:
-\begin{equation}
-q_c = \frac{\exp\!\left(-\dfrac{\|\mathbf{c}_c - \mathbf{x}_{true}\|^2}{2\sigma^2}\right)}{\displaystyle\sum_{j=1}^{M} \exp\!\left(-\dfrac{\|\mathbf{c}_j - \mathbf{x}_{true}\|^2}{2\sigma^2}\right)}, \quad \sum_{c=1}^{M} q_c = 1 \label{eq:target_q}
-\end{equation}
-where $\sigma$ is the spatial spread parameter. A Gaussian target is preferable to a one-hot label because it assigns partial probability mass to cells in the vicinity of the true location, providing the network with a smooth, spatially-graded gradient signal rather than a binary right-or-wrong penalty. This significantly stabilizes training in regions of sparse survey coverage. The network is then optimized by minimizing the KL divergence between $\mathbf{q}$ and the network output $\mathbf{p}$:
+The training target is defined as a \textbf{\color{red}two}-dimensional Gaussian probability distribution $\mathbf{q} \in \mathbb{R}^M$ centered precisely on the true coordinate of the surveyed node. The network is optimized using the Kullback-Leibler (KL) divergence loss:
 \begin{equation}
 \mathcal{L}_{MLP} = D_{KL}(\mathbf{q} \parallel \mathbf{p}) = \sum_{c=1}^{M} q_c \log \left( \frac{q_c}{p_c} \right) \label{eq:kl_loss}
 \end{equation}
@@ -219,97 +211,15 @@ where $B$ is the batch size, $\mathbf{z}_{true}$ is the ground-truth coordinate,
 
 \subsection{Causal Pedestrian Dead Reckoning (PDR)}
 
-The Pedestrian Dead Reckoning (PDR) system computes relative displacement at the full IMU rate ($f_s = 16.7$~Hz). Let $a_t = \|\mathbf{a}_t\| = \sqrt{a_x^2 + a_y^2 + a_z^2}$ denote the scalar acceleration magnitude. Step detection is performed by a first-order exponential moving average (EMA) low-pass filter that tracks the quasi-static gravitational baseline. The filter is initialized to $\bar{a}_0 = 9.81$~m/s$^2$ and updated each frame as:
-\begin{equation}
-\bar{a}_t = \alpha\, \bar{a}_{t-1} + (1-\alpha)\, a_t, \quad \alpha = 0.98 \label{eq:lpf}
-\end{equation}
-The high-pass residual $\tilde{a}_t$, which isolates dynamic foot-impact transients by removing the gravitational component, is then:
-\begin{equation}
-\tilde{a}_t = a_t - \bar{a}_t \label{eq:hpf}
-\end{equation}
-A step is declared at frame $t$ if and only if two conditions are simultaneously satisfied:
-\begin{equation}
-\tilde{a}_t > \tau \;\;\text{and}\;\; (t - t_{\text{last}}) > \Delta_r \label{eq:step_trigger}
-\end{equation}
-where $\tau = 0.6$~m/s$^2$ is the impact threshold and $\Delta_r = \lfloor 0.3 \cdot f_s \rfloor = 5$ frames is the refractory guard that suppresses double-counting within a single footfall.
+The Pedestrian Dead Reckoning (PDR) system computes relative displacement at the full IMU rate. A step event is detected by applying a first-order exponential high-pass filter to the acceleration magnitude $\|\mathbf{a}_t\|$ (with smoothing factor $\alpha = 0.98$) and triggering when the residual exceeds an empirical threshold $\tau = 0.6$~m/s$^2$ \textbf{\color{red}[You can give more mathematical details of the exponential high-pass filter]}, subject to a refractory period of 0.3~s. The high-pass filter removes the static gravitational component ($\approx 9.81$~m/s$^2$), isolating the dynamic transients caused by foot impacts.
 
 Upon detection, the discrete control displacement vector $\mathbf{u}_t$ is computed as:
 \begin{equation}
 \mathbf{u}_t = \begin{bmatrix} L_s \cos(\theta_t + \phi_h) \\ L_s \sin(\theta_t + \phi_h) \end{bmatrix} \label{eq:pdr}
 \end{equation}
-where $\theta_t$ is the device yaw from the orientation sensor (column \texttt{Orn\_z}) at time $t$. The two scalar calibration parameters are computed once from the training walks and then frozen for the test device. The step length $L_s$ is obtained by dividing the true path length by the number of detected steps and averaging across training walks:
-\begin{equation}
-L_s = \frac{1}{|\mathcal{W}_{train}|}\sum_{w \in \mathcal{W}_{train}} \frac{\ell_w}{n_w^{steps}} \label{eq:step_len}
-\end{equation}
-The heading offset $\phi_h$ is the circular mean of the per-frame angular difference between the true trajectory direction and the device heading, computed via the four-quadrant inverse tangent:
-\begin{equation}
-\phi_h = \arctan2\!\left(\,\overline{\sin(\theta_{true} - \theta_t)},\; \overline{\cos(\theta_{true} - \theta_t)}\right) \label{eq:phi_h}
-\end{equation}
-where $\theta_{true,t} = \arctan2(\Delta y_t, \Delta x_t)$ is the instantaneous ground-truth heading and the overline denotes the mean over all training frames. The complete geometry of a single PDR step is illustrated in Fig.~\ref{fig:pdr_geometry}.
-
-\begin{figure}[htbp]
-\centering
-\resizebox{0.9\columnwidth}{!}{
-\begin{tikzpicture}[>=latex, thick, font=\small]
-
-  % --- Map frame axes ---
-  \draw[->, gray!60, thin] (-0.3,0) -- (4.2,0) node[right, black] {$x$ (map East)};
-  \draw[->, gray!60, thin] (0,-0.3) -- (0,4.0) node[above, black] {$y$ (map North)};
-
-  % --- Origin: foot at t-1 ---
-  \filldraw[black] (0,0) circle (2.2pt);
-  \node[below left, yshift=-2pt] at (0,0) {foot at $t\!-\!1$};
-
-  % --- Step vector u_t (bearing = theta_t + phi_h = 30 deg from x-axis) ---
-  % 30 deg: cos=0.866, sin=0.5, L_s scaled to 3.2
-  \draw[->, very thick, blue!70!black] (0,0) -- ({3.2*0.866},{3.2*0.5})
-        node[pos=0.55, above left=2pt, blue!70!black] {$\mathbf{u}_t$, $\|\mathbf{u}_t\|=L_s$};
-
-  % foot at t
-  \filldraw[blue!70!black] ({3.2*0.866},{3.2*0.5}) circle (2.2pt);
-  \node[right=4pt, blue!70!black] at ({3.2*0.866},{3.2*0.5}) {foot at $t$};
-
-  % --- Dashed reference line along x for angle arcs ---
-  \draw[gray!50, dashed, thin] (0,0) -- (3.8,0);
-
-  % --- Device heading direction: theta_t = 50 deg from x-axis ---
-  % cos50=0.643, sin50=0.766
-  \draw[->, red!65!black, dashed, semithick] (0,0) -- ({2.7*0.643},{2.7*0.766})
-        node[right=3pt, red!65!black] {device $\hat{\mathbf{h}}_t$};
-
-  % --- Arc: theta_t (0 -> 50 deg) ---
-  \draw[->, red!65!black, thin] (1.05,0) arc[start angle=0, end angle=50, radius=1.05];
-  \node[red!65!black] at (1.1, 0.42) {$\theta_t$};
-
-  % --- Arc: phi_h (50 -> 30 deg, i.e. offset back) ---
-  % Note: phi_h shown as gap between device heading and actual step direction
-  % device heading at 50 deg, step direction at 30 deg => phi_h = -20 deg (shown as sweep from 30 to 50)
-  \draw[->, orange!80!black, thin] ({1.7*0.866},{1.7*0.5})
-        arc[start angle=30, end angle=50, radius=1.7];
-  \node[orange!85!black] at (1.55, 1.12) {$\phi_h$};
-
-  % --- Arc: total angle theta_t + phi_h (0 -> 30 deg) ---
-  \draw[->, gray!70!black, thin] (1.55,0) arc[start angle=0, end angle=30, radius=1.55];
-  \node[gray!60!black, yshift=-2pt] at (1.9, 0.27) {\footnotesize$\theta_t{+}\phi_h$};
-
-  % --- x-projection dashed line ---
-  \draw[gray!55, dashed, thin] ({3.2*0.866},{3.2*0.5}) -- ({3.2*0.866}, 0);
-  \draw[<->, gray!70, thin] (0, -0.55) -- ({3.2*0.866}, -0.55)
-        node[midway, below, black, font=\footnotesize] {$L_s\cos(\theta_t{+}\phi_h)$};
-
-  % --- y-projection dashed line ---
-  \draw[gray!55, dashed, thin] ({3.2*0.866},{3.2*0.5}) -- (0, {3.2*0.5});
-  \draw[<->, gray!70, thin] (-0.55, 0) -- (-0.55, {3.2*0.5})
-        node[midway, left, black, font=\footnotesize] {$L_s\sin(\theta_t{+}\phi_h)$};
-
-\end{tikzpicture}
-}
-\caption{Geometry of a single PDR step in the 2D map frame. The device orientation sensor reports heading $\theta_t$; a calibrated offset $\phi_h$ corrects the alignment between the device frame and the map frame. The resulting step displacement $\mathbf{u}_t$ has magnitude $L_s$ and direction $\theta_t + \phi_h$, with Cartesian components as labeled.}
-\label{fig:pdr_geometry}
-\end{figure}
+where $L_s$ is the calibrated step length, which is determined by matching the integrated step count to the ground-truth path length. Furthermore, $\theta_t$ is the real-time yaw heading angle from the device's orientation sensor at time $t$, and $\phi_h$ is the constant angular offset between the device's local orientation frame and the map's coordinate frame, calibrated as the mean angular difference between the device heading and the true trajectory direction over the training walks \textbf{\color{red}[It would be better to give a schematic diagram showing the PDR system with all the angles, $L_s$ mentioned above]}. 
 
 \subsection{Dual-Innovation KalmanNet Fusion}\label{sec:kalmannet}
-
 
 Classical EKFs rely on fixed covariance assumptions that fail to model highly variable multi-modal environments. We implement KalmanNet \cite{kalmannet}, replacing the analytical Kalman gain with a learned one computed by a Gated Recurrent Unit (GRU). The prediction step follows standard dead reckoning:
 \begin{equation}
@@ -319,13 +229,13 @@ The Wi-Fi innovation is a standard spatial residual:
 \begin{equation}
 \mathbf{y}_{wifi} = \mathbf{z}_{wifi} - \mathbf{x}_{\text{pred}} \in \mathbb{R}^2 \label{eq:kn_innovate_w}
 \end{equation}
-Next, the magnetic innovation, however, operates in the scalar anomaly domain rather than Cartesian space. The observed magnetic anomaly value at the current position is compared to the pre-surveyed map value $A(\mathbf{x}_{\text{pred}})$: 
+Next, the magnetic innovation, however, operates in the scalar anomaly domain rather than Cartesian space. The observed magnetic anomaly value at the current position is compared to the pre-surveyed map value $A(\mathbf{x}_{\text{pred}})$: \textbf{\color{red}[How is the anomaly $A_{\text{obs}}$ related to the magnetic sensor measurements given in eq.(5)?]}
 \begin{equation}
 y_{mag} = A_{\text{obs}} - A(\mathbf{x}_{\text{pred}}) \in \mathbb{R} \label{eq:kn_innovate_m}
 \end{equation}
 To convert this scalar mismatch into a 2D spatial correction, it is scaled by the spatial gradient $\nabla A = [\frac{\partial A}{\partial x}, \frac{\partial A}{\partial y}]^T$ of the pre-surveyed anomaly field, computed via discrete finite differences on the reference grid.
 
-
+\textbf{\color{red}[Why the output of the CNN in Fig.3 : $\mathbf{z}_{mag} \in \mathbb{R}^2$ not used in the GRU and Kalman filter eq.(11)?]}
 The input feature vector to the GRU encompasses 13 variables: the Wi-Fi innovation $\mathbf{y}_{wifi}  \in \mathbb{R}^2$, the scalar magnetic innovation $y_{mag}  \in \mathbb{R}$, the field gradient $\nabla A  \in \mathbb{R}^2$, the temporal difference of consecutive Wi-Fi fixes $\Delta \mathbf{z}_{wifi}  \in \mathbb{R}^2$, the PDR control $\mathbf{u}_t  \in \mathbb{R}^2$, the previous state update $\Delta \mathbf{x}_{t-1}  \in \mathbb{R}^2$, and two binary availability masks $m_{wifi}, m_{mag} \in \{0, 1\}$. The GRU outputs an 8-dimensional vector, reshaped into two independent $2\!\times\!2$ gain matrices, $\mathbf{K}_{wifi}$ and $\mathbf{K}_{mag}$. The posterior state $\mathbf{x}_t$ is updated as:
 \begin{equation}
 \mathbf{x}_t = \mathbf{x}_{\text{pred}} + m_{wifi} \cdot \mathbf{K}_{wifi} \mathbf{y}_{wifi} + m_{mag} \cdot \mathbf{K}_{mag} (y_{mag} \cdot \nabla A) \label{eq:kn_correct}
@@ -372,7 +282,7 @@ Held-out device & Samsung S9+ & 2.02 m & 1.68 m & 3.74 m & 9.12 m \\ \bottomrule
 
 
 
-Figure~\ref{fig:merged_cdfs} (top)  displays the continuous spatial matching error CDF for the 1D-CNN magnetic sequence model (MAE of 3.58~m), validating its capability as an effective high-rate structural anchor during periods of Wi-Fi attenuation.
+Figure~\ref{fig:merged_cdfs} (top) \textbf{\color{red}[Use subfigures (a), (b), (c) in fig.4]} displays the continuous spatial matching error CDF for the 1D-CNN magnetic sequence model (MAE of 3.58~m), validating its capability as an effective high-rate structural anchor during periods of Wi-Fi attenuation.
 
 \subsection{Dual-Innovation KalmanNet Fusion Comparison}
 
@@ -397,7 +307,7 @@ Table \ref{tab:fusion_comparison} details the comparative performance of the tem
 \includegraphics[width=0.85\columnwidth]{mag_cdf_cropped.png}\vspace{0.15cm}
 \includegraphics[width=0.85\columnwidth]{kalman_full_wifi.png}\vspace{0.15cm}
 \includegraphics[width=0.85\columnwidth]{kalman_degraded_wifi.png}
-\caption{Cumulative Distribution Functions (CDF) of the tracking models. Top: standalone 1D-CNN magnetic sequence matcher error. Middle: Temporal fusion performance under full Wi-Fi conditions (1 Hz). Bottom: Temporal fusion performance under degraded Wi-Fi scenarios (5s gap, 40\% AP dropout), highlighting the significant impact of the magnetic innovation. }
+\caption{Cumulative Distribution Functions (CDF) of the tracking models. Top: standalone 1D-CNN magnetic sequence matcher error. Middle: Temporal fusion performance under full Wi-Fi conditions (1 Hz). Bottom: Temporal fusion performance under degraded Wi-Fi scenarios (5s gap, 40\% AP dropout), highlighting the significant impact of the magnetic innovation. \textbf{\color{red}[Increase the font size of the axes labels, legends and add the results for the KNN model from the baseline paper.]}}
 \label{fig:merged_cdfs}
 \end{figure}
 
@@ -406,12 +316,12 @@ In standard operating conditions featuring high-frequency 1~Hz Wi-Fi fixes, inte
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.9\columnwidth]{trajectory_example.png}
-\caption{Example trajectory visualization illustrating tracking divergence. Without frequent Wi-Fi spatial anchors, the standard PDR path (dashed red) drifts due to heading accumulation errors. The Dual-Innovation KalmanNet (solid green) tightly tracks the ground truth (solid blue) by integrating structural magnetic sequence measurements continuously. }
+\caption{Example trajectory visualization illustrating tracking divergence. Without frequent Wi-Fi spatial anchors, the standard PDR path (dashed red) drifts due to heading accumulation errors. The Dual-Innovation KalmanNet (solid green) tightly tracks the ground truth (solid blue) by integrating structural magnetic sequence measurements continuously. \textbf{\color{red}[Explain the results of this figure in the main text of Section-IV]}}
 \label{fig:trajectory}
 \end{figure}
 
 \subsection{Robustness and Postural Independence}
-
+\textbf{\color{red}[Move this to the data set description or magnetic sequence matcher]}
 To validate the generalizability of the framework, the training data intentionally includes three distinct device holding modes present in the MagWi dataset: standard navigation hold, call listening (device near the ear), and natural arm swinging. Because the Wi-Fi MLP operates on scalar RSSI values (orientation-independent) and the magnetic CNN processes rotation-invariant features (field magnitude, vertical/horizontal projections, and dip angle), the architecture is inherently robust to postural variation. This postural agnosticism is critical for real-world deployment where users hold devices in unpredictable orientations.
 
 \section{Conclusion}\label{sec:conclusion}
