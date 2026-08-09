@@ -11,10 +11,18 @@ MAGNETIC_FEATURES = ("magN", "magV", "magH", "dip")
 class MagSequenceMatcher(nn.Module):
     """1D CNN producing a two-dimensional fix and heteroscedastic log variance."""
 
-    def __init__(self, in_channels: int = 4, hidden_size: int = 128) -> None:
+    def __init__(
+        self,
+        in_channels: int = 4,
+        hidden_size: int = 128,
+        *,
+        position_dropout: float = 0.2,
+    ) -> None:
         super().__init__()
         if in_channels <= 0 or hidden_size <= 0:
             raise ValueError("network dimensions must be positive")
+        if not 0 <= position_dropout < 1:
+            raise ValueError("position_dropout must be in [0, 1)")
 
         self.in_channels = in_channels
         self.encoder = nn.Sequential(
@@ -34,7 +42,7 @@ class MagSequenceMatcher(nn.Module):
         self.position_head = nn.Sequential(
             nn.Linear(hidden_size, 64),
             nn.ReLU(),
-            nn.Dropout(0.2),
+            nn.Dropout(position_dropout),
             nn.Linear(64, 2),
         )
         self.variance_head = nn.Sequential(

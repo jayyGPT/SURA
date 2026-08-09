@@ -1,13 +1,15 @@
 # Original local dataset directory
 Datasets/
 
-# Canonical data layout
-data/raw/
-data/interim/
-data/processed/
+# Canonical data layout: keep directory markers, ignore all local contents
+data/raw/*
 !data/raw/.gitkeep
+data/interim/*
 !data/interim/.gitkeep
+data/processed/*
 !data/processed/.gitkeep
+data/local/*
+!data/local/.gitkeep
 
 # Python
 __pycache__/
