@@ -10,6 +10,14 @@ htmlcov/
 .venv/
 venv/
 
+# Generated data (the original data/raw/magwi dataset is tracked)
+data/interim/*
+!data/interim/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+data/local/*
+!data/local/.gitkeep
+
 # Training and experiment outputs
 experiments/runs/
 *.pth

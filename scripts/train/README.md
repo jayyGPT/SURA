@@ -1,22 +1,28 @@
-# Training workflows
+# Training scripts
 
-Available canonical commands:
+Install dependencies once from the repository root:
 
 ```bash
-python -m sura train wifi
-python -m sura train magnetic
-python -m sura train magnetic --sweep
-python -m sura train all
+python -m pip install -r requirements.txt
 ```
 
-Each command:
+Then run:
 
-1. loads checked-in YAML from `configs/`;
-2. resolves data through `--data-root`, `SURA_DATA_ROOT`, or `data/`;
-3. validates the fingerprint database before training;
-4. saves checkpoints, predictions, histories, metrics, seeds, and the Git commit below the
-   ignored `experiments/runs/` directory; and
-5. supports `--dry-run` for path/schema/model preflight.
+```bash
+cd scripts/train
+python train_wifi_heatmap.py
+python train_magnetic_sequence.py
+```
 
-The CNN-output DualKalmanNet training command will be added with that architecture. The legacy
-anomaly-gradient implementation is not exposed as the default fusion workflow.
+Both scripts also work from the repository root:
+
+```bash
+python scripts/train/train_wifi_heatmap.py
+python scripts/train/train_magnetic_sequence.py
+```
+
+Use `--dry-run` to verify data loading and model construction without training. Use `--epochs`
+for a short run, `--device cuda` for a GPU, and `--help` for all options. The magnetic script
+also supports `--sweep` for the configured window-size sweep.
+
+Outputs are written to `experiments/runs/`.

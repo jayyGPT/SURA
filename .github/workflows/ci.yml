@@ -4,26 +4,28 @@ on:
   push:
     branches:
       - main
-      - agent/repository-renovation
       - agent/simplify-workflows
   pull_request:
 
 jobs:
   dataset-inventory:
-    name: Count uploaded dataset
+    name: Verify uploaded dataset
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Count repository and raw dataset files
-        run: python scripts/data/count_dataset.py --json dataset_inventory.json
+        run: |
+          python scripts/data/count_dataset.py \
+            --verify-known-counts \
+            --json dataset_inventory.json
       - name: Upload dataset inventory
         uses: actions/upload-artifact@v4
         with:
           name: dataset-inventory
           path: dataset_inventory.json
 
-  quality:
-    name: Python quality and CLI preflight
+  code:
+    name: Code and direct-script checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -31,32 +33,36 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
-      - name: Install package
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e ".[dev]"
-      - name: Compile Python sources
-        run: python -m compileall -q src tests
-      - name: Run Ruff
-        run: python -m ruff check src tests
-      - name: Validate command wiring on tracked sample data
+      - name: Compile and lint
         run: |
-          python -m sura commands
-          python -m sura doctor --data-root data/sample --strict
-          python -m sura data check --data-root data/sample
-          python -m sura data analyze --data-root data/sample --no-write
-          python -m sura train wifi \
+          python -m compileall -q src scripts tests
+          python -m ruff check src scripts tests
+      - name: Test direct scripts with the tracked sample database
+        run: |
+          python scripts/data/check_fingerprint_db.py \
+            --database data/sample/processed/fingerprint_db/it_engineering
+          python scripts/data/analyze_dataset.py \
+            --data-root data/sample \
+            --no-write
+          python scripts/train/train_wifi_heatmap.py \
             --data-root data/sample \
             --config configs/testing/wifi_heatmap_smoke.yaml \
             --split random \
             --dry-run
-          python -m sura train magnetic \
+          python scripts/train/train_magnetic_sequence.py \
             --data-root data/sample \
             --config configs/testing/magnetic_sequence_smoke.yaml \
             --dry-run
+      - name: Run tests
+        run: python -m pytest
 
-  unit-tests:
-    name: Unit and training smoke tests
+  raw-data-builder:
+    name: Build fingerprint database from uploaded raw data
+    if: github.ref == 'refs/heads/agent/simplify-workflows'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -64,12 +70,15 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
-      - name: Install package
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Build and validate IT Engineering fingerprints
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install -e ".[dev]"
-      - name: Run tests
-        run: pytest
+          python scripts/data/build_fingerprint_db.py \
+            --output /tmp/it_engineering_fingerprint \
+            --no-plot
+          python scripts/data/check_fingerprint_db.py \
+            --database /tmp/it_engineering_fingerprint
 
   paper:
     name: Compile paper
