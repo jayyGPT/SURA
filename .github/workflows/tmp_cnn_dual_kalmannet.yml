@@ -1,0 +1,25 @@
+name: Temporary CNN DualKalmanNet check
+
+on:
+  push:
+    branches:
+      - feat/cnn-dual-kalmannet
+
+jobs:
+  test-fusion:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Syntax check
+        run: python -m py_compile train/kalmannet_wifiheatmap_magneticCNN_pdr.py models/*.py tools/*.py
+      - name: End-to-end dry run
+        run: python train/kalmannet_wifiheatmap_magneticCNN_pdr.py --dry-run --bins 80 --device cpu
+      - name: Small trained benchmark
+        run: python train/kalmannet_wifiheatmap_magneticCNN_pdr.py --smoke --device cpu --output /tmp/cnn-dual-smoke
