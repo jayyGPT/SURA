@@ -1,0 +1,78 @@
+name: Temporary extract full-run history
+
+on:
+  push:
+    branches:
+      - feat/cnn-dual-kalmannet
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  extract-history:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download previous full-run job log
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          curl -L --fail \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/jayyGPT/SURA/actions/jobs/93481722677/logs \
+            -o previous_job.log
+      - name: Extract exact metric histories
+        run: |
+          python - <<'PY'
+          import csv, json, re
+          from pathlib import Path
+
+          raw = Path('previous_job.log').read_text(encoding='utf-8-sig', errors='replace').splitlines()
+          cleaned = [re.sub(r'^\d{4}-\d{2}-\d{2}T[^ ]+Z ', '', line) for line in raw]
+          try:
+              start = cleaned.index('Final metrics') + 1
+          except ValueError:
+              raise SystemExit('Final metrics marker not found')
+          json_lines = []
+          depth = 0
+          started = False
+          for line in cleaned[start:]:
+              if not started:
+                  if line.strip().startswith('{'):
+                      started = True
+                  else:
+                      continue
+              json_lines.append(line)
+              depth += line.count('{') - line.count('}')
+              if started and depth == 0:
+                  break
+          payload = json.loads('\n'.join(json_lines))
+          rows = []
+          for epoch in range(150):
+              rows.append({
+                  'epoch': epoch + 1,
+                  'full_wifi_baseline_train_mse': payload['full']['baseline_training_loss'][epoch],
+                  'full_wifi_cnn_dual_train_mse': payload['full']['dual_training_loss'][epoch],
+                  'degraded_wifi_baseline_train_mse': payload['degraded']['baseline_training_loss'][epoch],
+                  'degraded_wifi_cnn_dual_train_mse': payload['degraded']['dual_training_loss'][epoch],
+              })
+          with open('full_run_training_history.csv', 'w', newline='', encoding='utf-8') as f:
+              writer = csv.DictWriter(f, fieldnames=rows[0].keys())
+              writer.writeheader()
+              writer.writerows(rows)
+          summary = {
+              'full': {k:v for k,v in payload['full'].items() if not k.endswith('training_loss')},
+              'degraded': {k:v for k,v in payload['degraded'].items() if not k.endswith('training_loss')},
+          }
+          Path('full_run_summary.json').write_text(json.dumps(summary, indent=2) + '\n')
+          print('extracted', len(rows), 'epochs')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: full-run-training-history
+          path: |
+            full_run_training_history.csv
+            full_run_summary.json
