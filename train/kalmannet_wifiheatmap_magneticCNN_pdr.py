@@ -124,9 +124,14 @@ class CNNMagneticDualKalmanNet(nn.Module):
     spatial anomaly gradient is used anywhere in this model.
     """
 
-    def __init__(self, hidden_size: int = FUSION_HIDDEN_SIZE) -> None:
+    def __init__(
+        self,
+        hidden_size: int = FUSION_HIDDEN_SIZE,
+        magnetic_reference_log_variance: float = 0.0,
+    ) -> None:
         super().__init__()
         self.hidden_size = hidden_size
+        self.magnetic_reference_log_variance = float(magnetic_reference_log_variance)
         self.cell = nn.GRUCell(13, hidden_size)
         self.head = nn.Linear(hidden_size, 8)
         nn.init.zeros_(self.head.weight)
@@ -175,6 +180,13 @@ class CNNMagneticDualKalmanNet(nn.Module):
             # still used in the correction; the GRU learns how strongly variance matters.
             mag_confidence = magnetic_log_variance[:, step].clamp(-6.0, 8.0) * mag_available
 
+            # Relative confidence weighting. Since log_variance = log(sigma^2),
+            # exp(logvar - ref_logvar) = sigma^2 / sigma_ref^2.
+            relative_log_variance = (
+                magnetic_log_variance[:, step] - self.magnetic_reference_log_variance
+            ).clamp(-8.0, 8.0)
+            magnetic_weight = 1.0 / (1.0 + torch.exp(relative_log_variance))
+
             features = torch.cat(
                 [
                     wifi_innovation,
@@ -196,7 +208,7 @@ class CNNMagneticDualKalmanNet(nn.Module):
             wifi_correction = wifi_available * torch.bmm(
                 wifi_gain, wifi_innovation.unsqueeze(-1)
             ).squeeze(-1)
-            magnetic_correction = mag_available * torch.bmm(
+            magnetic_correction = magnetic_weight * mag_available * torch.bmm(
                 magnetic_gain, magnetic_innovation.unsqueeze(-1)
             ).squeeze(-1)
             updated = predicted + wifi_correction + magnetic_correction
@@ -839,6 +851,16 @@ def run_experiment(
         )
         print("  magnetic CNN measurement quality:", magnetic_measurement_summary(testing))
 
+        # Reference uncertainty comes from fusion-training magnetic predictions only.
+        training_mag_available = training[5][..., 0] > 0.5
+        training_logvar = training[4][..., 0][training_mag_available]
+        magnetic_reference_log_variance = float(np.median(training_logvar))
+        magnetic_reference_sigma = float(np.exp(0.5 * magnetic_reference_log_variance))
+        print(
+            f"  training-only magnetic reference: logvar={magnetic_reference_log_variance:.4f}, "
+            f"sigma={magnetic_reference_sigma:.3f} m"
+        )
+
         torch.manual_seed(SEED)
         baseline = WiFiOnlyKalmanNet(hidden_size=FUSION_HIDDEN_SIZE).to(device)
         print("  training Wi-Fi-only KalmanNet")
@@ -850,7 +872,10 @@ def run_experiment(
         )
 
         torch.manual_seed(SEED)
-        dual = CNNMagneticDualKalmanNet(hidden_size=FUSION_HIDDEN_SIZE).to(device)
+        dual = CNNMagneticDualKalmanNet(
+            hidden_size=FUSION_HIDDEN_SIZE,
+            magnetic_reference_log_variance=magnetic_reference_log_variance,
+        ).to(device)
         print("  training CNN-output DualKalmanNet")
         dual, dual_history = train_filter(
             dual, training, device, epochs=fusion_epochs, uses_magnetic=True
@@ -879,6 +904,8 @@ def run_experiment(
             "wifi_period_s": wifi_period,
             "ap_dropout": dropout,
             "magnetic_measurement": magnetic_measurement_summary(testing),
+            "magnetic_reference_log_variance_training": magnetic_reference_log_variance,
+            "magnetic_reference_sigma_training_m": magnetic_reference_sigma,
             "wifi_only_kalmannet": baseline_summary,
             "cnn_dual_kalmannet": dual_summary,
             "relative_improvement_percent": float(improvement),
