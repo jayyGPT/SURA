@@ -1,40 +1,32 @@
-# IEEE manuscript workspace
+# IEEE paper
 
-`main.tex` is the canonical paper source and `Ref.bib` is its bibliography. Historical drafts and generated build products are preserved under `archive/legacy_publication/`.
+The current manuscript is:
+
+```text
+paper/main.tex
+```
+
+The bibliography is `Ref.bib`.
 
 ## Build
 
-From the repository root:
-
-```bash
-python -m sura paper build
-# or
-make paper
-```
-
-From this directory:
+From this folder:
 
 ```bash
 latexmk -pdf -outdir=build main.tex
 ```
 
-The generated PDF and auxiliary files remain under ignored `paper/build/`.
+The generated PDF is `build/main.pdf`. Build files are ignored by Git.
 
-## Directory roles
+## Other folders
 
-- `reviews/`: professor annotations and extracted feedback.
-- `notes/`: revision requests, figure audit, and previous code-paper audits.
-- `figures/`: supplementary or replacement publication figures not currently referenced by `main.tex`.
-- `template/`: IEEE class documentation.
+- `reviews/` — professor comments and feedback
+- `notes/` — revision notes and previous paper/code checks
+- `figures/` — paper figures and replacements
+- `template/` — IEEE template material
 
-The four PNG files currently referenced by `main.tex` remain beside the main source so the relocated manuscript compiles without changing scientific content. When the CNN-based DualKalmanNet update is implemented, figures and section files will be modularized in the same paper revision.
+The current paper still contains the old magnetic-anomaly fusion description. We will update the
+method, equations, figures, and results only after the new DualKalmanNet is implemented and tested
+with the magnetic CNN's 2-D position output and uncertainty.
 
-## Important current limitation
-
-The existing manuscript describes the magnetic sequence CNN but the legacy fusion equations use a scalar anomaly-gradient correction. This is documented in `notes/architecture_consistency.md`. Do not polish or strengthen the affected claims before the CNN-output fusion experiment is complete.
-
-For Overleaf Git synchronization, set the project's main document to:
-
-```text
-paper/main.tex
-```
+For Overleaf, use `paper/main.tex` as the main document.
