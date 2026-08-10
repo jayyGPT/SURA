@@ -1,0 +1,34 @@
+[
+  {
+    "regime": "Full Wi-Fi (1 Hz)",
+    "samples": 8458,
+    "mean_actual_error_m": 3.3625916669252693,
+    "median_actual_error_m": 2.474042057991028,
+    "mean_predicted_sigma_m": 6.896169912420963,
+    "median_predicted_sigma_m": 6.219198315881088,
+    "pearson_logvariance_vs_error": 0.358627027449207,
+    "spearman_uncertainty_vs_error": 0.3101919864145003,
+    "q4_to_q1_mean_error_ratio": 2.414809995848992,
+    "predicted_variance_mean_m2": 51.579099801892966,
+    "empirical_per_axis_variance_m2": 11.47590994959939,
+    "variance_calibration_ratio_predicted_over_empirical": 4.4945542469766,
+    "fraction_error_within_1sigma": 0.9219673681721448,
+    "fraction_error_within_2sigma": 0.9874674864034051
+  },
+  {
+    "regime": "Degraded Wi-Fi (5 s, 40% AP drop)",
+    "samples": 8458,
+    "mean_actual_error_m": 3.429186953587793,
+    "median_actual_error_m": 2.519835591316223,
+    "mean_predicted_sigma_m": 6.917281174176076,
+    "median_predicted_sigma_m": 6.229914638386393,
+    "pearson_logvariance_vs_error": 0.3348681882759297,
+    "spearman_uncertainty_vs_error": 0.31193138668032544,
+    "q4_to_q1_mean_error_ratio": 2.4030984162288656,
+    "predicted_variance_mean_m2": 52.038229921676006,
+    "empirical_per_axis_variance_m2": 11.930047130478162,
+    "variance_calibration_ratio_predicted_over_empirical": 4.36194671760616,
+    "fraction_error_within_1sigma": 0.9148734925514306,
+    "fraction_error_within_2sigma": 0.9890044927878932
+  }
+]

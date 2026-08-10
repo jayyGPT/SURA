@@ -2,10 +2,9 @@
 
 This folder is the single place for benchmark numbers and comparison baselines.
 
-## Current recorded results
+## Current manuscript / legacy results
 
-The values below come from the current manuscript / previous experiment records and are marked
-for reproduction before final publication.
+These are the numbers currently carried by the manuscript or older experiment records. They remain useful for comparison, but they are not all reproduced under the new CNN-output fusion implementation.
 
 | Model / condition | Mean error | Median | P90 | Max |
 |---|---:|---:|---:|---:|
@@ -17,31 +16,43 @@ for reproduction before final publication.
 | Wi-Fi-only KalmanNet, degraded Wi-Fi | 1.44 m | — | — | — |
 | Legacy anomaly DualKalmanNet, degraded Wi-Fi | 1.07 m | — | — | — |
 
-Machine-readable values are in `results.yaml`.
+Machine-readable legacy values are in `results.yaml`.
 
-## Status
+## CNN-output DualKalmanNet experiments
 
-The anomaly-based DualKalmanNet is a **legacy comparison**, not the architecture we are taking
-forward. The next implementation will feed the magnetic CNN's 2-D position estimate (and its
-predicted uncertainty) into DualKalmanNet. Once that experiment is complete, the benchmark table
-and paper will be updated with newly reproduced numbers.
+The experiments that actually feed the magnetic CNN's 2-D output into KalmanNet are recorded in:
+
+- `cnn_dual_kalmannet_full_run.md` — first unweighted CNN-output run
+- `cnn_dual_kalmannet_training_history.csv` — all 150 epochs from that unweighted run
+- `cnn_dual_kalmannet_relative_variance.md` — current relative-variance weighted result and comparison
+- `cnn_dual_kalmannet_relative_variance_metrics.json` — exact machine-readable weighted metrics
+- `cnn_dual_kalmannet_relative_variance_training_history.csv` — all 150 epochs from the weighted run
+- `magnetic_variance_calibration/` — comparison of CNN-predicted uncertainty with actual magnetic error
+- `analyze_magnetic_variance.py` — reproducible variance/error analysis
+
+### Current best CNN-output variant
+
+The relative-variance model computes a reference uncertainty from the fusion **training set only** and weights the magnetic correction by
+
+\[
+w_{mag}=\frac{1}{1+\sigma_{mag}^2/\sigma_{ref}^2}.
+\]
+
+Full 250-train / 60-test / 150-epoch comparison:
+
+| Wi-Fi regime | Wi-Fi-only | Unweighted CNN Dual | Relative-variance CNN Dual |
+|---|---:|---:|---:|
+| Full Wi-Fi (1 Hz) | **0.473 m** | 0.506 m | 0.494 m |
+| Degraded Wi-Fi (5 s, 40% AP dropout) | 1.533 m | 1.171 m | **1.154 m** |
+
+The relative weight improves the CNN-output model in both regimes. Under degraded Wi-Fi it gives a **24.7% mean-error reduction versus Wi-Fi-only**, and lowers P90 from 2.064 m in the unweighted CNN Dual to **1.612 m**. Under full Wi-Fi it reduces the CNN-Dual penalty from 7.0% to 4.5%, although the Wi-Fi-only mean remains slightly better.
+
+The variance calibration experiment explains why relative weighting is preferable to treating the CNN variance as an absolute covariance: uncertainty ranks weak magnetic fixes usefully, but its raw scale is substantially over-conservative.
 
 ## Generated runs
 
-Training scripts write checkpoints, metrics, prediction arrays, error CDFs, and training curves
-under:
-
-```text
-benchmarks/runs/
-```
-
-That directory is ignored because it can become large. Results we want to preserve should be
-copied into `results.yaml` after they are checked.
+Training scripts can write checkpoints, metrics, prediction arrays, error CDFs, and training curves under `benchmarks/runs/`. That directory is ignored because it can become large. Results worth preserving should be summarized here or copied into a labelled benchmark file.
 
 ## Older baseline
 
-The older KNN proof-of-concept code and figures are kept under:
-
-```text
-benchmarks/knn/
-```
+The older KNN proof-of-concept code and figures are kept under `knn/`.
