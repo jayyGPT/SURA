@@ -1,7 +1,22 @@
-# Workflow entry points
+# Runnable scripts
 
-The canonical user interface is the installed `sura` command (or `python -m sura`).
-Reusable implementations remain under `src/sura/`; this directory holds workflow-specific
-notes and any future thin wrappers that cannot be expressed cleanly through the CLI.
+There is no project-specific command-line application. Use the ordinary Python scripts in the
+subdirectories:
 
-See [`../COMMANDS.md`](../COMMANDS.md) for the complete command reference.
+```text
+scripts/data/     inspect raw data and build processed fingerprints
+scripts/train/    train the standalone models
+```
+
+Examples:
+
+```bash
+python scripts/data/count_dataset.py
+python scripts/data/build_fingerprint_db.py
+python scripts/train/train_wifi_heatmap.py
+python scripts/train/train_magnetic_sequence.py
+```
+
+Each script supports `--help`. They can be run from the repository root or from their own
+folder and automatically locate the repository's `src/`, `data/`, `configs/`, and
+`experiments/` directories.

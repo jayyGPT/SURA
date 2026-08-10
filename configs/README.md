@@ -1,23 +1,25 @@
 # Experiment configuration
 
-Checked-in YAML files define reproducible model and dataset defaults.
+The training scripts use these checked-in YAML defaults:
 
 ```text
-configs/
-├── datasets/magwi_it_engineering.yaml
-├── wifi_heatmap.yaml
-├── magnetic_sequence.yaml
-├── wifi_kalmannet.yaml
-├── dual_kalmannet_anomaly.yaml
-└── testing/                         tiny CI-only settings
+configs/datasets/magwi_it_engineering.yaml
+configs/wifi_heatmap.yaml
+configs/magnetic_sequence.yaml
 ```
 
-Use another file without editing code:
+Normally no configuration argument is needed:
 
 ```bash
-python -m sura train wifi --config path/to/wifi.yaml
-python -m sura train magnetic --config path/to/magnetic.yaml
+python scripts/train/train_wifi_heatmap.py
+python scripts/train/train_magnetic_sequence.py
 ```
 
-Dataset locations are resolved separately through `--data-root`, `SURA_DATA_ROOT`, or the
-repository's `data/` directory. Do not put machine-specific absolute paths in checked-in YAML.
+To use another file:
+
+```bash
+python scripts/train/train_wifi_heatmap.py --config path/to/wifi.yaml
+python scripts/train/train_magnetic_sequence.py --config path/to/magnetic.yaml
+```
+
+The `configs/testing/` files are tiny settings used by automated smoke tests.

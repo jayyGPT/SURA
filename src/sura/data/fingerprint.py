@@ -55,9 +55,23 @@ def _boolean_series(series: pd.Series) -> pd.Series:
     return normalized.isin({"true", "1", "yes", "y"})
 
 
+def _read_vocabulary_payload(path: Path) -> object:
+    """Read vocabulary JSON, tolerating the uploaded legacy file's missing opening brace."""
+    text = path.read_text(encoding="utf-8")
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError as original_error:
+        stripped = text.lstrip()
+        if stripped.startswith('"bssid_vocab"') and stripped.rstrip().endswith("}"):
+            try:
+                return json.loads("{" + stripped)
+            except json.JSONDecodeError:
+                pass
+        raise ValueError(f"invalid AP vocabulary JSON: {path}") from original_error
+
+
 def _load_access_point_columns(path: Path) -> tuple[str, ...]:
-    with path.open("r", encoding="utf-8") as handle:
-        payload = json.load(handle)
+    payload = _read_vocabulary_payload(path)
     if isinstance(payload, list):
         values = payload
     elif isinstance(payload, dict):

@@ -1,75 +1,35 @@
-# Local data layout
+# Dataset layout
 
-The full MagWi dataset and generated model-ready data are intentionally excluded from Git.
-
-Create the standard directories with:
-
-```bash
-python -m sura data init
-# or
-make data-init
-```
-
-```text
-data/
-├── raw/          untouched downloaded datasets
-├── interim/      decoded, converted, or temporary intermediate files
-├── processed/    fingerprint databases and model-ready arrays
-├── local/        personal symlinks, notes, or machine-specific helpers
-└── sample/       tiny tracked fixture used only by tests and CI
-```
-
-The directory markers are tracked, but everything users place inside `raw`, `interim`,
-`processed`, and `local` is ignored.
-
-## Existing legacy `Datasets/` directory
-
-Preview migration from the former layout:
-
-```bash
-python -m sura data migrate-legacy
-```
-
-Apply it:
-
-```bash
-python -m sura data migrate-legacy --apply
-```
-
-Targets that already exist are skipped rather than overwritten.
-
-## Raw MagWi placement
-
-Keep the original directory names:
+## Raw uploaded source files
 
 ```text
 data/raw/magwi/
 ├── Magnetic field dataset/
 │   ├── Static Data/
-│   │   └── IT Engineering/
 │   └── Continuous Data/
 └── WiFi dataset/
-    └── IT Engineering/
 ```
 
-The fingerprint builder currently uses static magnetic data and matched Wi-Fi scans. The
-continuous directory may still be stored here for later fusion and real-walk work.
+Verified tracked counts:
 
-## Build the processed database
+| Source | Files |
+|---|---:|
+| Magnetic static | 4,135 |
+| Magnetic continuous | 127 |
+| Magnetic total | 4,262 |
+| Wi-Fi | 2,831 |
+| Raw source total | 7,093 |
 
-Inspect paths and file counts:
+The prior exhaustive local audit recorded 4,399 Wi-Fi files. Therefore the current GitHub
+snapshot appears to be missing 1,568 Wi-Fi files, although the magnetic side is essentially
+complete. Use `python scripts/data/count_dataset.py` for the full per-building inventory.
 
-```bash
-python -m sura data build-fingerprint --dry-run
-```
+Do not rename folders inside the source trees. The stable root is `data/raw/magwi/`.
 
-Build:
+## Prebuilt processed database
 
-```bash
-python -m sura data build-fingerprint
-```
-
-Expected output:
+The uploaded processed IT Engineering database was separated from the raw data and is tracked
+at:
 
 ```text
 data/processed/fingerprint_db/it_engineering/
@@ -81,34 +41,26 @@ data/processed/fingerprint_db/it_engineering/
 Validate it:
 
 ```bash
-python -m sura data check
+python scripts/data/check_fingerprint_db.py
 ```
 
-Generate a compact report:
+This prebuilt database is the default input to both current training scripts.
+
+## Rebuilding
 
 ```bash
-python -m sura data analyze
+python scripts/data/build_fingerprint_db.py --dry-run
+python scripts/data/build_fingerprint_db.py
 ```
 
-## External data root
+A rebuild uses the currently uploaded raw subset and may differ from the prebuilt database due
+to missing Wi-Fi source files. Use `--output` to preserve the included database while testing a
+rebuild.
 
-To avoid storing the dataset in the Git checkout:
+## Historical generated files
 
-```bash
-export SURA_DATA_ROOT=/absolute/path/to/sura-data
-```
+Files that were uploaded beside the source data but were produced by older experiments were
+moved to `archive/dataset_generated/`. These include fused CSVs, simulated scans, merged data,
+metrics, and figures. They are not raw model inputs.
 
-PowerShell:
-
-```powershell
-$env:SURA_DATA_ROOT="D:\research\sura-data"
-```
-
-The external directory must use the same `raw/interim/processed/local` structure. A per-command
-override is also available:
-
-```bash
-python -m sura data check --data-root /absolute/path/to/sura-data
-```
-
-Never commit participant data, raw sensor recordings, generated arrays, or checkpoints.
+`data/interim/` and `data/local/` remain ignored scratch areas.

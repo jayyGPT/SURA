@@ -4,45 +4,28 @@ on:
   push:
     branches:
       - main
-      - agent/repository-renovation
+      - agent/simplify-workflows
   pull_request:
 
 jobs:
-  quality:
-    name: Python quality and CLI preflight
+  dataset-inventory:
+    name: Verify tracked dataset snapshot
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Count source files
+        run: |
+          python scripts/data/count_dataset.py \
+            --verify-snapshot \
+            --json dataset_inventory.json
+      - name: Upload dataset inventory
+        uses: actions/upload-artifact@v4
         with:
-          python-version: "3.11"
-          cache: pip
-      - name: Install package
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -e ".[dev]"
-      - name: Compile Python sources
-        run: python -m compileall -q src tests
-      - name: Run Ruff
-        run: python -m ruff check src tests
-      - name: Validate command wiring on tracked sample data
-        run: |
-          python -m sura commands
-          python -m sura doctor --data-root data/sample --strict
-          python -m sura data check --data-root data/sample
-          python -m sura data analyze --data-root data/sample --no-write
-          python -m sura train wifi \
-            --data-root data/sample \
-            --config configs/testing/wifi_heatmap_smoke.yaml \
-            --split random \
-            --dry-run
-          python -m sura train magnetic \
-            --data-root data/sample \
-            --config configs/testing/magnetic_sequence_smoke.yaml \
-            --dry-run
+          name: dataset-inventory
+          path: dataset_inventory.json
 
-  unit-tests:
-    name: Unit and training smoke tests
+  code:
+    name: Code and direct-script checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -50,12 +33,43 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
-      - name: Install package
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e ".[dev]"
+          python -m pip install -r requirements.txt
+          python -m pip install pytest ruff
+      - name: Compile and lint
+        run: |
+          python -m compileall -q src scripts tests
+          python -m ruff check src scripts tests
+      - name: Validate included database and direct training scripts
+        run: |
+          python scripts/data/check_fingerprint_db.py
+          python scripts/data/analyze_dataset.py --no-write
+          python scripts/train/train_wifi_heatmap.py --dry-run
+          python scripts/train/train_magnetic_sequence.py --dry-run
       - name: Run tests
-        run: pytest
+        run: python -m pytest
+
+  raw-data-builder:
+    name: Rebuild fingerprint database from tracked raw subset
+    if: github.ref == 'refs/heads/agent/simplify-workflows'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Build and validate IT Engineering fingerprints
+        run: |
+          python scripts/data/build_fingerprint_db.py \
+            --output /tmp/it_engineering_fingerprint \
+            --no-plot
+          python scripts/data/check_fingerprint_db.py \
+            --database /tmp/it_engineering_fingerprint
 
   paper:
     name: Compile paper

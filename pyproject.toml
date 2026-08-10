@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sura-indoor-localization"
-version = "0.2.0"
+version = "0.2.1"
 description = "Causal Wi-Fi, magnetic, and IMU indoor-localization research code"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -28,9 +28,6 @@ dev = [
   "pytest>=8.0",
   "ruff>=0.6",
 ]
-
-[project.scripts]
-sura = "sura.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
