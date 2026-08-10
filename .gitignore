@@ -18,7 +18,6 @@ wandb/
 mlruns/
 
 # LaTeX build files
-paper/build/
 *.aux
 *.bbl
 *.blg

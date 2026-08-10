@@ -9,6 +9,7 @@
 \usepackage{multirow}
 \usepackage{tikz}
 \usetikzlibrary{shapes,arrows,positioning,fit,backgrounds,calc,shadows}
+\usepackage{subcaption}
 
 \begin{document}
 
@@ -217,6 +218,8 @@ The CNN processes the input to yield both a continuous position fix $\mathbf{z}_
 \end{equation}
 where $B$ is the batch size, $\mathbf{z}_{true}$ is the ground-truth coordinate, and the variance $\sigma^2_{mag} = \exp(\text{logvar})$ is clamped to a minimum of 0.01 for numerical stability.
 
+Because all four input features ($m_N$, $m_V$, $m_H$, $\delta$) are rotation-invariant scalars derived from the field geometry rather than from the device body frame, the magnetic sequence matcher is inherently agnostic to device posture. The MagWi dataset covers three distinct holding modes---standard navigation hold, call-listening (device near the ear), and natural arm swinging---and no postural calibration or additional adaptation is required across any of them.
+
 \subsection{Causal Pedestrian Dead Reckoning (PDR)}
 
 The Pedestrian Dead Reckoning (PDR) system computes relative displacement at the full IMU rate ($f_s = 16.7$~Hz). Let $a_t = \|\mathbf{a}_t\| = \sqrt{a_x^2 + a_y^2 + a_z^2}$ denote the scalar acceleration magnitude. Step detection is performed by a first-order exponential moving average (EMA) low-pass filter that tracks the quasi-static gravitational baseline. The filter is initialized to $\bar{a}_0 = 9.81$~m/s$^2$ and updated each frame as:
@@ -394,9 +397,24 @@ Table \ref{tab:fusion_comparison} details the comparative performance of the tem
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.85\columnwidth]{mag_cdf_cropped.png}\vspace{0.15cm}
-\includegraphics[width=0.85\columnwidth]{kalman_full_wifi.png}\vspace{0.15cm}
-\includegraphics[width=0.85\columnwidth]{kalman_degraded_wifi.png}
+\begin{subfigure}[b]{\columnwidth}
+  \centering
+  \includegraphics[width=0.85\columnwidth]{figures/mag_cdf_cropped.png}
+  \caption{Standalone 1D-CNN magnetic sequence matcher (MAE 3.58~m).}
+  \label{fig:cdf_mag}
+\end{subfigure}\vspace{0.1cm}
+\begin{subfigure}[b]{\columnwidth}
+  \centering
+  \includegraphics[width=0.85\columnwidth]{figures/kalman_full_wifi.png}
+  \caption{Temporal fusion under full Wi-Fi conditions (1~Hz).}
+  \label{fig:cdf_full}
+\end{subfigure}\vspace{0.1cm}
+\begin{subfigure}[b]{\columnwidth}
+  \centering
+  \includegraphics[width=0.85\columnwidth]{figures/kalman_degraded_wifi.png}
+  \caption{Temporal fusion under degraded Wi-Fi (5~s gap, 40\% AP dropout).}
+  \label{fig:cdf_degraded}
+\end{subfigure}
 \caption{Cumulative Distribution Functions (CDF) of the tracking models. Top: standalone 1D-CNN magnetic sequence matcher error. Middle: Temporal fusion performance under full Wi-Fi conditions (1 Hz). Bottom: Temporal fusion performance under degraded Wi-Fi scenarios (5s gap, 40\% AP dropout), highlighting the significant impact of the magnetic innovation. }
 \label{fig:merged_cdfs}
 \end{figure}
@@ -405,14 +423,12 @@ In standard operating conditions featuring high-frequency 1~Hz Wi-Fi fixes, inte
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\columnwidth]{trajectory_example.png}
+\includegraphics[width=0.9\columnwidth]{figures/trajectory_example.png}
 \caption{Example trajectory visualization illustrating tracking divergence. Without frequent Wi-Fi spatial anchors, the standard PDR path (dashed red) drifts due to heading accumulation errors. The Dual-Innovation KalmanNet (solid green) tightly tracks the ground truth (solid blue) by integrating structural magnetic sequence measurements continuously. }
 \label{fig:trajectory}
 \end{figure}
 
-\subsection{Robustness and Postural Independence}
-
-To validate the generalizability of the framework, the training data intentionally includes three distinct device holding modes present in the MagWi dataset: standard navigation hold, call listening (device near the ear), and natural arm swinging. Because the Wi-Fi MLP operates on scalar RSSI values (orientation-independent) and the magnetic CNN processes rotation-invariant features (field magnitude, vertical/horizontal projections, and dip angle), the architecture is inherently robust to postural variation. This postural agnosticism is critical for real-world deployment where users hold devices in unpredictable orientations.
+Fig.~\ref{fig:trajectory} shows a representative test walk under the degraded Wi-Fi regime. The PDR-only trajectory (dashed red) diverges progressively from the ground truth (solid blue) as heading errors accumulate during the inter-scan gaps; the divergence is most visible in corridor turns where a small heading bias compounds over multiple steps. The Dual-Innovation KalmanNet (solid green), receiving scalar magnetic anomaly corrections at 16.7~Hz throughout each outage, suppresses this lateral drift and maintains close alignment with the true path. Upon each Wi-Fi fix arrival, the filter rapidly re-anchors, preventing further error accumulation.
 
 \section{Conclusion}\label{sec:conclusion}
 

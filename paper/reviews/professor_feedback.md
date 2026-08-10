@@ -261,10 +261,10 @@ or the equivalent low-pass complement approach should be stated explicitly.
 - [x] R1: Discretize Gaussian target — added Eq. for $q_c \propto \exp(-\|\mathbf{c}_c - \mathbf{x}_{true}\|^2/2\sigma^2)$ before KL loss
 - [x] R2: Add HPF recurrence equation — added $\bar{a}_t = \alpha\bar{a}_{t-1} + (1-\alpha)a_t$ and $\tilde{a}_t = a_t - \bar{a}_t$ to PDR section
 - [x] R3: Create TikZ PDR geometry schematic — new single-column `fig:pdr_geometry` added
-- [x] R4: Explicitly define $A_{\text{obs}} = m_N - \bar{m}_N^{(\text{dev})} = \|\mathbf{m}_t\| - \bar{m}_N^{(\text{dev})}$ (linked to Eq. for $m_N$)
-- [x] R5: Resolved CNN-vs-scalar-gradient inconsistency — added "Note on the CNN" paragraph explaining CNN is standalone benchmark; scalar-gradient mechanism justified by causality constraint
+- [ ] R4: Explicitly define $A_{\text{obs}} = m_N - \bar{m}_N^{(\text{dev})} = \|\mathbf{m}_t\| - \bar{m}_N^{(\text{dev})}$ (linked to Eq. for $m_N$)
+- [ ] R5: Resolved CNN-vs-scalar-gradient inconsistency — added "Note on the CNN" paragraph explaining CNN is standalone benchmark; scalar-gradient mechanism justified by causality constraint
 - [x] R6: Refactored Fig. 4 into (a)(b)(c) subfigures using `subcaption`; added `\usepackage{subcaption}` to preamble
-- [x] R7: Updated all text references from "top/bottom" to `fig:cdf_full` and `fig:cdf_degraded` subfigure labels (KNN baseline plot regeneration pending)
+- [ ] R7: Updated all text references from "top/bottom" to `fig:cdf_full` and `fig:cdf_degraded` subfigure labels (KNN baseline plot regeneration pending)
 - [x] R8: Added explanatory paragraph for Fig. 5 trajectory visualization in Section IV
 - [x] R9: Moved postural independence discussion from Section IV.C to end of Section II.C (Magnetic Sequence Matcher)
 

@@ -10,13 +10,17 @@ The bibliography is `Ref.bib`.
 
 ## Build
 
-From this folder:
+From the `paper/` folder:
 
-```bash
-latexmk -pdf -outdir=build main.tex
+```powershell
+pdflatex -output-directory=build main.tex
+pdflatex -output-directory=build main.tex
 ```
 
-The generated PDF is `build/main.pdf`. Build files are ignored by Git.
+Run twice so cross-references and labels resolve correctly. The generated PDF is `build/main.pdf`.
+
+> **Note:** The README originally listed `latexmk -pdf -outdir=build main.tex` but `latexmk` requires Perl which is not installed. Use `pdflatex` directly as above. For Overleaf, no build command is needed — just use `paper/main.tex` as the main document.
+
 
 ## Other folders
 
