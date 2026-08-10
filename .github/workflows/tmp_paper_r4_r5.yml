@@ -18,6 +18,16 @@ jobs:
             echo "No paper revision needed on this commit."
             exit 0
           fi
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('.github/tmp_patch_paper_r4_r5.py')
+          s = p.read_text(encoding='utf-8')
+          old = "for token in ['A_"
+          new = "for token in ['y_{mag} = A_"
+          if old not in s:
+              raise SystemExit('guard pattern not found')
+          p.write_text(s.replace(old, new, 1), encoding='utf-8')
+          PY
           python .github/tmp_patch_paper_r4_r5.py
           if ! command -v pdflatex >/dev/null 2>&1; then
             sudo apt-get update -qq
