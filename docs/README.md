@@ -1,8 +1,10 @@
 # Documentation
 
-- `architecture/` explains the current model components and their interfaces.
-- `data/` documents the dataset, known data traps, and preprocessing assumptions.
-- `decisions/` records consequential architectural and repository decisions.
-- `project_history/` contains reports, presentations, proposals, and administrative records from the SURA project.
+This folder keeps only supporting material that is useful to understand the research:
 
-For executable instructions, use the root README and the README inside the relevant code or paper directory.
+- `architecture/` — model and fusion design notes
+- `data/` — dataset notes and known quirks
+- `project_history/` — older reports, presentations, proposals, and administrative material
+
+For running code, use the root `README.md`. Historical or superseded material belongs in
+`archive/`.

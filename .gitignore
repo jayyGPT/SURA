@@ -1,37 +1,23 @@
-# Python
+# Python / environments
 __pycache__/
 *.py[cod]
-*$py.class
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-.coverage
-htmlcov/
 .venv/
 venv/
+.pytest_cache/
+.ruff_cache/
 
-# Generated data (raw source and the prebuilt fingerprint database are tracked)
-data/interim/*
-!data/interim/.gitkeep
-data/processed/*
-!data/processed/.gitkeep
-!data/processed/fingerprint_db/
-!data/processed/fingerprint_db/**
-data/local/*
-!data/local/.gitkeep
-
-# Training and experiment outputs
-experiments/runs/
+# Generated training outputs
+benchmarks/runs/
 *.pth
 *.pt
 *.ckpt
+
+# Notebook / experiment caches
+.ipynb_checkpoints/
 wandb/
 mlruns/
 
-# Jupyter
-.ipynb_checkpoints/
-
-# LaTeX build products
+# LaTeX build files
 paper/build/
 *.aux
 *.bbl

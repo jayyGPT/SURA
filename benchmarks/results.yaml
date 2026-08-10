@@ -1,0 +1,30 @@
+status: legacy_pending_reproduction
+source_commit: b94012cfe4341a830bcb023cfe65f626d7ff8b50
+note: >-
+  These values come from the current manuscript / historical experiment records.
+  Reproduce them before final publication. The anomaly-fusion values will be replaced
+  after CNN-output magnetic fusion is implemented.
+
+wifi_heatmap:
+  random_split:
+    mean_error_m: 1.43
+    median_error_m: 1.12
+    p90_error_m: 2.65
+    maximum_error_m: 7.84
+  held_out_s9_plus:
+    mean_error_m: 2.02
+    median_error_m: 1.68
+    p90_error_m: 3.74
+    maximum_error_m: 9.12
+
+magnetic_sequence_cnn:
+  window_frames: 84
+  mean_error_m: 3.58
+
+fusion_legacy:
+  full_wifi:
+    wifi_only_mean_error_m: 0.55
+    anomaly_dual_mean_error_m: 0.47
+  degraded_wifi:
+    wifi_only_mean_error_m: 1.44
+    anomaly_dual_mean_error_m: 1.07

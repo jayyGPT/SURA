@@ -1,114 +1,167 @@
 # SURA Indoor Localization
 
-Research code, dataset, experiments, and the IEEE manuscript for indoor localization using smartphone Wi-Fi, magnetic, and inertial measurements.
+Research code, dataset, benchmarks, and the IEEE paper for smartphone indoor localization using
+Wi-Fi, magnetic, and inertial measurements.
 
-The project was developed under IIT Delhi's Summer Undergraduate Research Award by Jayendra Vijay Birhade and Utkarsh Agrawal under the supervision of Dr. Neel Kanth Kundu.
+The project was developed under IIT Delhi's Summer Undergraduate Research Award by Jayendra
+Vijay Birhade and Utkarsh Agrawal under the supervision of Dr. Neel Kanth Kundu.
 
-## Repository map
+## Repository
 
 ```text
 SURA/
-├── data/raw/magwi/          original tracked MagWi source trees
-├── data/processed/          prebuilt and regenerated fingerprint databases
-├── scripts/data/            dataset inspection and preparation scripts
-├── scripts/train/           direct model training scripts
-├── src/sura/                reusable model and algorithm implementations
-├── experiments/runs/        generated checkpoints and metrics (ignored)
-├── paper/                   canonical LaTeX manuscript
-├── docs/                    architecture and project documentation
-├── references/              literature library
-└── archive/                 historical code and generated dataset artifacts
+├── data/           tracked MagWi dataset + processed fingerprint database
+├── models/         model definitions only
+├── train/          scripts you actually run to train models
+├── tools/          small dataset/preprocessing utilities
+├── benchmarks/     benchmark summary, baselines, and generated runs
+├── paper/          current IEEE LaTeX paper
+├── references/     research papers
+├── docs/           useful architecture/data notes and project history
+└── archive/        old code and historical artifacts
 ```
+
+There is no custom Python package, CLI framework, config directory, CI workflow, or test
+framework. Hyperparameters are written clearly near the top of each training script.
 
 ## Setup
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate          # Windows: .venv\Scripts\activate
+```
+
+Windows:
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+Linux/macOS:
+
+```bash
+source .venv/bin/activate
+```
+
+Install dependencies:
+
+```bash
 python -m pip install -r requirements.txt
 ```
 
-The runnable scripts add `src/` to Python's import path themselves. There is no custom `sura` command and no editable package installation is required.
+## Dataset
 
-## Verified uploaded data
+The tracked raw dataset is already included at:
 
-The original file manifest and the current GitHub source trees have been verified against each other. The two source-tree Git object IDs are unchanged across the repository reorganization, so filenames and file contents are identical.
-
-Tracked source data:
-
-- **4,262 magnetic files**: 4,135 static and 127 continuous;
-- **2,831 Wi-Fi files**;
-- **7,093 raw source files in total**.
-
-Run the inventory at any time:
-
-```bash
-python scripts/data/count_dataset.py
+```text
+data/raw/magwi/
+├── Magnetic field dataset/
+└── WiFi dataset/
 ```
 
-The older project report that mentioned 4,399 Wi-Fi files refers to a different historical audit/snapshot and is not a completeness baseline for the uploaded dataset.
+Verified source counts:
 
-The uploaded prebuilt IT Engineering fingerprint database is at `data/processed/fingerprint_db/it_engineering/`. Older fused CSVs, metrics, merged datasets, and plots were moved to `archive/dataset_generated/` and are not treated as raw inputs.
+- 4,135 static magnetic files
+- 127 continuous magnetic files
+- 2,831 Wi-Fi files
+- 7,093 source files total
+
+These counts match the original directory manifest that was uploaded.
+
+The processed IT Engineering fingerprint database is included at:
+
+```text
+data/processed/fingerprint_db/it_engineering/
+```
+
+Quick checks:
+
+```bash
+python tools/count_dataset.py
+python tools/check_fingerprint_db.py
+```
+
+Rebuild the processed fingerprint database only when needed:
+
+```bash
+python tools/build_fingerprint_db.py --dry-run
+python tools/build_fingerprint_db.py
+```
 
 ## Training
 
-From the repository root:
+The normal workflow is simply:
 
 ```bash
-python scripts/train/train_wifi_heatmap.py
-python scripts/train/train_magnetic_sequence.py
-```
-
-Or:
-
-```bash
-cd scripts/train
+cd train
 python train_wifi_heatmap.py
 python train_magnetic_sequence.py
 ```
 
-Useful checks and short runs:
+Or from the repository root:
 
 ```bash
-python scripts/train/train_wifi_heatmap.py --dry-run
-python scripts/train/train_wifi_heatmap.py --epochs 5 --split random
-python scripts/train/train_magnetic_sequence.py --dry-run
-python scripts/train/train_magnetic_sequence.py --epochs 5
-python scripts/train/train_magnetic_sequence.py --sweep
+python train/train_wifi_heatmap.py
+python train/train_magnetic_sequence.py
 ```
 
-Outputs are written to `experiments/runs/`. The current scripts train the standalone Wi-Fi heatmap model and magnetic sequence CNN. CNN-output DualKalmanNet fusion is the next milestone.
-
-## Data scripts
+Before a long run, use the built-in dry run:
 
 ```bash
-python scripts/data/count_dataset.py
-python scripts/data/check_fingerprint_db.py
-python scripts/data/analyze_dataset.py
+python train/train_wifi_heatmap.py --dry-run
+python train/train_magnetic_sequence.py --dry-run
 ```
 
-Regenerate the fingerprint database when needed:
+Useful options:
 
 ```bash
-python scripts/data/build_fingerprint_db.py --dry-run
-python scripts/data/build_fingerprint_db.py
+python train/train_wifi_heatmap.py --epochs 5 --split random
+python train/train_wifi_heatmap.py --device cuda
+
+python train/train_magnetic_sequence.py --epochs 5
+python train/train_magnetic_sequence.py --sweep
+python train/train_magnetic_sequence.py --device cuda
 ```
 
-See [`RUNNING.md`](RUNNING.md), [`scripts/data/README.md`](scripts/data/README.md), and [`scripts/train/README.md`](scripts/train/README.md) for complete instructions.
+To change model/training settings, edit the `Configuration` block near the top of the relevant
+training script. No separate YAML config is required.
 
-## Tests and paper
+Each training run writes its checkpoint, metrics, predictions, CDF, and training curve under:
+
+```text
+benchmarks/runs/
+```
+
+The generated run directory is ignored by Git; benchmark numbers that we decide to keep are
+recorded in `benchmarks/results.yaml`.
+
+## Dataset tools
 
 ```bash
-python -m pip install pytest ruff
-python -m pytest
-python -m ruff check src scripts tests
+python tools/count_dataset.py
+python tools/check_fingerprint_db.py
+python tools/analyze_dataset.py
+python tools/build_fingerprint_db.py
 ```
 
-Compile the manuscript:
+## Benchmarks
+
+See [`benchmarks/README.md`](benchmarks/README.md) for the current benchmark table and the
+status of each result. Older KNN baselines are kept under `benchmarks/knn/`.
+
+## Paper
+
+The current paper source is:
+
+```text
+paper/main.tex
+```
+
+Compile locally with:
 
 ```bash
 cd paper
 latexmk -pdf -outdir=build main.tex
 ```
 
-The paper source of truth is `paper/main.tex`. Files under `archive/` are provenance only.
+The next research step is to replace the legacy magnetic-anomaly DualKalmanNet with fusion that
+uses the magnetic CNN's 2-D position estimate and uncertainty directly.
