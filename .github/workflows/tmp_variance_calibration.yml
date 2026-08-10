@@ -1,0 +1,23 @@
+name: Temporary magnetic variance calibration
+on:
+  push:
+    branches:
+      - feat/cnn-dual-kalmannet
+jobs:
+  calibrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Run calibration analysis
+        run: python benchmarks/analyze_magnetic_variance.py --walks 60 --bins 160 --device cpu --output /tmp/magnetic-calibration
+      - uses: actions/upload-artifact@v4
+        with:
+          name: magnetic-variance-calibration
+          path: /tmp/magnetic-calibration
