@@ -11,20 +11,25 @@ permissions:
 
 jobs:
   apply:
-    if: github.event.head_commit.message == 'test: apply relative variance implementation'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: feat/cnn-dual-kalmannet
-      - name: Apply tested source change
+      - name: Apply tested implementation and save results
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
+          if [ "$(git log -1 --pretty=%s)" != "test: apply relative variance implementation v2" ]; then
+            echo "No source-application work needed on this commit."
+            exit 0
+          fi
+
           python - <<'PY'
           from pathlib import Path
 
           path = Path('train/kalmannet_wifiheatmap_magneticCNN_pdr.py')
           text = path.read_text(encoding='utf-8')
-
           replacements = [
               (
                   '''    def __init__(self, hidden_size: int = FUSION_HIDDEN_SIZE) -> None:\n        super().__init__()\n        self.hidden_size = hidden_size\n        self.cell = nn.GRUCell(13, hidden_size)\n''',
@@ -40,7 +45,7 @@ jobs:
               ),
               (
                   '''        print("  magnetic CNN measurement quality:", magnetic_measurement_summary(testing))\n\n        torch.manual_seed(SEED)\n''',
-                  '''        print("  magnetic CNN measurement quality:", magnetic_measurement_summary(testing))\n\n        # Compute the relative-uncertainty reference from training predictions only.\n        # This avoids leaking any test-set uncertainty statistic into the fusion model.\n        training_mag_available = training[5][..., 0] > 0.5\n        training_logvar = training[4][..., 0][training_mag_available]\n        magnetic_reference_log_variance = float(np.median(training_logvar))\n        magnetic_reference_sigma = float(np.exp(0.5 * magnetic_reference_log_variance))\n        print(\n            f"  training-only magnetic reference: logvar={magnetic_reference_log_variance:.4f}, "\n            f"sigma={magnetic_reference_sigma:.3f} m"\n        )\n\n        torch.manual_seed(SEED)\n''',
+                  '''        print("  magnetic CNN measurement quality:", magnetic_measurement_summary(testing))\n\n        # Reference uncertainty comes from fusion-training magnetic predictions only.\n        training_mag_available = training[5][..., 0] > 0.5\n        training_logvar = training[4][..., 0][training_mag_available]\n        magnetic_reference_log_variance = float(np.median(training_logvar))\n        magnetic_reference_sigma = float(np.exp(0.5 * magnetic_reference_log_variance))\n        print(\n            f"  training-only magnetic reference: logvar={magnetic_reference_log_variance:.4f}, "\n            f"sigma={magnetic_reference_sigma:.3f} m"\n        )\n\n        torch.manual_seed(SEED)\n''',
               ),
               (
                   '''        dual = CNNMagneticDualKalmanNet(hidden_size=FUSION_HIDDEN_SIZE).to(device)\n''',
@@ -57,47 +62,23 @@ jobs:
               text = text.replace(old, new, 1)
           path.write_text(text, encoding='utf-8')
           PY
+
           python -m py_compile train/kalmannet_wifiheatmap_magneticCNN_pdr.py
-      - name: Recover weighted benchmark output
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh run download 31414305369 -n relative-variance-weight-results -D /tmp/weighted-results
-      - name: Save machine-readable full-run results
-        run: |
+
+          gh run download 31414305369 -n relative-variance-weight-results -D /tmp/weighted-results
           python - <<'PY'
           from pathlib import Path
-          import csv
-          import json
-          import shutil
-
+          import csv, json, shutil
           src = Path('/tmp/weighted-results/relative-weight-full/metrics.json')
-          if not src.is_file():
-              raise SystemExit(f'weighted metrics not found: {src}')
           metrics = json.loads(src.read_text(encoding='utf-8'))
-          dest = Path('benchmarks/cnn_dual_kalmannet_relative_variance_metrics.json')
-          shutil.copyfile(src, dest)
-
-          csv_path = Path('benchmarks/cnn_dual_kalmannet_relative_variance_training_history.csv')
-          with csv_path.open('w', newline='', encoding='utf-8') as handle:
+          shutil.copyfile(src, 'benchmarks/cnn_dual_kalmannet_relative_variance_metrics.json')
+          with Path('benchmarks/cnn_dual_kalmannet_relative_variance_training_history.csv').open('w', newline='', encoding='utf-8') as handle:
               writer = csv.writer(handle)
-              writer.writerow([
-                  'epoch',
-                  'full_wifi_baseline_train_mse',
-                  'full_wifi_weighted_cnn_dual_train_mse',
-                  'degraded_wifi_baseline_train_mse',
-                  'degraded_wifi_weighted_cnn_dual_train_mse',
-              ])
-              for index in range(150):
-                  writer.writerow([
-                      index + 1,
-                      metrics['full']['baseline_training_loss'][index],
-                      metrics['full']['dual_training_loss'][index],
-                      metrics['degraded']['baseline_training_loss'][index],
-                      metrics['degraded']['dual_training_loss'][index],
-                  ])
+              writer.writerow(['epoch','full_wifi_baseline_train_mse','full_wifi_weighted_cnn_dual_train_mse','degraded_wifi_baseline_train_mse','degraded_wifi_weighted_cnn_dual_train_mse'])
+              for i in range(150):
+                  writer.writerow([i+1, metrics['full']['baseline_training_loss'][i], metrics['full']['dual_training_loss'][i], metrics['degraded']['baseline_training_loss'][i], metrics['degraded']['dual_training_loss'][i]])
           PY
-      - name: Commit implementation and benchmark data
-        run: |
+
           git config user.name 'Jayendra Vijay Birhade'
           git config user.email 'cs1240891@iitd.ac.in'
           git add train/kalmannet_wifiheatmap_magneticCNN_pdr.py benchmarks/cnn_dual_kalmannet_relative_variance_metrics.json benchmarks/cnn_dual_kalmannet_relative_variance_training_history.csv
