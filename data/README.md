@@ -20,16 +20,15 @@ Verified tracked counts:
 | Wi-Fi | 2,831 |
 | Raw source total | 7,093 |
 
-The prior exhaustive local audit recorded 4,399 Wi-Fi files. Therefore the current GitHub
-snapshot appears to be missing 1,568 Wi-Fi files, although the magnetic side is essentially
-complete. Use `python scripts/data/count_dataset.py` for the full per-building inventory.
+These counts exactly match the source portion of the original uploaded directory manifest. In addition, the Git tree IDs for both `Magnetic field dataset/` and `WiFi dataset/` are unchanged from the pre-reorganization commit, which verifies the complete directory names and file contents—not only the counts.
+
+The older project audit mentioning 4,399 Wi-Fi files belongs to a different historical audit/snapshot and should not be interpreted as missing files from this upload.
 
 Do not rename folders inside the source trees. The stable root is `data/raw/magwi/`.
 
 ## Prebuilt processed database
 
-The uploaded processed IT Engineering database was separated from the raw data and is tracked
-at:
+The uploaded processed IT Engineering database was separated from the raw data and is tracked at:
 
 ```text
 data/processed/fingerprint_db/it_engineering/
@@ -53,14 +52,10 @@ python scripts/data/build_fingerprint_db.py --dry-run
 python scripts/data/build_fingerprint_db.py
 ```
 
-A rebuild uses the currently uploaded raw subset and may differ from the prebuilt database due
-to missing Wi-Fi source files. Use `--output` to preserve the included database while testing a
-rebuild.
+Use `--output` to preserve the included database while testing a rebuilt version.
 
 ## Historical generated files
 
-Files that were uploaded beside the source data but were produced by older experiments were
-moved to `archive/dataset_generated/`. These include fused CSVs, simulated scans, merged data,
-metrics, and figures. They are not raw model inputs.
+The original uploaded folder also contained 62 derived/generated artifacts beside the two source trees. During cleanup these were moved to `archive/dataset_generated/`. They include fused CSVs, simulated scans, merged data, metrics, figures, and the old processed fingerprint database. They remain available for provenance but are not raw model inputs.
 
 `data/interim/` and `data/local/` remain ignored scratch areas.

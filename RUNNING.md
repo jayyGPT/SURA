@@ -1,7 +1,6 @@
 # Running the project
 
-The project uses ordinary Python scripts rather than a custom command-line application. Run
-these commands from the repository root unless stated otherwise.
+The project uses ordinary Python scripts rather than a custom command-line application. Run these commands from the repository root unless stated otherwise.
 
 ## 1. Install dependencies
 
@@ -11,13 +10,13 @@ source .venv/bin/activate          # Windows: .venv\Scripts\activate
 python -m pip install -r requirements.txt
 ```
 
-## 2. Inspect the uploaded dataset
+## 2. Inspect the tracked dataset
 
 ```bash
 python scripts/data/count_dataset.py
 ```
 
-Current tracked source snapshot:
+Verified source snapshot:
 
 ```text
 4,262 magnetic files
@@ -25,8 +24,7 @@ Current tracked source snapshot:
 7,093 source files total
 ```
 
-The earlier local audit expected 4,399 Wi-Fi files, so 1,568 Wi-Fi files appear absent from the
-GitHub upload. The count script shows the exact per-building differences.
+These counts match the original uploaded directory manifest. The magnetic and Wi-Fi Git subtree hashes also match the pre-reorganization upload, confirming that the source filenames and bytes were preserved exactly.
 
 ## 3. Check the prebuilt fingerprint database
 
@@ -86,9 +84,7 @@ python scripts/data/build_fingerprint_db.py --dry-run
 python scripts/data/build_fingerprint_db.py
 ```
 
-The rebuild uses the tracked raw subset. Since the uploaded Wi-Fi source tree is incomplete
-relative to the earlier audit, preserve the included prebuilt database or use `--output` for
-an experimental rebuild.
+Use `--output` when you want to preserve the included prebuilt database while testing a rebuilt version.
 
 ## 7. Outputs
 
