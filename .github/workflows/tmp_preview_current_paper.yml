@@ -1,0 +1,25 @@
+name: Temporary current paper preview
+on:
+  push:
+    branches:
+      - feat/cnn-dual-kalmannet
+jobs:
+  build:
+    if: github.event.head_commit.message == 'test: build current paper preview'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install LaTeX
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq texlive-latex-base texlive-latex-extra texlive-fonts-recommended texlive-pictures latexmk >/dev/null
+      - name: Compile current paper
+        run: |
+          mkdir -p /tmp/current-paper
+          cd paper
+          latexmk -pdf -interaction=nonstopmode -halt-on-error -outdir=/tmp/current-paper main.tex
+      - uses: actions/upload-artifact@v4
+        with:
+          name: current-paper-preview
+          path: /tmp/current-paper/main.pdf
