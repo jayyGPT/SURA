@@ -8,7 +8,7 @@ on:
 jobs:
   test-fusion:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -20,6 +20,6 @@ jobs:
       - name: Syntax check
         run: python -m py_compile train/kalmannet_wifiheatmap_magneticCNN_pdr.py models/*.py tools/*.py
       - name: End-to-end dry run
-        run: python train/kalmannet_wifiheatmap_magneticCNN_pdr.py --dry-run --bins 80 --device cpu
-      - name: Small trained benchmark
-        run: python train/kalmannet_wifiheatmap_magneticCNN_pdr.py --smoke --device cpu --output /tmp/cnn-dual-smoke
+        run: python train/kalmannet_wifiheatmap_magneticCNN_pdr.py --dry-run --bins 160 --device cpu
+      - name: Medium trained benchmark
+        run: python train/kalmannet_wifiheatmap_magneticCNN_pdr.py --device cpu --train-walks 80 --test-walks 20 --fusion-epochs 60 --bins 160 --output /tmp/cnn-dual-medium
