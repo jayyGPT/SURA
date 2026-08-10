@@ -1,7 +1,7 @@
 # Running the project
 
-This project intentionally uses ordinary Python scripts rather than a custom `sura` command.
-Run the commands below from the repository root unless a section says otherwise.
+The project uses ordinary Python scripts rather than a custom command-line application. Run
+these commands from the repository root unless stated otherwise.
 
 ## 1. Install dependencies
 
@@ -11,36 +11,31 @@ source .venv/bin/activate          # Windows: .venv\Scripts\activate
 python -m pip install -r requirements.txt
 ```
 
-For tests and linting, also install:
-
-```bash
-python -m pip install pytest ruff
-```
-
-## 2. Check the uploaded dataset
+## 2. Inspect the uploaded dataset
 
 ```bash
 python scripts/data/count_dataset.py
 ```
 
-The expected raw location is `data/raw/magwi/`. The script prints total file counts, total
-size, static/continuous magnetic counts, Wi-Fi counts, and counts per building.
+Current tracked source snapshot:
 
-## 3. Build the fingerprint database
-
-Preview the raw inputs without processing:
-
-```bash
-python scripts/data/build_fingerprint_db.py --dry-run
+```text
+4,262 magnetic files
+2,831 Wi-Fi files
+7,093 source files total
 ```
 
-Build the database:
+The earlier local audit expected 4,399 Wi-Fi files, so 1,568 Wi-Fi files appear absent from the
+GitHub upload. The count script shows the exact per-building differences.
+
+## 3. Check the prebuilt fingerprint database
 
 ```bash
-python scripts/data/build_fingerprint_db.py
+python scripts/data/check_fingerprint_db.py
+python scripts/data/analyze_dataset.py
 ```
 
-Output:
+The included database is:
 
 ```text
 data/processed/fingerprint_db/it_engineering/
@@ -49,17 +44,7 @@ data/processed/fingerprint_db/it_engineering/
 └── coverage.png
 ```
 
-Validate it:
-
-```bash
-python scripts/data/check_fingerprint_db.py
-```
-
-Create a compact report:
-
-```bash
-python scripts/data/analyze_dataset.py
-```
+It lets the standalone models train without rebuilding raw data first.
 
 ## 4. Train the Wi-Fi heatmap model
 
@@ -67,7 +52,6 @@ python scripts/data/analyze_dataset.py
 python scripts/train/train_wifi_heatmap.py
 ```
 
-The default run trains both the random-visit split and the S9+ held-out-device split.
 Common options:
 
 ```bash
@@ -95,18 +79,27 @@ python scripts/train/train_magnetic_sequence.py --device cuda
 
 `--sweep` trains the configured 50, 84, 134, and 167-frame windows.
 
-## 6. Outputs
+## 6. Rebuild processed fingerprints when needed
 
-Training outputs are placed below:
+```bash
+python scripts/data/build_fingerprint_db.py --dry-run
+python scripts/data/build_fingerprint_db.py
+```
+
+The rebuild uses the tracked raw subset. Since the uploaded Wi-Fi source tree is incomplete
+relative to the earlier audit, preserve the included prebuilt database or use `--output` for
+an experimental rebuild.
+
+## 7. Outputs
 
 ```text
 experiments/runs/wifi_heatmap/
 experiments/runs/magnetic_sequence/
 ```
 
-These generated checkpoints and logs are ignored by Git.
+Training outputs are ignored by Git.
 
-## 7. Paper
+## 8. Paper
 
 ```bash
 cd paper

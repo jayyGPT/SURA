@@ -10,11 +10,13 @@ htmlcov/
 .venv/
 venv/
 
-# Generated data (the original data/raw/magwi dataset is tracked)
+# Generated data (raw source and the prebuilt fingerprint database are tracked)
 data/interim/*
 !data/interim/.gitkeep
 data/processed/*
 !data/processed/.gitkeep
+!data/processed/fingerprint_db/
+!data/processed/fingerprint_db/**
 data/local/*
 !data/local/.gitkeep
 

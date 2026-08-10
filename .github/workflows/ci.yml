@@ -9,14 +9,14 @@ on:
 
 jobs:
   dataset-inventory:
-    name: Verify uploaded dataset
+    name: Verify tracked dataset snapshot
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Count repository and raw dataset files
+      - name: Count source files
         run: |
           python scripts/data/count_dataset.py \
-            --verify-known-counts \
+            --verify-snapshot \
             --json dataset_inventory.json
       - name: Upload dataset inventory
         uses: actions/upload-artifact@v4
@@ -41,27 +41,17 @@ jobs:
         run: |
           python -m compileall -q src scripts tests
           python -m ruff check src scripts tests
-      - name: Test direct scripts with the tracked sample database
+      - name: Validate included database and direct training scripts
         run: |
-          python scripts/data/check_fingerprint_db.py \
-            --database data/sample/processed/fingerprint_db/it_engineering
-          python scripts/data/analyze_dataset.py \
-            --data-root data/sample \
-            --no-write
-          python scripts/train/train_wifi_heatmap.py \
-            --data-root data/sample \
-            --config configs/testing/wifi_heatmap_smoke.yaml \
-            --split random \
-            --dry-run
-          python scripts/train/train_magnetic_sequence.py \
-            --data-root data/sample \
-            --config configs/testing/magnetic_sequence_smoke.yaml \
-            --dry-run
+          python scripts/data/check_fingerprint_db.py
+          python scripts/data/analyze_dataset.py --no-write
+          python scripts/train/train_wifi_heatmap.py --dry-run
+          python scripts/train/train_magnetic_sequence.py --dry-run
       - name: Run tests
         run: python -m pytest
 
   raw-data-builder:
-    name: Build fingerprint database from uploaded raw data
+    name: Rebuild fingerprint database from tracked raw subset
     if: github.ref == 'refs/heads/agent/simplify-workflows'
     runs-on: ubuntu-latest
     steps:

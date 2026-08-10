@@ -1,6 +1,6 @@
 # Dataset layout
 
-The complete MagWi dataset is tracked in this repository at:
+## Raw uploaded source files
 
 ```text
 data/raw/magwi/
@@ -10,35 +10,26 @@ data/raw/magwi/
 └── WiFi dataset/
 ```
 
-Do not rename folders inside the original dataset. Active code refers only to the stable
-`data/raw/magwi` root and then uses the dataset's original internal names.
+Verified tracked counts:
 
-## Verify the upload
+| Source | Files |
+|---|---:|
+| Magnetic static | 4,135 |
+| Magnetic continuous | 127 |
+| Magnetic total | 4,262 |
+| Wi-Fi | 2,831 |
+| Raw source total | 7,093 |
 
-```bash
-python scripts/data/count_dataset.py
-```
+The prior exhaustive local audit recorded 4,399 Wi-Fi files. Therefore the current GitHub
+snapshot appears to be missing 1,568 Wi-Fi files, although the magnetic side is essentially
+complete. Use `python scripts/data/count_dataset.py` for the full per-building inventory.
 
-This reports the repository file count, raw dataset file count and size, magnetic static and
-continuous counts, Wi-Fi count, extensions, and per-building counts.
+Do not rename folders inside the source trees. The stable root is `data/raw/magwi/`.
 
-## Generated data
+## Prebuilt processed database
 
-The original raw files are tracked. Derived data is not tracked:
-
-```text
-data/interim/      temporary conversions
-data/processed/    fingerprint databases and model-ready data
-data/local/        machine-specific scratch data
-```
-
-Build the IT Engineering fingerprint database with:
-
-```bash
-python scripts/data/build_fingerprint_db.py
-```
-
-Output:
+The uploaded processed IT Engineering database was separated from the raw data and is tracked
+at:
 
 ```text
 data/processed/fingerprint_db/it_engineering/
@@ -47,12 +38,29 @@ data/processed/fingerprint_db/it_engineering/
 └── coverage.png
 ```
 
-Validate or summarize it with:
+Validate it:
 
 ```bash
 python scripts/data/check_fingerprint_db.py
-python scripts/data/analyze_dataset.py
 ```
 
-The Wi-Fi source files use a `.csv` filename but many contain BIFF8 Excel data. The builder
-handles this through the `xlrd` dependency listed in `requirements.txt`.
+This prebuilt database is the default input to both current training scripts.
+
+## Rebuilding
+
+```bash
+python scripts/data/build_fingerprint_db.py --dry-run
+python scripts/data/build_fingerprint_db.py
+```
+
+A rebuild uses the currently uploaded raw subset and may differ from the prebuilt database due
+to missing Wi-Fi source files. Use `--output` to preserve the included database while testing a
+rebuild.
+
+## Historical generated files
+
+Files that were uploaded beside the source data but were produced by older experiments were
+moved to `archive/dataset_generated/`. These include fused CSVs, simulated scans, merged data,
+metrics, and figures. They are not raw model inputs.
+
+`data/interim/` and `data/local/` remain ignored scratch areas.

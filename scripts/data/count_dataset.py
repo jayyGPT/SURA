@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Count the tracked MagWi dataset and report its directory-level inventory."""
+"""Count the tracked MagWi upload and compare it with the earlier dataset audit."""
 
 from __future__ import annotations
 
@@ -11,7 +11,17 @@ from pathlib import Path
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_DATASET_ROOT = REPOSITORY_ROOT / "data" / "raw" / "magwi"
 IGNORED_NAMES = {".DS_Store", ".gitkeep", "Thumbs.db"}
-KNOWN_COUNTS = {
+
+# Exact source-file counts in the GitHub upload that this repository now tracks.
+TRACKED_SNAPSHOT_COUNTS = {
+    "dataset_files": 7093,
+    "magnetic_files": 4262,
+    "wifi_files": 2831,
+}
+
+# Counts from the earlier exhaustive local audit. These are shown as a completeness reference,
+# not enforced by default, because the current GitHub upload contains fewer Wi-Fi files.
+REFERENCE_AUDIT_COUNTS = {
     "dataset_files": 8660,
     "magnetic_files": 4261,
     "wifi_files": 4399,
@@ -34,6 +44,18 @@ def _group_by_building(files: list[Path], root: Path, prefix: tuple[str, ...]) -
         if parts[:prefix_length] == prefix and len(parts) > prefix_length:
             counts[parts[prefix_length]] += 1
     return dict(sorted(counts.items()))
+
+
+def _comparison(payload: dict[str, object], expected: dict[str, int]) -> dict[str, object]:
+    return {
+        name: {
+            "expected": count,
+            "actual": int(payload[name]),
+            "difference": int(payload[name]) - count,
+            "matches": int(payload[name]) == count,
+        }
+        for name, count in expected.items()
+    }
 
 
 def build_inventory(dataset_root: Path, repository_root: Path = REPOSITORY_ROOT) -> dict[str, object]:
@@ -93,14 +115,8 @@ def build_inventory(dataset_root: Path, repository_root: Path = REPOSITORY_ROOT)
             ("WiFi dataset",),
         ),
     }
-    payload["known_count_comparison"] = {
-        name: {
-            "expected": expected,
-            "actual": int(payload[name]),
-            "matches": int(payload[name]) == expected,
-        }
-        for name, expected in KNOWN_COUNTS.items()
-    }
+    payload["tracked_snapshot_comparison"] = _comparison(payload, TRACKED_SNAPSHOT_COUNTS)
+    payload["reference_audit_comparison"] = _comparison(payload, REFERENCE_AUDIT_COUNTS)
     return payload
 
 
@@ -113,22 +129,28 @@ def _human_bytes(value: int) -> str:
     return f"{value} B"
 
 
+def _print_comparison(title: str, comparison: dict[str, object]) -> None:
+    print(f"\n{title}:")
+    for name, result in comparison.items():
+        marker = "OK" if result["matches"] else "DIFF"
+        print(
+            f"  {name:20s} expected={result['expected']:,} "
+            f"actual={result['actual']:,} difference={result['difference']:+,} [{marker}]"
+        )
+
+
 def print_inventory(payload: dict[str, object]) -> None:
     print(f"Repository files:          {payload['repository_files']:,}")
-    print(f"Raw dataset files:         {payload['dataset_files']:,}")
-    print(f"Raw dataset size:          {_human_bytes(int(payload['dataset_bytes']))}")
+    print(f"Raw source files:          {payload['dataset_files']:,}")
+    print(f"Raw source size:           {_human_bytes(int(payload['dataset_bytes']))}")
     print(f"Magnetic files:            {payload['magnetic_files']:,}")
     print(f"  Static:                  {payload['magnetic_static_files']:,}")
     print(f"  Continuous:              {payload['magnetic_continuous_files']:,}")
     print(f"Wi-Fi files:               {payload['wifi_files']:,}")
-    print(f"Unexpected top-level files:{len(payload['extra_files']):>9,}")
-    print("\nKnown-count comparison:")
-    for name, result in payload["known_count_comparison"].items():
-        marker = "OK" if result["matches"] else "MISMATCH"
-        print(
-            f"  {name:20s} expected={result['expected']:,} "
-            f"actual={result['actual']:,} [{marker}]"
-        )
+    print(f"Unexpected raw files:      {len(payload['extra_files']):,}")
+    _print_comparison("Tracked GitHub snapshot", payload["tracked_snapshot_comparison"])
+    _print_comparison("Earlier full-dataset audit reference", payload["reference_audit_comparison"])
+
     print("\nFiles by building:")
     for label, key in (
         ("Magnetic static", "magnetic_static_by_building"),
@@ -150,9 +172,9 @@ def main() -> int:
     )
     parser.add_argument("--json", type=Path, help="write the inventory to this JSON file")
     parser.add_argument(
-        "--verify-known-counts",
+        "--verify-snapshot",
         action="store_true",
-        help="return an error when the historic 4,261/4,399 file counts do not match",
+        help="return an error if tracked source-file counts change unexpectedly",
     )
     args = parser.parse_args()
 
@@ -163,14 +185,14 @@ def main() -> int:
         args.json.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
         print(f"\nWrote: {args.json}")
 
-    if args.verify_known_counts:
+    if args.verify_snapshot:
         mismatches = [
             name
-            for name, result in payload["known_count_comparison"].items()
+            for name, result in payload["tracked_snapshot_comparison"].items()
             if not result["matches"]
         ]
-        if mismatches:
-            print(f"\nCount verification failed: {', '.join(mismatches)}")
+        if mismatches or payload["extra_files"]:
+            print(f"\nSnapshot verification failed: {', '.join(mismatches) or 'extra files'}")
             return 1
     return 0
 
