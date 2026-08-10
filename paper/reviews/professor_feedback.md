@@ -261,11 +261,15 @@ or the equivalent low-pass complement approach should be stated explicitly.
 - [x] R1: Discretize Gaussian target — added Eq. for $q_c \propto \exp(-\|\mathbf{c}_c - \mathbf{x}_{true}\|^2/2\sigma^2)$ before KL loss
 - [x] R2: Add HPF recurrence equation — added $\bar{a}_t = \alpha\bar{a}_{t-1} + (1-\alpha)a_t$ and $\tilde{a}_t = a_t - \bar{a}_t$ to PDR section
 - [x] R3: Create TikZ PDR geometry schematic — new single-column `fig:pdr_geometry` added
-- [ ] R4: Explicitly define $A_{\text{obs}} = m_N - \bar{m}_N^{(\text{dev})} = \|\mathbf{m}_t\| - \bar{m}_N^{(\text{dev})}$ (linked to Eq. for $m_N$)
-- [ ] R5: Resolved CNN-vs-scalar-gradient inconsistency — added "Note on the CNN" paragraph explaining CNN is standalone benchmark; scalar-gradient mechanism justified by causality constraint
+- [x] R4: Resolved by removing the legacy scalar-anomaly path from the active architecture; $A_{\text{obs}}$, $A(\mathbf{x})$, and $\nabla A$ are no longer used by the proposed fusion model.
+- [x] R5: Resolved by integrating the magnetic CNN output directly into DualKalmanNet: $\mathbf{y}_{mag}=\mathbf{z}_{mag}-\mathbf{x}_{pred}$, with CNN log-variance used as a GRU confidence input and a training-normalized relative correction weight.
 - [x] R6: Refactored Fig. 4 into (a)(b)(c) subfigures using `subcaption`; added `\usepackage{subcaption}` to preamble
 - [ ] R7: Updated all text references from "top/bottom" to `fig:cdf_full` and `fig:cdf_degraded` subfigure labels (KNN baseline plot regeneration pending)
 - [x] R8: Added explanatory paragraph for Fig. 5 trajectory visualization in Section IV
 - [x] R9: Moved postural independence discussion from Section IV.C to end of Section II.C (Magnetic Sequence Matcher)
+
+### Follow-up figure TODO (not an unresolved professor comment)
+
+- [ ] Recreate the trajectory visualization using the current CNN-output, relative-variance-weighted DualKalmanNet. The legacy trajectory image represented the old scalar-anomaly fusion path and was removed when R4/R5 were resolved. Once regenerated, re-add/update the accompanying trajectory discussion if the figure remains useful.
 
 
