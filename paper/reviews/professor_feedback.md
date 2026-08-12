@@ -270,6 +270,6 @@ or the equivalent low-pass complement approach should be stated explicitly.
 
 ### Follow-up figure TODO (not an unresolved professor comment)
 
-- [ ] Recreate the trajectory visualization using the current CNN-output, relative-variance-weighted DualKalmanNet. The legacy trajectory image represented the old scalar-anomaly fusion path and was removed when R4/R5 were resolved. Once regenerated, re-add/update the accompanying trajectory discussion if the figure remains useful.
+- [x] Recreated the trajectory visualization from the current CNN-output, relative-variance-weighted DualKalmanNet benchmark outputs. The new figure uses an actual degraded-Wi-Fi test walk, includes open-loop PDR and Wi-Fi update times, uses a non-cherry-picked representative selection rule, and is discussed explicitly in Section IV.
 
 

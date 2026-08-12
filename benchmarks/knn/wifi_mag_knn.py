@@ -420,6 +420,100 @@ def _plot_trajectory_cdf(
     plt.close(fig)
 
 
+
+def _trajectory_turn_score(target: np.ndarray) -> float:
+    displacement = np.diff(np.asarray(target, dtype=float), axis=0)
+    lengths = np.linalg.norm(displacement, axis=1)
+    displacement = displacement[lengths > 1e-4]
+    if len(displacement) < 2:
+        return 0.0
+    heading = np.unwrap(np.arctan2(displacement[:, 1], displacement[:, 0]))
+    return float(np.abs(np.diff(heading)).sum())
+
+
+def _select_representative_walk(
+    baseline_errors: np.ndarray,
+    dual_errors: np.ndarray,
+    target: np.ndarray,
+) -> tuple[int, dict[str, float | int | str]]:
+    """Pick a typical-but-geometrically-informative walk without cherry-picking.
+
+    Candidate walks are restricted to the interquartile range of per-walk
+    improvements (Wi-Fi-only error minus weighted-Dual error). Within that
+    central 50% we choose the path with the largest accumulated heading change,
+    so the figure contains several corridor turns while remaining a typical
+    performance case rather than a best-case example.
+    """
+    improvement = np.asarray(baseline_errors) - np.asarray(dual_errors)
+    q25, q75 = np.percentile(improvement, [25, 75])
+    candidates = np.flatnonzero((improvement >= q25) & (improvement <= q75))
+    if not len(candidates):
+        candidates = np.arange(len(improvement))
+    scores = np.asarray([_trajectory_turn_score(path) for path in target], dtype=float)
+    index = int(candidates[np.argmax(scores[candidates])])
+    return index, {
+        "selection_rule": "max turn score among walks in the interquartile improvement range",
+        "walk_index_zero_based": index,
+        "improvement_q25_m": float(q25),
+        "improvement_q75_m": float(q75),
+        "selected_improvement_m": float(improvement[index]),
+        "selected_turn_score_rad": float(scores[index]),
+    }
+
+
+def _plot_representative_trajectory(
+    output: Path,
+    index: int,
+    cache: dict[str, dict[str, np.ndarray]],
+    corridor_coordinates: np.ndarray,
+) -> None:
+    """Plot an actual degraded-Wi-Fi test walk using current model outputs."""
+    data = cache["degraded"]
+    start = data["start"][index]
+    truth = data["target"][index]
+    pdr = start[None, :] + np.cumsum(data["motion"][index], axis=0)
+    wifi = start[None, :] + data["wifi_prediction"][index]
+    dual = start[None, :] + data["dual_prediction"][index]
+    wifi_updates = data["wifi_mask"][index, :, 0] > 0.5
+
+    fig, ax = plt.subplots(figsize=(8.4, 4.8))
+    combined = np.vstack((truth, pdr, wifi, dual))
+    x_min, y_min = combined.min(axis=0) - 3.0
+    x_max, y_max = combined.max(axis=0) + 3.0
+    corridor = np.asarray(corridor_coordinates)
+    local = corridor[
+        (corridor[:, 0] >= x_min) & (corridor[:, 0] <= x_max)
+        & (corridor[:, 1] >= y_min) & (corridor[:, 1] <= y_max)
+    ]
+    ax.scatter(local[:, 0], local[:, 1], s=12, marker="s", color="0.88", zorder=0)
+    ax.plot(truth[:, 0], truth[:, 1], "k--", linewidth=2.6, label="Ground truth", zorder=5)
+    ax.plot(pdr[:, 0], pdr[:, 1], color="0.55", linestyle=":", linewidth=2.0,
+            label="PDR only", zorder=2)
+    ax.plot(wifi[:, 0], wifi[:, 1], linewidth=2.2, label="Wi-Fi-only KalmanNet", zorder=3)
+    ax.plot(dual[:, 0], dual[:, 1], linewidth=2.5,
+            label="CNN Dual + relative variance", zorder=4)
+    ax.scatter(
+        truth[wifi_updates, 0], truth[wifi_updates, 1],
+        s=28, facecolors="none", edgecolors="0.25", linewidths=1.0,
+        label="Wi-Fi update time", zorder=6,
+    )
+    ax.scatter(truth[0, 0], truth[0, 1], s=55, marker="o", facecolors="white",
+               edgecolors="black", linewidths=1.5, zorder=7)
+    ax.scatter(truth[-1, 0], truth[-1, 1], s=60, marker="X", color="black", zorder=7)
+
+    ax.set_xlabel("x (m)", fontsize=14)
+    ax.set_ylabel("y (m)", fontsize=14)
+    ax.set_title("Representative degraded-Wi-Fi test trajectory", fontsize=14)
+    ax.tick_params(axis="both", labelsize=12)
+    ax.grid(alpha=0.28)
+    ax.set_xlim(x_min, x_max)
+    ax.set_ylim(y_min, y_max)
+    ax.set_aspect("equal", adjustable="box")
+    ax.legend(fontsize=10, ncol=2, loc="best")
+    fig.tight_layout()
+    fig.savefig(output, dpi=240, bbox_inches="tight")
+    plt.close(fig)
+
 def run_trajectory(
     database: Path,
     wifi_checkpoint: Path,
@@ -447,6 +541,7 @@ def run_trajectory(
         "bins": bins,
         "regimes": {},
     }
+    trajectory_cache: dict[str, dict[str, np.ndarray]] = {}
 
     for key, (name, wifi_period, dropout) in regimes.items():
         print(f"\n{'=' * 72}\n{name}\n{'=' * 72}")
@@ -492,10 +587,25 @@ def run_trajectory(
             knn_prediction=knn_prediction,
             dual_weighted_prediction=dual_prediction,
             target=testing[6],
+            start=testing[7],
+            motion=testing[0],
+            wifi_mask=testing[2],
+            magnetic_mask=testing[5],
         )
         _plot_trajectory_cdf(
             regime_dir / "cdf.png", name, baseline_errors, knn_errors, dual_errors
         )
+        trajectory_cache[key] = {
+            "target": testing[6],
+            "start": testing[7],
+            "motion": testing[0],
+            "wifi_mask": testing[2],
+            "wifi_prediction": baseline_prediction,
+            "dual_prediction": dual_prediction,
+            "wifi_error": baseline_errors,
+            "dual_error": dual_errors,
+        }
+
         report["regimes"][key] = {
             "name": name,
             "wifi_period_s": wifi_period,
@@ -505,6 +615,29 @@ def run_trajectory(
             "cnn_dual_relative_variance": summarize(dual_errors),
             "magnetic_reference_log_variance_training": reference_logvar,
         }
+
+    if "degraded" in trajectory_cache:
+        degraded = trajectory_cache["degraded"]
+        representative_index, selection = _select_representative_walk(
+            degraded["wifi_error"], degraded["dual_error"], degraded["target"]
+        )
+        selection.update(
+            {
+                "wifi_only_mean_error_m": float(degraded["wifi_error"][representative_index]),
+                "weighted_dual_mean_error_m": float(degraded["dual_error"][representative_index]),
+                "regime": "Degraded Wi-Fi (5 s, 40% AP drop)",
+            }
+        )
+        report["representative_trajectory"] = selection
+        (trajectory_dir / "representative_trajectory.json").write_text(
+            json.dumps(selection, indent=2) + "\n", encoding="utf-8"
+        )
+        _plot_representative_trajectory(
+            trajectory_dir / "representative_trajectory.png",
+            representative_index,
+            trajectory_cache,
+            env.corridor.coordinates,
+        )
 
     (trajectory_dir / "metrics.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     return report

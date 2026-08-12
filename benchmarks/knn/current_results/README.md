@@ -17,3 +17,8 @@ The real static protocol and the synthetic trajectory protocol are deliberately 
 - Degraded Wi-Fi: KNN 2.606 m; Wi-Fi-only KalmanNet 1.533 m; weighted CNN DualKalmanNet 1.154 m
 
 The trajectory KNN uses no PDR or temporal history. Its purpose is to test whether simply having the current Wi-Fi and magnetic learned measurements is enough to match the learned temporal filter.
+
+
+## Representative trajectory figure
+
+`trajectory_protocol/representative_trajectory.png` is generated from the same 250/60 trajectory benchmark. It is not hand drawn. The displayed degraded-Wi-Fi walk is chosen from the interquartile range of per-walk improvements and then selected for the largest accumulated heading change, giving a typical-performance example with several visible turns rather than a best-case trajectory. Exact selection metadata and per-walk errors are stored in `trajectory_protocol/representative_trajectory.json`.
