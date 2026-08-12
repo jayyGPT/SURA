@@ -477,8 +477,15 @@ def _plot_representative_trajectory(
     wifi_updates = data["wifi_mask"][index, :, 0] > 0.5
 
     fig, ax = plt.subplots(figsize=(8.4, 4.8))
+    combined = np.vstack((truth, pdr, wifi, dual))
+    x_min, y_min = combined.min(axis=0) - 3.0
+    x_max, y_max = combined.max(axis=0) + 3.0
     corridor = np.asarray(corridor_coordinates)
-    ax.scatter(corridor[:, 0], corridor[:, 1], s=10, marker="s", color="0.88", zorder=0)
+    local = corridor[
+        (corridor[:, 0] >= x_min) & (corridor[:, 0] <= x_max)
+        & (corridor[:, 1] >= y_min) & (corridor[:, 1] <= y_max)
+    ]
+    ax.scatter(local[:, 0], local[:, 1], s=12, marker="s", color="0.88", zorder=0)
     ax.plot(truth[:, 0], truth[:, 1], "k--", linewidth=2.6, label="Ground truth", zorder=5)
     ax.plot(pdr[:, 0], pdr[:, 1], color="0.55", linestyle=":", linewidth=2.0,
             label="PDR only", zorder=2)
@@ -499,7 +506,9 @@ def _plot_representative_trajectory(
     ax.set_title("Representative degraded-Wi-Fi test trajectory", fontsize=14)
     ax.tick_params(axis="both", labelsize=12)
     ax.grid(alpha=0.28)
-    ax.set_aspect("equal", adjustable="datalim")
+    ax.set_xlim(x_min, x_max)
+    ax.set_ylim(y_min, y_max)
+    ax.set_aspect("equal", adjustable="box")
     ax.legend(fontsize=10, ncol=2, loc="best")
     fig.tight_layout()
     fig.savefig(output, dpi=240, bbox_inches="tight")
