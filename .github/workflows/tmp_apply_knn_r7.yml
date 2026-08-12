@@ -1,0 +1,38 @@
+name: Temporary R7 KNN paper update
+on:
+  push:
+    branches:
+      - tmp/knn-baseline-run
+permissions:
+  contents: write
+jobs:
+  revise:
+    if: "${{ github.event.head_commit.message == 'test: run R7 KNN paper update' }}"
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: tmp/knn-baseline-run
+      - name: Apply R7 manuscript update
+        run: python .github/tmp_apply_knn_r7.py
+      - name: Install LaTeX
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq texlive-latex-base texlive-latex-extra texlive-fonts-recommended texlive-pictures latexmk >/dev/null
+      - name: Compile paper
+        run: |
+          mkdir -p /tmp/knn-r7-paper
+          cd paper
+          latexmk -pdf -interaction=nonstopmode -halt-on-error -outdir=/tmp/knn-r7-paper main.tex
+      - name: Save manuscript changes
+        run: |
+          git config user.name 'Jayendra Vijay Birhade'
+          git config user.email 'cs1240891@iitd.ac.in'
+          git add paper/main.tex paper/reviews/professor_feedback.md benchmarks/knn/README.md benchmarks/knn/current_results/README.md
+          git commit -m 'paper: add KNN baseline and resolve R7'
+          git push origin HEAD:tmp/knn-baseline-run
+      - uses: actions/upload-artifact@v4
+        with:
+          name: knn-r7-paper-preview
+          path: /tmp/knn-r7-paper/main.pdf
