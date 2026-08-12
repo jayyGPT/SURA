@@ -264,7 +264,7 @@ or the equivalent low-pass complement approach should be stated explicitly.
 - [x] R4: Resolved by removing the legacy scalar-anomaly path from the active architecture; $A_{\text{obs}}$, $A(\mathbf{x})$, and $\nabla A$ are no longer used by the proposed fusion model.
 - [x] R5: Resolved by integrating the magnetic CNN output directly into DualKalmanNet: $\mathbf{y}_{mag}=\mathbf{z}_{mag}-\mathbf{x}_{pred}$, with CNN log-variance used as a GRU confidence input and a training-normalized relative correction weight.
 - [x] R6: Refactored Fig. 4 into (a)(b)(c) subfigures using `subcaption`; added `\usepackage{subcaption}` to preamble
-- [ ] R7: Updated all text references from "top/bottom" to `fig:cdf_full` and `fig:cdf_degraded` subfigure labels (KNN baseline plot regeneration pending)
+- [x] R7: Regenerated the KNN/fusion CDF panels with paper-readable axes, ticks, and legends. Added (i) a real held-out-S9+ classical fingerprint KNN panel and (ii) matched-protocol non-temporal Wi-Fi+magnetic KNN curves for full/degraded Wi-Fi. Source note: the MagWi paper is used as the dataset reference; no explicit KNN localization specification/result was located in the paper, so these are our reproducible KNN baselines rather than numbers attributed to Ashraf et al.
 - [x] R8: Added explanatory paragraph for Fig. 5 trajectory visualization in Section IV
 - [x] R9: Moved postural independence discussion from Section IV.C to end of Section II.C (Magnetic Sequence Matcher)
 

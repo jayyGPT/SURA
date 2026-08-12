@@ -393,41 +393,62 @@ Held-out device & Samsung S9+ & 2.02 m & 1.68 m & 3.74 m & 9.12 m \\ \bottomrule
 
 
 
-Figure~\ref{fig:cdf_mag} displays the continuous spatial matching error CDF for the 1D-CNN magnetic sequence model (MAE of 3.58~m), validating its capability as a structural spatial anchor during periods of Wi-Fi attenuation.
+For a classical non-neural reference, we additionally evaluate K-nearest-neighbor (KNN) localization on the MagWi fingerprints~\cite{magwi}. Figure~\ref{fig:knn_fusion_cdfs}(a) reports a real held-out-device experiment: 726 fingerprint visits from A8, G7, and S8 are used for training and 90 S9+ visits are reserved for final testing. Hyperparameters are selected only from the training phones using leave-one-phone-out cross-validation. Wi-Fi-only KNN achieves 3.31~m mean error (1.57~m median), whereas magnetic-only KNN reaches 17.54~m and a simple Wi-Fi--magnetic feature concatenation reaches 7.46~m. The degradation of the naive magnetic variants highlights the strong cross-device sensitivity of static magnetic fingerprints and motivates learned, sequence-based magnetic matching rather than direct raw-feature concatenation.
 
 \subsection{Dual-Innovation KalmanNet Fusion Comparison}
 
 Table \ref{tab:fusion_comparison} details the comparative performance of the temporal fusion mechanisms across the independent test walks, evaluated under two separate signal availability regimes.
 
 \begin{table}[htbp]
-\caption{CNN-Output DualKalmanNet Comparison (60 Test Walks)}
+\caption{Fusion Comparison on the Matched 60-Walk Protocol}
 \label{tab:fusion_comparison}
 \centering
 \footnotesize
-\setlength{\tabcolsep}{2pt}
+\setlength{\tabcolsep}{1.8pt}
 \renewcommand{\arraystretch}{1.08}
-\begin{tabular}{@{}p{0.18\columnwidth}p{0.35\columnwidth}p{0.25\columnwidth}p{0.12\columnwidth}@{}}
+\begin{tabular}{@{}p{0.17\columnwidth}p{0.35\columnwidth}p{0.25\columnwidth}p{0.12\columnwidth}@{}}
 \toprule
 \textbf{Regime} & \textbf{Model} & \textbf{Mean Err.} & \textbf{Med.} \\ \midrule
 Full Wi-Fi (1 Hz)
 & WiFi-only KalmanNet & \textbf{0.473 $\pm$ 0.035 m} & 0.449 m \\
+& WiFi+Mag KNN (non-temp.) & 0.802 $\pm$ 0.038 m & 0.772 m \\
 & CNN DualKalmanNet & 0.506 $\pm$ 0.056 m & 0.440 m \\
 & CNN Dual + rel. variance & 0.494 $\pm$ 0.046 m & \textbf{0.437 m} \\ \midrule
 Degraded Wi-Fi (5 s, 40\% drop)
 & WiFi-only KalmanNet & 1.533 $\pm$ 0.193 m & 1.392 m \\
+& WiFi+Mag KNN (non-temp.) & 2.606 $\pm$ 0.184 m & 2.560 m \\
 & CNN DualKalmanNet & 1.171 $\pm$ 0.139 m & \textbf{1.042 m} \\
 & \textbf{CNN Dual + rel. variance} & \textbf{1.154 $\pm$ 0.129 m} & 1.113 m \\ \bottomrule
 \end{tabular}
 \end{table}
 
-\begin{figure}[htbp]
+\begin{figure*}[htbp]
 \centering
-\includegraphics[width=0.85\columnwidth]{figures/mag_cdf_cropped.png}
-\caption{Standalone 1D-CNN magnetic sequence matcher error CDF (MAE 3.58~m).}
-\label{fig:cdf_mag}
-\end{figure}
+\begin{subfigure}[t]{0.44\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{../benchmarks/knn/current_results/static_heldout_device/cdf.png}
+  \caption{Real static fingerprints with S9+ held out.}
+  \label{fig:knn_static}
+\end{subfigure}\hfill
+\begin{subfigure}[t]{0.44\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{../benchmarks/knn/current_results/trajectory_protocol/full/cdf.png}
+  \caption{Matched trajectory protocol, full Wi-Fi (1~Hz).}
+  \label{fig:knn_full}
+\end{subfigure}
 
-Under full 1~Hz Wi-Fi, the Wi-Fi-only KalmanNet retains the lowest mean error at 0.473~m, while the variance-weighted CNN fusion obtains 0.494~m. However, its median error improves slightly from 0.449~m to 0.437~m, and relative variance weighting improves the CNN-fusion mean from 0.506~m to 0.494~m. The benefit becomes substantially clearer when Wi-Fi is degraded. With one Wi-Fi update every 5~s and 40\% AP dropout, directly fusing the CNN output reduces the mean error from 1.533~m to 1.171~m (23.6\%). Adding relative magnetic-variance weighting further reduces the mean to 1.154~m, corresponding to a 24.7\% reduction over Wi-Fi-only KalmanNet. The weighting particularly suppresses poor magnetic fixes: the degraded-regime P90 decreases from 2.064~m for the unweighted CNN fusion to 1.612~m with relative variance weighting. These results show that the magnetic CNN is most valuable as an absolute spatial anchor during sparse Wi-Fi periods, while its predicted uncertainty helps limit the high-error tail.
+\vspace{0.15cm}
+\begin{subfigure}[t]{0.44\textwidth}
+  \centering
+  \includegraphics[width=\linewidth]{../benchmarks/knn/current_results/trajectory_protocol/degraded/cdf.png}
+  \caption{Matched trajectory protocol, degraded Wi-Fi.}
+  \label{fig:knn_degraded}
+\end{subfigure}
+\caption{KNN baselines and current fusion CDFs. (a) Real static fingerprints with S9+ held out. (b)--(c) Matched 250-training/60-test synthetic walks; the KNN uses current Wi-Fi/magnetic fixes and masks only, without PDR motion or recurrent history.}
+\label{fig:knn_fusion_cdfs}
+\end{figure*}
+
+For the matched trajectory comparison in Fig.~\ref{fig:knn_fusion_cdfs}(b)--(c), KNN is intentionally non-temporal: it receives only the contemporaneous Wi-Fi heatmap position, magnetic-CNN position and log-variance, and the two availability masks. Its value of $K$ is selected by five-fold grouped cross-validation in which all bins from a trajectory remain in the same fold. Under full 1~Hz Wi-Fi, the KNN baseline obtains 0.802~m mean error, compared with 0.473~m for Wi-Fi-only KalmanNet and 0.494~m for the variance-weighted CNN fusion. The latter also improves median error slightly from 0.449~m to 0.437~m. Under degraded Wi-Fi, the gap is larger: non-temporal KNN reaches 2.606~m, Wi-Fi-only KalmanNet reaches 1.533~m, and the variance-weighted DualKalmanNet reaches 1.154~m. Direct CNN fusion without the explicit variance weight reaches 1.171~m, so relative magnetic-variance weighting yields a 24.7\% reduction over Wi-Fi-only KalmanNet and reduces the degraded-regime P90 from 2.064~m for unweighted CNN fusion to 1.612~m. The separation from KNN in Fig.~\ref{fig:knn_fusion_cdfs}(c) indicates that the gain does not arise merely from having both absolute sensor estimates available; PDR propagation and learned temporal, context-dependent fusion are important in sparse-Wi-Fi operation.
 
 \section{Conclusion}\label{sec:conclusion}
 
