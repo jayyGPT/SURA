@@ -1,0 +1,49 @@
+name: Temporary current KNN baseline
+on:
+  push:
+    branches:
+      - tmp/knn-baseline-run
+permissions:
+  contents: write
+jobs:
+  benchmark:
+    if: "${{ github.event.head_commit.message == 'test: run current KNN baseline' }}"
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: tmp/knn-baseline-run
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Restore benchmark script
+        run: |
+          mkdir -p benchmarks/knn
+          base64 -d .github/tmp_knn_payload.b64 | gzip -d > benchmarks/knn/wifi_mag_knn.py
+          python -m py_compile benchmarks/knn/wifi_mag_knn.py
+      - name: Static held-out-device benchmark
+        run: python benchmarks/knn/wifi_mag_knn.py --protocol static --output /tmp/knn-static
+      - name: Medium trajectory smoke benchmark
+        run: python benchmarks/knn/wifi_mag_knn.py --protocol trajectory --train-walks 40 --test-walks 10 --fusion-epochs 20 --bins 120 --output /tmp/knn-medium
+      - name: Full benchmark
+        run: python benchmarks/knn/wifi_mag_knn.py --protocol both --output /tmp/knn-full
+      - name: Save reviewed outputs
+        run: |
+          rm -rf benchmarks/knn/current_results
+          cp -R /tmp/knn-full benchmarks/knn/current_results
+          git config user.name 'Jayendra Vijay Birhade'
+          git config user.email 'cs1240891@iitd.ac.in'
+          git add benchmarks/knn/wifi_mag_knn.py benchmarks/knn/current_results
+          git commit -m 'benchmark: add current Wi-Fi magnetic KNN baseline'
+          git push origin HEAD:tmp/knn-baseline-run
+      - uses: actions/upload-artifact@v4
+        with:
+          name: current-knn-baseline-results
+          path: |
+            /tmp/knn-static
+            /tmp/knn-medium
+            /tmp/knn-full
