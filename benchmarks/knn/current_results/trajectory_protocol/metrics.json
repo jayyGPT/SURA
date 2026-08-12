@@ -155,5 +155,16 @@
       },
       "magnetic_reference_log_variance_training": 3.6304352283477783
     }
+  },
+  "representative_trajectory": {
+    "selection_rule": "max turn score among walks in the interquartile improvement range",
+    "walk_index_zero_based": 25,
+    "improvement_q25_m": -0.18325059115886688,
+    "improvement_q75_m": 0.9091031700372696,
+    "selected_improvement_m": 0.19329142570495605,
+    "selected_turn_score_rad": 6.283409274331177,
+    "wifi_only_mean_error_m": 1.9469789266586304,
+    "weighted_dual_mean_error_m": 1.7536875009536743,
+    "regime": "Degraded Wi-Fi (5 s, 40% AP drop)"
   }
 }
