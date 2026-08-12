@@ -424,13 +424,13 @@ Degraded Wi-Fi (5 s, 40\% drop)
 
 \begin{figure*}[htbp]
 \centering
-\begin{subfigure}[t]{0.48\textwidth}
+\begin{subfigure}[t]{0.44\textwidth}
   \centering
   \includegraphics[width=\linewidth]{../benchmarks/knn/current_results/static_heldout_device/cdf.png}
   \caption{Real static fingerprints with S9+ held out.}
   \label{fig:knn_static}
 \end{subfigure}\hfill
-\begin{subfigure}[t]{0.48\textwidth}
+\begin{subfigure}[t]{0.44\textwidth}
   \centering
   \includegraphics[width=\linewidth]{../benchmarks/knn/current_results/trajectory_protocol/full/cdf.png}
   \caption{Matched trajectory protocol, full Wi-Fi (1~Hz).}
@@ -438,13 +438,13 @@ Degraded Wi-Fi (5 s, 40\% drop)
 \end{subfigure}
 
 \vspace{0.15cm}
-\begin{subfigure}[t]{0.48\textwidth}
+\begin{subfigure}[t]{0.44\textwidth}
   \centering
   \includegraphics[width=\linewidth]{../benchmarks/knn/current_results/trajectory_protocol/degraded/cdf.png}
   \caption{Matched trajectory protocol, degraded Wi-Fi.}
   \label{fig:knn_degraded}
 \end{subfigure}
-\caption{KNN baselines and current fusion CDFs. Panel (a) is a separate real static-fingerprint, held-out-device experiment and is not numerically comparable to the synthetic walk errors in (b)--(c). Panels (b)--(c) use exactly the same 250-training/60-test synthetic trajectory generation as KalmanNet. The non-temporal KNN receives the contemporaneous Wi-Fi heatmap fix, magnetic-CNN fix and log-variance, and availability masks, but no PDR motion or recurrent history. Axes, ticks, and legends are regenerated at paper-readable sizes.}
+\caption{KNN baselines and current fusion CDFs. (a) Real static fingerprints with S9+ held out. (b)--(c) Matched 250-training/60-test synthetic walks; the KNN uses current Wi-Fi/magnetic fixes and masks only, without PDR motion or recurrent history.}
 \label{fig:knn_fusion_cdfs}
 \end{figure*}
 
