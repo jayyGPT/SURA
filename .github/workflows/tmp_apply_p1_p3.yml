@@ -20,6 +20,13 @@ jobs:
           cache: pip
       - name: Apply methodology patch
         run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('.github/tmp_apply_p1_p3.py')
+          text = path.read_text(encoding='utf-8')
+          text = text.replace('## Priority B — architecture consistency / explanation', '## Priority B - architecture consistency / explanation')
+          path.write_text(text, encoding='utf-8')
+          PY
           python .github/tmp_apply_p1_p3.py
           python -m py_compile train/kalmannet_wifiheatmap_magneticCNN_pdr.py benchmarks/knn/wifi_mag_knn.py
       - name: Install Python dependencies
