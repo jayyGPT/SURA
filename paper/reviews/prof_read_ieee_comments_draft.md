@@ -4,7 +4,7 @@ Working checklist collected during final paper proofreading. These are **questio
 
 ## Priority A - methodology / validity
 
-### [ ] P1. PDR heading source, `Orn_z`, and heading-offset calibration (observations 1 + 10)
+### [x] P1. PDR heading source, `Orn_z`, and heading-offset calibration (observations 1 + 10)
 
 **Concern.** The manuscript currently describes device yaw `Orn_z` corrected by a fixed heading offset `phi_h`, calibrated from ground-truth training trajectories. We need to verify whether this is actually what the final experiment does, whether `Orn_z` is sufficiently available in MagWi, and whether any offset calibration ever touches test information.
 
@@ -14,7 +14,7 @@ Working checklist collected during final paper proofreading. These are **questio
 
 **Decision needed.** Decide whether the paper should describe the actual synthetic-heading protocol, or whether we should implement and validate a truly causal heading-estimation/calibration method for real inference.
 
-### [ ] P2. Step-length calibration and online realism (observation 2)
+### [x] P2. Step-length calibration and online realism (observation 2)
 
 **Concern.** The paper says step length `L_s` is calibrated from training trajectories and frozen. We need to decide what is scientifically acceptable and what a deployable system should do.
 
@@ -24,7 +24,7 @@ Working checklist collected during final paper proofreading. These are **questio
 
 **Decision needed.** Align paper and code, then decide whether to keep a fixed nominal step length as a controlled simulation parameter or implement a causal online estimator.
 
-### [ ] P3. Full data-augmentation / synthetic-evaluation audit (observation 11)
+### [x] P3. Full data-augmentation / synthetic-evaluation audit (observation 11)
 
 We need a line-by-line conceptual audit of how the synthetic fusion dataset is generated and whether any information unavailable at inference is used.
 
@@ -42,6 +42,15 @@ Current pipeline to inspect:
 **Potential high-priority issue to verify.** `setup_environment()` currently loads the full processed fingerprint database; the Wi-Fi scan pool and magnetic map do not visibly filter out S9+ before synthetic measurement generation. Therefore the manuscript statement that S9+ is fully held out must be audited carefully. We must distinguish (a) an environment survey map that is legitimately available before deployment from (b) held-out-device fingerprints that would violate a device-generalization claim.
 
 Also check whether per-phone magnetic centering is computed using the whole database, including any nominally held-out phone, and whether this creates a device-information leak.
+
+
+### P1-P3 implementation note
+
+Resolved in the methodology-consistency pass:
+
+- **P1:** the evaluated fusion method no longer claims to consume MagWi `Orn_z` or a ground-truth-calibrated `phi_h`. The paper now defines PDR using a generic causal heading observation and documents the actual synthetic heading measurement used in the benchmark.
+- **P2:** the paper no longer claims that stride length is estimated from the fusion training trajectories. It documents the actual fixed nominal `L_s = 0.65 m`; no rolling estimator is claimed or implemented.
+- **P3:** the simulator/estimator boundary is now explicit, fusion results are labelled as held-out-trajectory rather than held-out-device evaluation, and the code saves fixed train/test seeds plus an exact binned-trajectory overlap check. The paper also explicitly states that survey-derived Wi-Fi/magnetic environment resources use the available processed survey fingerprints, so those fusion numbers are not presented as unseen-device generalization.
 
 ## Priority B - architecture consistency / explanation
 

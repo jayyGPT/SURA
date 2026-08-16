@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import hashlib
 import json
 import math
 import sys
@@ -49,9 +50,11 @@ SEED = 0
 INCLUDED_MODES = ["Navigation", "Call listening", "Swinging"]
 
 SAMPLING_HZ = 16.7
-HEADING_WHITE_NOISE_RAD = np.deg2rad(8.8)
+HEADING_WHITE_NOISE_STD_RAD = np.deg2rad(8.8)
 HEADING_DRIFT_STD_RAD = np.deg2rad(0.5) / np.sqrt(SAMPLING_HZ)
-STEP_LENGTH_M = 0.65
+NOMINAL_STEP_LENGTH_M = 0.65
+FUSION_TRAIN_SEED = 1
+FUSION_TEST_SEED = 2
 SPEED_MIN_MPS = 1.0
 SPEED_MAX_MPS = 1.35
 STEP_FREQ_MIN_HZ = 1.7
@@ -105,6 +108,7 @@ class Environment:
     magnetic_window: int
     magnetic_map: MagneticMap
     corridor: CorridorGraph
+    survey_phones: tuple[str, ...]
 
 
 class CNNMagneticDualKalmanNet(nn.Module):
@@ -411,6 +415,7 @@ def setup_environment(
     magnetic_map = build_magnetic_map(database, wifi_grid, magnetic_features)
     corridor = build_corridor_graph(database)
     pool_nodes, pool = build_wifi_pool(database, ap_columns)
+    survey_phones = tuple(sorted(str(value) for value in database.frame["phone"].dropna().unique()))
     return Environment(
         wifi_model=wifi_model,
         wifi_grid=wifi_grid,
@@ -422,6 +427,7 @@ def setup_environment(
         magnetic_window=magnetic_window,
         magnetic_map=magnetic_map,
         corridor=corridor,
+        survey_phones=survey_phones,
     )
 
 
@@ -470,7 +476,7 @@ def synthesize_walk(path: np.ndarray, rng: np.random.Generator) -> tuple[np.ndar
     true_heading = np.unwrap(np.arctan2(np.gradient(y), np.gradient(x)))
     true_heading = np.convolve(true_heading, np.ones(7) / 7.0, mode="same")
     drift = np.cumsum(rng.normal(0.0, HEADING_DRIFT_STD_RAD, frames))
-    measured_heading = true_heading + drift + rng.normal(0.0, HEADING_WHITE_NOISE_RAD, frames)
+    measured_heading = true_heading + drift + rng.normal(0.0, HEADING_WHITE_NOISE_STD_RAD, frames)
 
     time = np.arange(frames) / SAMPLING_HZ
     acceleration_magnitude = (
@@ -565,7 +571,7 @@ def build_sequence(
     controls = np.zeros((frames, 2), dtype=np.float32)
     for index in range(frames):
         if detector.update(float(acceleration_magnitude[index])):
-            controls[index] = STEP_LENGTH_M * np.array(
+            controls[index] = NOMINAL_STEP_LENGTH_M * np.array(
                 [math.cos(heading[index]), math.sin(heading[index])], dtype=np.float32
             )
 
@@ -664,6 +670,34 @@ def make_dataset(
     if len(rows) != walks:
         raise RuntimeError(f"generated only {len(rows)}/{walks} requested walks")
     return tuple(np.stack([row[column] for row in rows]) for column in range(8))
+
+
+def _trajectory_signature(target: np.ndarray) -> str:
+    """Stable signature for one binned ground-truth trajectory."""
+    rounded = np.round(np.asarray(target, dtype=np.float32), 4)
+    return hashlib.sha256(rounded.tobytes()).hexdigest()
+
+
+def validate_trajectory_split(
+    training: tuple[np.ndarray, ...],
+    testing: tuple[np.ndarray, ...],
+) -> dict[str, object]:
+    """Fail if an identical generated target trajectory occurs in train and test."""
+    train_signatures = {_trajectory_signature(target) for target in training[6]}
+    test_signatures = {_trajectory_signature(target) for target in testing[6]}
+    overlap = sorted(train_signatures.intersection(test_signatures))
+    if overlap:
+        raise RuntimeError(
+            f"trajectory leakage detected: {len(overlap)} identical train/test trajectory signature(s)"
+        )
+    return {
+        "train_seed": FUSION_TRAIN_SEED,
+        "test_seed": FUSION_TEST_SEED,
+        "train_walks": int(len(training[6])),
+        "test_walks": int(len(testing[6])),
+        "exact_target_trajectory_overlap_count": 0,
+        "signature_rounding_m": 1e-4,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -832,7 +866,7 @@ def run_experiment(
         print("  generating training set")
         training = make_dataset(
             train_walks,
-            seed=1,
+            seed=FUSION_TRAIN_SEED,
             env=env,
             device=device,
             wifi_period_s=wifi_period,
@@ -842,13 +876,15 @@ def run_experiment(
         print("  generating test set")
         testing = make_dataset(
             test_walks,
-            seed=2,
+            seed=FUSION_TEST_SEED,
             env=env,
             device=device,
             wifi_period_s=wifi_period,
             ap_dropout=dropout,
             bins=bins,
         )
+        split_audit = validate_trajectory_split(training, testing)
+        print("  trajectory split audit:", split_audit)
         print("  magnetic CNN measurement quality:", magnetic_measurement_summary(testing))
 
         # Reference uncertainty comes from fusion-training magnetic predictions only.
@@ -904,6 +940,17 @@ def run_experiment(
             "wifi_period_s": wifi_period,
             "ap_dropout": dropout,
             "magnetic_measurement": magnetic_measurement_summary(testing),
+            "trajectory_split_audit": split_audit,
+            "simulation_protocol": {
+                "heading_source": "true_path_tangent_plus_random_walk_and_white_noise",
+                "heading_white_noise_std_deg": float(np.rad2deg(HEADING_WHITE_NOISE_STD_RAD)),
+                "heading_random_walk_step_std_deg": float(np.rad2deg(HEADING_DRIFT_STD_RAD)),
+                "nominal_step_length_m": NOMINAL_STEP_LENGTH_M,
+                "step_frequency_range_hz": [STEP_FREQ_MIN_HZ, STEP_FREQ_MAX_HZ],
+                "speed_range_mps": [SPEED_MIN_MPS, SPEED_MAX_MPS],
+                "survey_phones_used_to_construct_environment": list(env.survey_phones),
+                "fusion_device_generalization_claim": False,
+            },
             "magnetic_reference_log_variance_training": magnetic_reference_log_variance,
             "magnetic_reference_sigma_training_m": magnetic_reference_sigma,
             "wifi_only_kalmannet": baseline_summary,

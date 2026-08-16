@@ -281,6 +281,27 @@
         "name": "Full Wi-Fi (1 Hz)",
         "wifi_period_s": 1.0,
         "ap_dropout": 0.0,
+        "trajectory_split_audit": {
+          "train_seed": 1,
+          "test_seed": 2,
+          "train_walks": 250,
+          "test_walks": 60,
+          "exact_target_trajectory_overlap_count": 0,
+          "signature_rounding_m": 0.0001
+        },
+        "simulation_protocol": {
+          "nominal_step_length_m": 0.65,
+          "heading_source": "true_path_tangent_plus_random_walk_and_white_noise",
+          "survey_phones_used_to_construct_environment": [
+            "A8",
+            "G7",
+            "LG G6",
+            "LG Q6",
+            "S8",
+            "S9+"
+          ],
+          "fusion_device_generalization_claim": false
+        },
         "wifi_only_kalmannet": {
           "walks": 60,
           "mean_m": 0.47284391323725383,
@@ -356,6 +377,27 @@
         "name": "Degraded Wi-Fi (5 s, 40% AP drop)",
         "wifi_period_s": 5.0,
         "ap_dropout": 0.4,
+        "trajectory_split_audit": {
+          "train_seed": 1,
+          "test_seed": 2,
+          "train_walks": 250,
+          "test_walks": 60,
+          "exact_target_trajectory_overlap_count": 0,
+          "signature_rounding_m": 0.0001
+        },
+        "simulation_protocol": {
+          "nominal_step_length_m": 0.65,
+          "heading_source": "true_path_tangent_plus_random_walk_and_white_noise",
+          "survey_phones_used_to_construct_environment": [
+            "A8",
+            "G7",
+            "LG G6",
+            "LG Q6",
+            "S8",
+            "S9+"
+          ],
+          "fusion_device_generalization_claim": false
+        },
         "wifi_only_kalmannet": {
           "walks": 60,
           "mean_m": 1.5329574704170228,

@@ -52,12 +52,15 @@ from train.kalmannet_wifiheatmap_magneticCNN_pdr import (
     DEFAULT_TRAIN_WALKS,
     DEFAULT_WIFI_CHECKPOINT,
     FUSION_HIDDEN_SIZE,
+    FUSION_TEST_SEED,
+    FUSION_TRAIN_SEED,
     INCLUDED_MODES,
     evaluate_filter,
     make_dataset,
     setup_environment,
     summarize,
     train_filter,
+    validate_trajectory_split,
 )
 
 SEED = 0
@@ -546,13 +549,15 @@ def run_trajectory(
     for key, (name, wifi_period, dropout) in regimes.items():
         print(f"\n{'=' * 72}\n{name}\n{'=' * 72}")
         training = make_dataset(
-            train_walks, seed=1, env=env, device=device,
+            train_walks, seed=FUSION_TRAIN_SEED, env=env, device=device,
             wifi_period_s=wifi_period, ap_dropout=dropout, bins=bins,
         )
         testing = make_dataset(
-            test_walks, seed=2, env=env, device=device,
+            test_walks, seed=FUSION_TEST_SEED, env=env, device=device,
             wifi_period_s=wifi_period, ap_dropout=dropout, bins=bins,
         )
+        split_audit = validate_trajectory_split(training, testing)
+        print("  trajectory split audit:", split_audit)
 
         print("  tuning/fitting non-temporal Wi-Fi + magnetic KNN")
         knn_errors, knn_prediction, knn_report = _fit_trajectory_knn(training, testing)
@@ -610,6 +615,13 @@ def run_trajectory(
             "name": name,
             "wifi_period_s": wifi_period,
             "ap_dropout": dropout,
+            "trajectory_split_audit": split_audit,
+            "simulation_protocol": {
+                "nominal_step_length_m": 0.65,
+                "heading_source": "true_path_tangent_plus_random_walk_and_white_noise",
+                "survey_phones_used_to_construct_environment": list(env.survey_phones),
+                "fusion_device_generalization_claim": False,
+            },
             "wifi_only_kalmannet": summarize(baseline_errors),
             "wifi_mag_knn": knn_report,
             "cnn_dual_relative_variance": summarize(dual_errors),
