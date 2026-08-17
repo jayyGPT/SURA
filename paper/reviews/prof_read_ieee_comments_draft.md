@@ -54,15 +54,20 @@ Resolved in the methodology-consistency pass:
 
 ## Priority B - architecture consistency / explanation
 
-### [ ] P4. Remove obsolete magnetic-anomaly notation from active Section II-E (observation 3)
+### [x] P4. Remove obsolete magnetic-anomaly notation from active Section II-E (observation 3)
 
 The current Section II-E still mentions `A_obs`, `A(x)`, and `nabla A` in a sentence explaining that they are *not* used. This is technically a disclaimer rather than an active equation, but it is confusing now that the final architecture is CNN-output-only. Remove or rewrite the sentence so the active method contains no legacy anomaly notation at all.
 
-### [ ] P5. Explain why `Delta z_wifi` is a GRU input (observation 6)
+### [x] P5. Explain why `Delta z_wifi` is a GRU input (observation 6)
 
 Current code computes `wifi_delta = z_wifi,t - previous_wifi` when a new Wi-Fi fix is available. Its intended role is to tell the GRU whether successive absolute Wi-Fi fixes are spatially consistent or make a sudden jump. This gives the gain network information about short-term Wi-Fi stability/outlier behaviour beyond the instantaneous innovation `z_wifi - x_pred`.
 
 We should decide whether this feature is genuinely necessary, testable by ablation, and described clearly enough in the paper. It is zeroed when Wi-Fi is unavailable; `previous_wifi` holds the last available fix.
+
+### P4-P5 implementation note
+
+- **P4:** removed the legacy anomaly notation from the active KalmanNet subsection. The paper now states only that the magnetic CNN position output is consumed directly by the fusion network.
+- **P5:** retained `Delta z_wifi` after a paired full-protocol ablation (`benchmarks/wifi_delta_ablation/`). For the CNN DualKalmanNet, removing the two-scalar feature worsened mean error by `+0.0280 m` in full Wi-Fi (paired 95% CI `[+0.0016, +0.0545] m`) and by `+0.0918 m` in degraded Wi-Fi (CI `[-0.0224, +0.2060] m`). Wi-Fi-only differences were inconclusive. The manuscript now defines the feature using the most recent available Wi-Fi fix and explains it only as a short-term consistency cue, without claiming that every large Wi-Fi delta is an outlier.
 
 ### [ ] P6. Explain the CNN variance output precisely (observation 7)
 
