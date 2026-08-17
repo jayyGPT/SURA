@@ -14,13 +14,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: fix/p6-p7-magnetic-cnn-audit
-      - name: Apply P6-P7 cleanup
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Regenerate uncertainty-labelled figures
         run: |
-          python .github/tmp_cleanup_p6p7.py
-          python -m py_compile models/magnetic_sequence_cnn.py
-          ! grep -F "relative-variance" paper/main.tex
-          ! grep -F "CNN-predicted magnetic variance" paper/main.tex
-          ! grep -F "Relative magnetic-variance" paper/main.tex
+          python -m pip install -q numpy matplotlib
+          python .github/tmp_replot_uncertainty.py
+          python -m py_compile models/magnetic_sequence_cnn.py benchmarks/knn/wifi_mag_knn.py
+          ! grep -F "CNN Dual + relative variance" benchmarks/knn/wifi_mag_knn.py
       - name: Install LaTeX
         run: |
           sudo apt-get update -qq
@@ -36,12 +38,12 @@ jobs:
         run: |
           git config user.name 'Jayendra Vijay Birhade'
           git config user.email 'cs1240891@iitd.ac.in'
-          git add models/magnetic_sequence_cnn.py docs/architecture/magnetic_sequence_cnn.md benchmarks/magnetic_variance_calibration/README.md paper/main.tex paper/reviews/prof_read_ieee_comments_draft.md
-          git commit -m 'paper: finish P6-P7 magnetic uncertainty audit'
+          git add models/magnetic_sequence_cnn.py docs/architecture/magnetic_sequence_cnn.md benchmarks/magnetic_variance_calibration/README.md benchmarks/knn/wifi_mag_knn.py benchmarks/knn/current_results/trajectory_protocol/full/cdf.png benchmarks/knn/current_results/trajectory_protocol/degraded/cdf.png benchmarks/knn/current_results/trajectory_protocol/representative_trajectory.png paper/main.tex paper/reviews/prof_read_ieee_comments_draft.md
+          git commit -m 'paper: align magnetic uncertainty terminology in figures'
           git push origin HEAD:fix/p6-p7-magnetic-cnn-audit
       - uses: actions/upload-artifact@v4
         with:
-          name: p6-p7-magnetic-cnn-preview-final
+          name: p6-p7-magnetic-cnn-preview-figures
           path: |
             /tmp/p6p7-paper/main.pdf
             /tmp/p6p7-render/*.png
