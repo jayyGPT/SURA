@@ -10,6 +10,10 @@
 \usepackage{tikz}
 \usetikzlibrary{shapes,arrows,positioning,fit,backgrounds,calc,shadows}
 \usepackage{subcaption}
+\setlength{\textfloatsep}{7pt plus 1pt minus 2pt}
+\setlength{\floatsep}{6pt plus 1pt minus 2pt}
+\setlength{\dbltextfloatsep}{7pt plus 1pt minus 2pt}
+\setlength{\dblfloatsep}{6pt plus 1pt minus 2pt}
 
 \begin{document}
 
@@ -304,8 +308,12 @@ The magnetic CNN output $\mathbf{z}_{mag}$ therefore serves directly as the magn
 
 The CNN additionally predicts the scalar log-uncertainty score $\ell_{mag,t}$ and its positive scale $q_{mag,t}=\exp(\ell_{mag,t})$. Because only relative reliability is used in fusion, we normalize the score using a training-only reference
 \begin{equation}
-\ell_{ref}=\operatorname{median}_{(w,t)\in\mathcal{D}_{train}:\,m_{mag}=1}\ell_{mag,w,t},
-\qquad q_{ref}=\exp(\ell_{ref}). \label{eq:mag_ref}
+\begin{aligned}
+\ell_{ref} &= \operatorname{median}_{(w,t)\in\mathcal{D}_{train}:\,m_{mag}=1}
+\ell_{mag,w,t},\\
+q_{ref} &= \exp(\ell_{ref}).
+\end{aligned}
+\label{eq:mag_ref}
 \end{equation}
 The relative magnetic confidence weight is then
 \begin{equation}
@@ -413,46 +421,44 @@ Degraded Wi-Fi (5 s, 40\% drop)
 
 \begin{figure*}[htbp]
 \centering
-\begin{subfigure}[t]{0.48\textwidth}
+\begin{subfigure}[t]{0.44\textwidth}
   \centering
   \includegraphics[width=\linewidth]{../benchmarks/knn/current_results/static_heldout_device/cdf.png}
   \caption{Real static fingerprints with S9+ held out.}
   \label{fig:knn_static}
 \end{subfigure}\hfill
-\begin{subfigure}[t]{0.48\textwidth}
+\begin{subfigure}[t]{0.44\textwidth}
   \centering
   \includegraphics[width=\linewidth]{../benchmarks/knn/current_results/trajectory_protocol/full/cdf.png}
   \caption{Matched trajectory protocol, full Wi-Fi (1~Hz).}
   \label{fig:knn_full}
 \end{subfigure}
 
-\vspace{0.15cm}
-\begin{subfigure}[t]{0.48\textwidth}
+\vspace{0.05cm}
+\begin{subfigure}[t]{0.44\textwidth}
   \centering
   \includegraphics[width=\linewidth]{../benchmarks/knn/current_results/trajectory_protocol/degraded/cdf.png}
   \caption{Matched trajectory protocol, degraded Wi-Fi.}
   \label{fig:knn_degraded}
 \end{subfigure}
-\caption{KNN baselines and current fusion CDFs. Panel (a) is a separate real static-fingerprint, held-out-device experiment and is not numerically comparable to the synthetic-walk errors in (b)--(c). Panels (b)--(c) use exactly the same 250-training/60-test synthetic trajectory generation as KalmanNet. The non-temporal KNN receives the contemporaneous Wi-Fi heatmap fix, magnetic-CNN fix and log-uncertainty score, and availability masks, but no PDR motion or recurrent history. Axes, ticks, and legends are regenerated at paper-readable sizes.}
+\caption{KNN baselines and fusion CDFs. Panel (a) is a separate real static-fingerprint held-out-device experiment and is not numerically comparable to the synthetic-walk results in (b)--(c). Panels (b)--(c) use the same 250-training/60-test trajectory protocol as KalmanNet; the non-temporal KNN uses contemporaneous Wi-Fi and magnetic fixes, magnetic log-uncertainty, and availability masks, without PDR or recurrent history.}
 \label{fig:knn_fusion_cdfs}
 \end{figure*}
 
-For the matched trajectory comparison in Fig.~\ref{fig:knn_fusion_cdfs}(b)--(c), KNN is intentionally non-temporal: it receives only the contemporaneous Wi-Fi heatmap position, magnetic-CNN position and log-uncertainty score, and the two availability masks. Its value of $K$ is selected by five-fold grouped cross-validation in which all bins from a trajectory remain in the same fold. Under full 1~Hz Wi-Fi, the KNN baseline obtains 0.802~m mean error, compared with 0.473~m for Wi-Fi-only KalmanNet and 0.494~m for the uncertainty-weighted CNN fusion. The latter also improves median error slightly from 0.449~m to 0.437~m. Under degraded Wi-Fi, the gap is larger: non-temporal KNN reaches 2.606~m, Wi-Fi-only KalmanNet reaches 1.533~m, and the uncertainty-weighted DualKalmanNet reaches 1.154~m. Direct CNN fusion without the explicit uncertainty weight reaches 1.171~m, so relative magnetic-uncertainty weighting yields a 24.7\% reduction over Wi-Fi-only KalmanNet and reduces the degraded-regime P90 from 2.064~m for unweighted CNN fusion to 1.612~m. The separation from KNN in Fig.~\ref{fig:knn_fusion_cdfs}(c) indicates that the gain does not arise merely from having both absolute sensor estimates available; PDR propagation and learned temporal, context-dependent fusion are important in sparse-Wi-Fi operation.
+For the matched trajectory comparison in Fig.~\ref{fig:knn_fusion_cdfs}(b)--(c), KNN is deliberately non-temporal, with $K$ selected by five-fold grouped cross-validation that keeps each trajectory within one fold. Under full 1~Hz Wi-Fi it obtains 0.802~m mean error, versus 0.473~m for Wi-Fi-only KalmanNet and 0.494~m for uncertainty-weighted CNN fusion; the latter also improves the median from 0.449~m to 0.437~m. Under degraded Wi-Fi, KNN reaches 2.606~m, Wi-Fi-only KalmanNet 1.533~m, unweighted CNN DualKalmanNet 1.171~m, and the uncertainty-weighted model 1.154~m. Thus relative magnetic uncertainty gives a 24.7\% mean-error reduction over Wi-Fi-only KalmanNet and lowers the unweighted model's P90 from 2.064~m to 1.612~m. The KNN gap shows that PDR propagation and recurrent context matter beyond simply having both absolute estimates available.
 
-\begin{figure*}[htbp]
+\begin{figure}[t]
 \centering
-\includegraphics[width=0.82\textwidth]{../benchmarks/knn/current_results/trajectory_protocol/representative_trajectory.png}
-\caption{Representative degraded-Wi-Fi test trajectory generated from the current experiment outputs. To avoid cherry-picking a best-case example, the displayed walk is selected from the interquartile range of per-walk fusion improvements and, within that central group, chosen to contain the largest accumulated heading change so that several corridor turns are visible. The plot compares ground truth, open-loop PDR, Wi-Fi-only KalmanNet, and the final CNN-output DualKalmanNet with relative magnetic-uncertainty weighting; circles indicate the sparse Wi-Fi update times.}
+\includegraphics[width=0.98\columnwidth]{../benchmarks/knn/current_results/trajectory_protocol/representative_trajectory.png}
+\caption{Representative degraded-Wi-Fi synthetic/map-constrained test walk, selected from the interquartile range of fusion improvements and then by maximum heading-change score. Curves compare ground truth, open-loop PDR, Wi-Fi-only KalmanNet, and the final uncertainty-weighted CNN DualKalmanNet; circles mark Wi-Fi updates.}
 \label{fig:trajectory_current}
-\end{figure*}
+\end{figure}
 
-Figure~\ref{fig:trajectory_current} provides a geometric view of the degraded-Wi-Fi regime behind the aggregate statistics. Open-loop PDR accumulates heading and step errors through the sequence of corridor turns, while the Wi-Fi-only KalmanNet can only re-anchor when a sparse Wi-Fi update arrives. The CNN-output DualKalmanNet receives an additional absolute magnetic position innovation at each causal magnetic window, and the relative-uncertainty weight suppresses corrections from windows that the CNN itself judges unreliable. Consequently, the fused path remains closer to the surveyed route between Wi-Fi updates rather than merely correcting after drift has already accumulated. The trajectory is intentionally a representative central-performance case rather than the walk with the largest improvement; its exact selection rule and per-walk errors are stored with the benchmark output for reproducibility.
+Figure~\ref{fig:trajectory_current} shows the same degraded regime geometrically. Open-loop PDR drifts through corridor turns and Wi-Fi-only KalmanNet can re-anchor only at sparse scans, whereas the CNN supplies causal magnetic position innovations between scans and relative uncertainty suppresses unreliable corrections. The fused path therefore remains closer to the surveyed route. The displayed walk is a central-performance case rather than the best improvement; its exact selection data are stored with the benchmark output.
 
 \section{Conclusion}\label{sec:conclusion}
 
-This paper introduced a generalized, decoupled Neural-Kalman fusion architecture designed to resolve pervasive limitations in deep-learning indoor positioning systems across Hybrid Wi-Fi, Magnetic, and IMU data regimes. By strictly separating spatial inference from temporal tracking modules, the framework successfully circumvents trajectory memorization and orientation-dependent data bias. The integration of a 1D-CNN magnetic sequence matcher alongside an MLP Wi-Fi probability heatmap provides two Cartesian spatial measurements in the same state space. Fusing these estimates through DualKalmanNet enables context-dependent $2\!\times\!2$ matrix gains, while the CNN-predicted magnetic uncertainty score supplies a relative confidence weight that suppresses uncertain magnetic corrections and availability masks preserve operation under missing sensor modalities.
-
-In challenging degraded scenarios, the CNN-output dual-innovation system effectively limits inertial drift. Relative magnetic-uncertainty weighting reduces mean error from 1.533~m for Wi-Fi-only KalmanNet to 1.154~m, a 24.7\% improvement, while reducing the high-error tail by suppressing uncertain magnetic fixes. While current configurations necessitate building-specific training due to unique foundational AP signatures, the mathematical structure is universally applicable. Future research efforts will focus on expanding the architecture to facilitate full three-dimensional, multi-floor positioning by integrating barometric pressure altitude data into the KalmanNet state vector.
+This paper presented a decoupled Neural-Kalman architecture that separates spatial inference from temporal tracking. A Wi-Fi heatmap MLP and gravity-referenced magnetic sequence CNN provide Cartesian measurements, while DualKalmanNet predicts independent $2\!\times\!2$ gains; availability masks and relative magnetic uncertainty suppress missing or unreliable corrections. Under degraded Wi-Fi, the uncertainty-weighted model reduces mean error from 1.533~m for Wi-Fi-only KalmanNet to 1.154~m (24.7\%) and reduces the high-error tail. The present fusion results demonstrate trajectory generalization within a surveyed environment and still require building-specific environment resources. Future work will extend the state to three-dimensional, multi-floor positioning, including barometric altitude information.
 
 \section*{Acknowledgment}
 The authors acknowledge the Summer Undergraduate Research Award (SURA) program at the Indian Institute of Technology Delhi for supporting this research.
