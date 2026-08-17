@@ -1,275 +1,157 @@
-# Model 2: MagSequenceMatcher — 1D-CNN Magnetic Sequence Matcher
+# Magnetic sequence CNN: code-backed architecture and uncertainty semantics
 
-**Source file:** [stage2_mag_sequence.py](file:///c:/Users/lenovo/Documents/GitHub/SURA/dl_models/stage2_mag_sequence.py)  
-**Paper reference:** Section II.C "Magnetic Sequence Matcher", Figure 3  
-**Role in system:** Maps a temporal sliding window of rotation-invariant magnetic features to a 2D spatial coordinate and a calibrated uncertainty estimate.
+This note documents the **active repository implementation** used by the current paper. It is explicit about which quantities come from raw MagWi files, which are survey-derived, which are synthetically generated for model training/evaluation, and what the CNN's scalar uncertainty head can and cannot be interpreted as.
 
----
+Active sources:
 
-## 1. Purpose and Design Philosophy
+- `tools/fingerprint_builder.py` - raw static-recording feature extraction.
+- `train/train_magnetic_sequence.py` - magnetic survey-map construction, synthetic sequence generation, and CNN training.
+- `models/magnetic_sequence_cnn.py` - neural-network architecture and training objective.
+- `train/kalmannet_wifiheatmap_magneticCNN_pdr.py` - causal use of 84-frame magnetic windows in the final fusion benchmark.
 
-Single-point magnetic matching is highly ambiguous — many locations in a building may have similar field magnitude. However, the *sequence* of magnetic anomalies along a walked path is far more discriminative, because the spatial anomaly profile is unique to each corridor segment.
+## 1. Survey magnetic features
 
-This model exploits temporal context by processing a sliding window of `T` frames (optimal: T=84 ≈ 5 seconds) through a 1D-CNN. The architecture outputs both a position estimate and a learned uncertainty, enabling the downstream Kalman filter to appropriately weight magnetic evidence.
+For every row of a raw static magnetic recording, let
 
----
+- `m = [Mag_x, Mag_y, Mag_z]`,
+- `a = [Acc_x, Acc_y, Acc_z]`,
+- `m_N = ||m||`, and
+- `a_hat = a / ||a||` whenever `||a|| != 0`.
 
-## 2. Input Feature Engineering
+The processed database uses four gravity-referenced features:
 
-### Rotation-Invariant Features
-
-**Constants (line 36):**
-```python
-MAG_FEATS = ["magN", "magV", "magH", "dip"]   # 4 rotation-invariant channels
+```text
+magN = ||m||
+magV = m dot a_hat
+magH = sqrt(max(magN^2 - magV^2, 0))
+dip  = atan2(magV, magH)
 ```
 
-| Channel | Feature | Definition | Why rotation-invariant? |
-|---------|---------|------------|------------------------|
-| `magN` | Magnetic norm (magnitude) | `‖M_t‖` = total field strength | Scalar — independent of device orientation |
-| `magV` | Vertical projection | Projection of M onto estimated gravity vector | Uses gravity to define "up" regardless of device pose |
-| `magH` | Horizontal component | Magnitude of M projected onto horizontal plane | Gravity-referenced, orientation-independent |
-| `dip` | Dip angle | Angle between M and horizontal plane | Angle — invariant to rotation about vertical axis |
+`tools/fingerprint_builder.py` computes these values row by row and stores their **mean and standard deviation over each static visit**. The magnetic-map trainer therefore consumes visit-level columns `magN_mean`, `magV_mean`, `magH_mean`, and `dip_mean`.
 
-All 4 features are scalar values that remain identical regardless of how the user holds the device. This is critical because the model must work across Navigation, Call listening, and Swinging postures.
+Important implementation detail: the current fingerprint builder uses the **instantaneous normalized acceleration vector** as the gravity-direction proxy. It does not low-pass the accelerometer before computing these processed static features. Averaging over the static visit subsequently reduces some row-level noise, but the low-pass formulation previously written in the manuscript did not match this code path.
 
-### Device-Invariant Anomaly Map
+## 2. Survey map used to generate magnetic sequences
 
-The raw magnetic features vary between different phone models (different magnetometer calibrations). To achieve device invariance:
+`train/train_magnetic_sequence.py` does not feed raw continuous MagWi magnetic recordings directly to the CNN. It first builds a four-channel spatial map from the processed static survey database.
 
-```python
-# line 58: subtract per-phone building-wide mean
-df[f"anom_{f}"] = df[col] - df.groupby("phone")[col].transform("mean")
+For each feature independently:
+
+1. take the visit-level feature mean;
+2. subtract that phone's mean value for the same feature (`value - phone_mean`);
+3. average the centered values at each surveyed `(x,y)` node;
+4. interpolate the node means onto a 1 m Cartesian grid using linear interpolation with nearest-neighbour filling outside the linear hull;
+5. estimate a channel noise scale as the median within-node standard deviation of the centered survey values.
+
+The resulting map has four channels corresponding to `magN`, `magV`, `magH`, and `dip`.
+
+The per-phone centering suppresses phone-dependent offsets in the survey map. The current fusion benchmark uses the available surveyed devices to construct this environment resource; it is therefore not presented as a held-out-phone magnetic generalization experiment.
+
+## 3. How the 84-frame training sequences are generated
+
+The standalone magnetic CNN is trained on **survey-derived synthetic/map-constrained sequences**:
+
+1. Build an epsilon-neighbour corridor graph from surveyed coordinates (`epsilon = 1.6 m`).
+2. Sample random graph paths of at least 30 m.
+3. Interpolate motion along each path at 16.7 Hz with speed sampled from 1.0-1.35 m/s.
+4. Bilinearly sample the four-channel magnetic map along the path.
+5. Add independent Gaussian noise using the map-estimated per-channel noise scales.
+6. Extract fixed-length windows. The current default is `T = 84` frames (about 5.0 s).
+7. Use the Cartesian position at the **last frame of the window** as the regression target.
+
+The current training configuration uses 300 generated training walks (`seed=42`) and 60 separately generated test walks (`seed=200`). Training windows use a 5-frame stride and test windows a 10-frame stride.
+
+Thus an input to the CNN is
+
+```text
+M_t shape = [batch, 84, 4]
+channels  = [magN, magV, magH, dip]
 ```
 
-For each phone, the building-wide average of each feature is subtracted. This removes the phone-specific bias, leaving only the spatial *anomaly* pattern — the deviations from the mean that are caused by structural steel, electrical wiring, etc.
+In the final fusion benchmark, magnetic fixes are also computed causally: a prediction is emitted only when the 84-frame window ending at the current fusion endpoint is available. No future magnetic frame is included in that window.
 
-### Anomaly Map Interpolation (line 42–72)
+## 4. Exact CNN architecture for T = 84
 
-The anomaly values at discrete survey nodes are interpolated onto a continuous grid using:
-1. **Linear interpolation** (`griddata(..., method="linear")`) for smooth regions
-2. **Nearest-neighbor fill** (`griddata(..., method="nearest")`) for extrapolation at grid edges
+`MagSequenceMatcher` first transposes `[B,T,C]` to PyTorch Conv1D layout `[B,C,T]`.
 
-```python
-lin = griddata(nxy, nval, grid.coords, method="linear")
-nn_fill = griddata(nxy, nval, grid.coords, method="nearest")
-vals = np.where(np.isnan(lin), nn_fill, lin).reshape(grid.nx, grid.ny)
+| Stage | Operation | Output for T=84 |
+|---|---|---|
+| Input | transpose `[B,84,4] -> [B,4,84]` | `[B,4,84]` |
+| Encoder 1 | Conv1D `4 -> 32`, kernel 7, padding 3 + BatchNorm + ReLU | `[B,32,84]` |
+| Pool 1 | MaxPool1D(2) | `[B,32,42]` |
+| Encoder 2 | Conv1D `32 -> 64`, kernel 5, padding 2 + BatchNorm + ReLU | `[B,64,42]` |
+| Pool 2 | MaxPool1D(2) | `[B,64,21]` |
+| Encoder 3 | Conv1D `64 -> 128`, kernel 3, padding 1 + BatchNorm + ReLU | `[B,128,21]` |
+| Global pooling | AdaptiveAvgPool1D(1) | `[B,128,1]` |
+| Shared representation | squeeze temporal dimension | `[B,128]` |
+
+Before global pooling, each local activation in the final convolutional feature map has an effective receptive field of 26 original input frames; adaptive average pooling then aggregates all 21 temporal locations, so the final 128-dimensional representation depends on the complete 84-frame window.
+
+### Position head
+
+```text
+128 -> Linear(64) -> ReLU -> Dropout(0.2) -> Linear(2)
 ```
 
-This produces a tensor of shape `[C, nx, ny]` (4 channels × grid width × grid height).
+Output:
 
-### Per-Channel Noise Standard Deviation (line 68–69)
-```python
-node_std = df.groupby([df["x"].round(1), df["y"].round(1)])[f"anom_{f}"].std().median()
-stds.append(float(node_std) if np.isfinite(node_std) else 1.0)
+```text
+z_mag shape = [B,2]
 ```
 
-Within-node measurement noise is estimated as the median standard deviation across all survey nodes. This is used to add realistic noise during synthetic training data generation.
+This is the 2-D Cartesian magnetic position fix used directly by DualKalmanNet.
 
----
+### Scalar uncertainty head
 
-## 3. Training Data Generation
+The second head is
 
-### Sliding Windows (line 97–133)
-
-Training data comes from **synthetic walks** (not raw measurements). For each walk:
-
-```python
-# Sample magnetic map values at each true position
-mag_clean = bilinear_mc(maps_t, tx, grid).numpy()  # [n_frames, 4]
-
-# Add realistic measurement noise
-noise = rng.normal(0, 1, size=(n, C)) * np.array(stds)
-mag_obs = mag_clean + noise
+```text
+128 -> Linear(32) -> ReLU -> Linear(1)
 ```
 
-Then sliding windows of length `T` are extracted:
-```python
-for t in range(window_size, n, stride):
-    windows.append(mag_obs[t - window_size: t])  # [T, 4]
-    targets.append(true_xy[t - 1])                # [2]
+and returns one unconstrained scalar `ell_mag` per window. The implementation historically names this quantity `log_variance`; define the corresponding positive scale as
+
+```text
+q_mag = exp(ell_mag).
 ```
 
-The target is the **last frame's position** — strictly causal (the model predicts "where am I now?" from the past `T` frames).
+There are **not** separate x/y variances and there is no learned 2x2 magnetic covariance matrix.
 
-**Data scale:** 300 walks for training, 60 for testing, each producing ~40 windows → ~12,000 training windows.
+## 5. What the uncertainty-training loss actually means
 
----
+The active checkpoint was trained with the repository objective
 
-## 4. Model Architecture
-
-### MagSequenceMatcher class (line 139–169)
-
-```python
-class MagSequenceMatcher(nn.Module):
-    def __init__(self, in_channels=4, hidden=128):
-        super().__init__()
-        self.encoder = nn.Sequential(
-            # Block 1
-            nn.Conv1d(in_channels, 32, kernel_size=7, padding=3),
-            nn.BatchNorm1d(32), nn.ReLU(), nn.MaxPool1d(2),
-            # Block 2
-            nn.Conv1d(32, 64, kernel_size=5, padding=2),
-            nn.BatchNorm1d(64), nn.ReLU(), nn.MaxPool1d(2),
-            # Block 3
-            nn.Conv1d(64, hidden, kernel_size=3, padding=1),
-            nn.BatchNorm1d(hidden), nn.ReLU(),
-            nn.AdaptiveAvgPool1d(1),
-        )
-        self.pos_head = nn.Sequential(
-            nn.Linear(hidden, 64), nn.ReLU(), nn.Dropout(0.2),
-            nn.Linear(64, 2),
-        )
-        self.var_head = nn.Sequential(
-            nn.Linear(hidden, 32), nn.ReLU(),
-            nn.Linear(32, 1),  # outputs log(sigma^2)
-        )
+```text
+0.5 * ||z_mag - p||^2 / q_mag + 0.5 * ell_mag,
 ```
 
-### Encoder: Layer-by-layer breakdown
+with a numerical lower floor of `0.01` applied to `exp(ell_mag)` in the denominator.
 
-The input `[B, T, 4]` is transposed to `[B, 4, T]` (Conv1d expects channels-first):
+This objective encourages the uncertainty head to assign a larger scale to examples with larger position residuals while the `+0.5*ell_mag` term penalizes making the scale arbitrarily large. The position and uncertainty heads share the CNN encoder, so the scale is predicted from the same 84-frame magnetic representation used for localization.
 
-| # | Layer | Input shape | Output shape | Kernel | Padding | Purpose |
-|---|-------|-------------|--------------|--------|---------|---------|
-| 1 | `Conv1d(4, 32, k=7, pad=3)` | [B, 4, T] | [B, 32, T] | 7 | 3 (same) | Large receptive field captures broad anomaly trends over ~0.4s. 32 filters learn basic magnetic patterns. |
-| 2 | `BatchNorm1d(32)` | [B, 32, T] | [B, 32, T] | — | — | Stabilizes training by normalizing activations per channel. |
-| 3 | `ReLU()` | [B, 32, T] | [B, 32, T] | — | — | Non-linearity. |
-| 4 | `MaxPool1d(2)` | [B, 32, T] | [B, 32, T/2] | 2 | — | Halves temporal resolution. Forces feature invariance to small time shifts. |
-| 5 | `Conv1d(32, 64, k=5, pad=2)` | [B, 32, T/2] | [B, 64, T/2] | 5 | 2 (same) | Medium kernel captures mid-scale anomaly patterns. Channel expansion to 64. |
-| 6 | `BatchNorm1d(64)` | [B, 64, T/2] | [B, 64, T/2] | — | — | Normalization. |
-| 7 | `ReLU()` | [B, 64, T/2] | [B, 64, T/2] | — | — | Non-linearity. |
-| 8 | `MaxPool1d(2)` | [B, 64, T/2] | [B, 64, T/4] | 2 | — | Further halves temporal resolution. |
-| 9 | `Conv1d(64, 128, k=3, pad=1)` | [B, 64, T/4] | [B, 128, T/4] | 3 | 1 (same) | Small kernel captures fine-grained local anomaly structure. Channel expansion to 128. |
-| 10 | `BatchNorm1d(128)` | [B, 128, T/4] | [B, 128, T/4] | — | — | Normalization. |
-| 11 | `ReLU()` | [B, 128, T/4] | [B, 128, T/4] | — | — | Non-linearity. |
-| 12 | `AdaptiveAvgPool1d(1)` | [B, 128, T/4] | [B, 128, 1] | — | — | Global average pooling collapses the temporal dimension to a single 128-d feature vector. Makes output independent of exact window length. |
+### Important probabilistic interpretation
 
-After `.squeeze(-1)`: **encoder output = `[B, 128]`**
+The current objective should **not** be described as the exact negative log-likelihood of a 2-D isotropic Gaussian with covariance `sigma^2 I_2`.
 
-### Design decisions:
-- **Decreasing kernel sizes (7→5→3):** Captures progressively finer spatial detail. The first layer sees ~0.4s of context; by layer 3, each neuron has an effective receptive field spanning the entire window.
-- **BatchNorm after every conv:** Essential for stable 1D-CNN training. Without it, the varying scale of magnetic anomalies across different corridors causes gradient instability.
-- **AdaptiveAvgPool1d(1) instead of Flatten:** Makes the architecture agnostic to the exact window size T. During the window-size sweep (T ∈ {50, 84, 134, 167}), the same architecture works for all.
+For a true two-dimensional isotropic Gaussian, omitting constants, the normalization term would be
 
-### Position Head (line 155–158)
-
-```python
-self.pos_head = nn.Sequential(
-    nn.Linear(128, 64), nn.ReLU(), nn.Dropout(0.2),
-    nn.Linear(64, 2),
-)
+```text
+0.5 * ||e||^2 / sigma^2 + log(sigma^2),
 ```
 
-| # | Layer | Input | Output | Purpose |
-|---|-------|-------|--------|---------|
-| 1 | `Linear(128, 64)` | 128 | 64 | Compress encoder features |
-| 2 | `ReLU()` | 64 | 64 | Non-linearity |
-| 3 | `Dropout(0.2)` | 64 | 64 | Regularization — prevents the position head from overfitting to specific corridors |
-| 4 | `Linear(64, 2)` | 64 | 2 | Output: 2D spatial coordinate `z_mag = [x, y]` |
+whereas the current implementation uses only `0.5 * log-scale` while applying the scale to the summed 2-D squared error. Consequently, the scalar learned by the current checkpoint is best interpreted as a **relative uncertainty / difficulty scale associated with radial position error**, not as a calibrated per-axis Cartesian variance.
 
-### Variance Head (line 159–162)
+This distinction is important for the paper. The existing uncertainty-calibration experiment shows that the raw scale is conservative in absolute units but useful for ranking magnetic prediction reliability. Therefore the final fusion method uses only **relative uncertainty**:
 
-```python
-self.var_head = nn.Sequential(
-    nn.Linear(128, 32), nn.ReLU(),
-    nn.Linear(32, 1),  # outputs log(sigma^2)
-)
+```text
+ell_ref = median training ell_mag
+w_mag   = 1 / (1 + exp(ell_mag - ell_ref)).
 ```
 
-| # | Layer | Input | Output | Purpose |
-|---|-------|-------|--------|---------|
-| 1 | `Linear(128, 32)` | 128 | 32 | Smaller head — uncertainty requires less capacity than position |
-| 2 | `ReLU()` | 32 | 32 | Non-linearity |
-| 3 | `Linear(32, 1)` | 32 | 1 | Output: `log(σ²_mag)` — log-variance (not variance directly) |
+Only the ordering/difference of the learned scores is needed for this weighting; the method does not insert `q_mag` as a literal Kalman covariance.
 
-**Why log-variance?** The variance must be strictly positive. By predicting `log(σ²)`, the model can output any real number, and `exp()` guarantees positivity. This is standard practice for heteroscedastic uncertainty estimation.
+## 6. Why the final paper keeps the current checkpoint
 
-**No Dropout in var_head:** Intentional. The variance head should learn a stable, smooth uncertainty surface. Dropout would inject noise into uncertainty estimates, making them unreliable for downstream filtering.
+P6/P7 are an audit of the already reported architecture, not a new model-training experiment. Correcting the loss to a fully specified 2-D Gaussian likelihood would require retraining the magnetic CNN and then rerunning uncertainty calibration and every downstream fusion experiment. The current paper instead makes the narrower claim supported by the existing checkpoint and calibration results: the second head provides a learned **relative magnetic uncertainty score** that is useful for confidence ranking.
 
----
-
-## 5. Forward Pass
-
-```python
-def forward(self, x):
-    # x: [B, W, C] -> conv expects [B, C, W]
-    feat = self.encoder(x.transpose(1, 2)).squeeze(-1)  # [B, 128]
-    pos = self.pos_head(feat)        # [B, 2]
-    logvar = self.var_head(feat)     # [B, 1]
-    return pos, logvar
-```
-
-1. **Transpose:** Input `[B, T, 4]` → `[B, 4, T]` for Conv1d
-2. **Encode:** Extract 128-d feature vector
-3. **Branch:** Shared features → two independent heads
-4. **Return:** Position estimate + log-variance
-
----
-
-## 6. Loss Function
-
-### nll_loss (line 172–176)
-
-```python
-def nll_loss(pred_pos, logvar, true_pos):
-    """Heteroscedastic Gaussian NLL: encourages calibrated uncertainty."""
-    var = torch.exp(logvar).clamp(min=0.01)  # [B, 1]
-    sq_err = ((pred_pos - true_pos) ** 2).sum(dim=1, keepdim=True)  # [B, 1]
-    return (0.5 * sq_err / var + 0.5 * logvar).mean()
-```
-
-This is the negative log-likelihood of a Gaussian: `L = (1/2) · ‖z - z_true‖² / σ² + (1/2) · log(σ²)`
-
-**Two competing terms:**
-- `sq_err / var`: Penalizes large errors. If `σ²` is small (high confidence), errors are penalized heavily.
-- `log(σ²)`: Penalizes large variance. Prevents the model from trivially setting `σ² → ∞` to make the first term zero.
-
-**The `.clamp(min=0.01)` on variance:** Prevents numerical instability when the model predicts very small variance (which would cause the first term to explode).
-
----
-
-## 7. Training Configuration
-
-```python
-model = MagSequenceMatcher(in_channels=len(MAG_FEATS))  # in_channels=4
-opt = optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-4)
-sched = optim.lr_scheduler.ReduceLROnPlateau(opt, patience=8, factor=0.5)
-# 60 epochs, batch size 128
-```
-
-| Parameter | Value | Justification |
-|-----------|-------|---------------|
-| Learning rate | 1e-3 | Standard Adam default |
-| Weight decay | 1e-4 | L2 regularization |
-| Scheduler | ReduceLROnPlateau | Halves LR if test MAE doesn't improve for 8 epochs |
-| Patience | 8 | Gives the model time to escape local minima |
-| Factor | 0.5 | Conservative LR reduction |
-| Epochs | 60 | Sufficient for convergence |
-| Batch size | 128 | Larger batch for stable gradient estimates |
-
-### Window Size Sweep (line 248–262)
-
-```python
-candidates = [50, 84, 134, 167]
-# 50 frames  = ~3.0 s
-# 84 frames  = ~5.0 s  <-- OPTIMAL
-# 134 frames = ~8.0 s
-# 167 frames = ~10.0 s
-```
-
-The sweep tests 4 window sizes. **T=84 (5.0 s)** was found optimal: short enough to avoid overfitting to long route patterns, long enough to accumulate sufficient spatial variation for unambiguous matching.
-
----
-
-## 8. Paper Figure Verification
-
-**Figure 3 in Paper.tex** shows:
-- Input: `ℝ^{T × 4}` ✅ (matches `in_channels=4`)
-- Conv1D(32), k=7, BN, ReLU → MaxPool ✅ (matches lines 147–148)
-- Conv1D(64), k=5, BN, ReLU → MaxPool ✅ (matches lines 149–150)
-- Conv1D(128), k=3, BN, ReLU → Adaptive AvgPool ✅ (matches lines 151–153)
-- Position head: FC(64), ReLU, Drop(0.2), FC(2) → z_mag ✅ (matches lines 155–158)
-- Variance head: FC(32), ReLU, FC(1) → log σ²_mag ✅ (matches lines 159–162)
-- Dashed encoder group box ✅
-
-**Verdict: Figure 3 is accurate.**
+A future probabilistic variant can retrain with a mathematically consistent 2-D likelihood (and a consistently bounded log-scale) if calibrated covariance is desired. That is a new experiment rather than a wording fix.
