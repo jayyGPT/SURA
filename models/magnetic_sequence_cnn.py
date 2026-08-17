@@ -9,7 +9,12 @@ MAGNETIC_FEATURES = ("magN", "magV", "magH", "dip")
 
 
 class MagSequenceMatcher(nn.Module):
-    """1D CNN producing a two-dimensional fix and heteroscedastic log variance."""
+    """1D CNN producing a two-dimensional fix and one scalar uncertainty score.
+
+    The second head is historically named a variance head for checkpoint compatibility.
+    Its output is used as a relative log-uncertainty scale by the current fusion system;
+    it is not interpreted as a calibrated 2-D Cartesian covariance.
+    """
 
     def __init__(
         self,
@@ -45,6 +50,7 @@ class MagSequenceMatcher(nn.Module):
             nn.Dropout(position_dropout),
             nn.Linear(64, 2),
         )
+        # Keep the module name for compatibility with existing checkpoint keys.
         self.variance_head = nn.Sequential(
             nn.Linear(hidden_size, 32),
             nn.ReLU(),
@@ -67,7 +73,15 @@ def heteroscedastic_nll(
     *,
     minimum_variance: float = 0.01,
 ) -> Tensor:
-    """Gaussian negative log likelihood with a learned scalar position variance."""
+    """Historical scalar uncertainty-weighted regression objective.
+
+    The function name is retained for compatibility with the existing training code and
+    checkpoint provenance. One scalar scale weights the summed 2-D squared position
+    error, with a 0.5 * log-scale penalty. Consequently this exact objective is not the
+    full negative log-likelihood of a 2-D isotropic Gaussian and its output should not
+    be interpreted as a calibrated 2-D covariance. The current fusion model uses only
+    the relative ordering of this score.
+    """
     if predicted_position.shape != true_position.shape or predicted_position.shape[-1] != 2:
         raise ValueError("predicted_position and true_position must both have shape [B,2]")
     if log_variance.shape != predicted_position.shape[:-1] + (1,):
@@ -78,5 +92,5 @@ def heteroscedastic_nll(
 
 
 def variance_from_log_variance(log_variance: Tensor, minimum: float = 0.01) -> Tensor:
-    """Convert network log variance to a numerically safe variance."""
+    """Convert the historical log-variance output to its positive uncertainty scale."""
     return torch.exp(log_variance).clamp(min=minimum)
