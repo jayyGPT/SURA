@@ -129,6 +129,8 @@ with a numerical lower floor of `0.01` applied to `exp(ell_mag)` in the denomina
 
 This objective encourages the uncertainty head to assign a larger scale to examples with larger position residuals while the `+0.5*ell_mag` term penalizes making the scale arbitrarily large. The position and uncertainty heads share the CNN encoder, so the scale is predicted from the same 84-frame magnetic representation used for localization.
 
+Implementation caveat: the historical code floors `exp(ell_mag)` only in the residual denominator, while the additive `0.5*ell_mag` term itself is not floored. The learned scores in the current calibration runs are far above that floor, but a future probabilistic retraining should use a consistently bounded parameterization if calibrated likelihood semantics are desired.
+
 ### Important probabilistic interpretation
 
 The current objective should **not** be described as the exact negative log-likelihood of a 2-D isotropic Gaussian with covariance `sigma^2 I_2`.

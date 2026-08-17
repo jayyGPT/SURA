@@ -71,11 +71,11 @@ We should decide whether this feature is genuinely necessary, testable by ablati
 
 ### [x] P6. Explain the CNN uncertainty output precisely (observation 7)
 
-The magnetic CNN has a shared Conv1D encoder followed by two heads: a 2D position head and a one-scalar variance head. The variance head outputs **log variance**, not variance directly. Training uses heteroscedastic Gaussian NLL:
+**Resolved finding.** The second head outputs one learned scalar `ell_mag` from the shared 128-D CNN representation. The active implementation defines a positive scale `q_mag = exp(ell_mag)` and trains with
 
-`0.5 * squared_position_error / exp(log_variance) + 0.5 * log_variance`.
+`0.5 * ||position_error||^2 / q_mag + 0.5 * ell_mag`
 
-This makes the network learn larger uncertainty for examples whose location is harder to predict, while the `+ log_variance` term prevents it from making uncertainty arbitrarily large. The current head is a **single isotropic scalar variance for the 2D position**, not separate x/y covariance entries. Our calibration experiment showed that its absolute scale is conservative, but its ranking is useful, which is why the final fusion uses relative variance weighting.
+(with a numerical floor on the denominator). Because this one scalar weights the **summed 2-D radial squared error** while the normalization penalty is only `0.5 * ell_mag`, the exact objective is **not** the full negative log-likelihood of a 2-D isotropic Gaussian. We therefore do not call `q_mag` a calibrated Cartesian variance or covariance. It is a learned relative uncertainty/difficulty scale. The existing calibration benchmark shows useful confidence ordering but a conservative absolute scale, so final fusion uses only the training-normalized score difference `ell_mag - ell_ref`.
 
 ### [x] P7. Deep code-backed walkthrough of the complete magnetic CNN architecture (observation 9)
 
@@ -88,8 +88,8 @@ Prepare a full explanation directly from `models/magnetic_sequence_cnn.py` and `
 - Conv1D 64->128, kernel 3 + BatchNorm + ReLU;
 - AdaptiveAvgPool1D(1) -> one 128-dimensional sequence representation;
 - position head: 128->64->2 with ReLU and Dropout(0.2);
-- variance head: 128->32->1 with ReLU;
-- joint heteroscedastic NLL training.
+- scalar uncertainty head: 128->32->1 with ReLU;
+- joint uncertainty-weighted radial regression training.
 
 Also inspect how the magnetic fingerprint map and synthetic causal 84-frame windows are generated, because the network architecture cannot be evaluated independently of that data-generation process.
 
@@ -106,7 +106,7 @@ The current magnetic-map trainer subtracts each phone's mean feature value befor
 
 ### [ ] P8. Fix `ell_ref` equation overflow (observation 4)
 
-The line defining the training-reference log variance is visually crossing/pressing the IEEE column boundary in the current PDF. Reformat using `aligned`, split the median definition and `sigma_ref^2 = exp(ell_ref)` across lines, or otherwise guarantee both fit inside one column. Re-render the PDF after the fix.
+The line defining the training-reference log variance is visually crossing/pressing the IEEE column boundary in the current PDF. Reformat using `aligned`, split the median definition and `q_ref = exp(ell_ref)` across lines, or otherwise guarantee both fit inside one column. Re-render the PDF after the fix.
 
 ### [ ] P9. Present the 13 GRU inputs as a readable list (observation 5)
 
