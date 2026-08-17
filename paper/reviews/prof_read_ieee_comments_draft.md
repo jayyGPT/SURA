@@ -69,7 +69,7 @@ We should decide whether this feature is genuinely necessary, testable by ablati
 - **P4:** removed the legacy anomaly notation from the active KalmanNet subsection. The paper now states only that the magnetic CNN position output is consumed directly by the fusion network.
 - **P5:** retained `Delta z_wifi` after a paired full-protocol ablation (`benchmarks/wifi_delta_ablation/`). For the CNN DualKalmanNet, removing the two-scalar feature worsened mean error by `+0.0280 m` in full Wi-Fi (paired 95% CI `[+0.0016, +0.0545] m`) and by `+0.0918 m` in degraded Wi-Fi (CI `[-0.0224, +0.2060] m`). Wi-Fi-only differences were inconclusive. The manuscript now defines the feature using the most recent available Wi-Fi fix and explains it only as a short-term consistency cue, without claiming that every large Wi-Fi delta is an outlier.
 
-### [ ] P6. Explain the CNN variance output precisely (observation 7)
+### [x] P6. Explain the CNN uncertainty output precisely (observation 7)
 
 The magnetic CNN has a shared Conv1D encoder followed by two heads: a 2D position head and a one-scalar variance head. The variance head outputs **log variance**, not variance directly. Training uses heteroscedastic Gaussian NLL:
 
@@ -77,7 +77,7 @@ The magnetic CNN has a shared Conv1D encoder followed by two heads: a 2D positio
 
 This makes the network learn larger uncertainty for examples whose location is harder to predict, while the `+ log_variance` term prevents it from making uncertainty arbitrarily large. The current head is a **single isotropic scalar variance for the 2D position**, not separate x/y covariance entries. Our calibration experiment showed that its absolute scale is conservative, but its ranking is useful, which is why the final fusion uses relative variance weighting.
 
-### [ ] P7. Deep code-backed walkthrough of the complete magnetic CNN architecture (observation 9)
+### [x] P7. Deep code-backed walkthrough of the complete magnetic CNN architecture (observation 9)
 
 Prepare a full explanation directly from `models/magnetic_sequence_cnn.py` and `train/train_magnetic_sequence.py`, including tensor shapes and receptive/temporal processing:
 
@@ -92,6 +92,15 @@ Prepare a full explanation directly from `models/magnetic_sequence_cnn.py` and `
 - joint heteroscedastic NLL training.
 
 Also inspect how the magnetic fingerprint map and synthetic causal 84-frame windows are generated, because the network architecture cannot be evaluated independently of that data-generation process.
+
+### P6-P7 implementation note
+
+- **P6:** the second CNN head is now described as a scalar **log-uncertainty score** rather than a calibrated Cartesian variance. The active loss is an uncertainty-weighted radial regression objective, `0.5*||e||^2/exp(ell) + 0.5*ell`; because a true 2-D isotropic Gaussian would carry a full `+ log(q)` normalization term, the paper no longer calls this exact objective a 2-D Gaussian NLL or treats `exp(ell)` as a covariance. The existing calibration benchmark supports relative reliability ranking, which is the only role used by final fusion.
+- **P7:** added `docs/architecture/magnetic_sequence_cnn.md` with the exact preprocessing/data-generation path and tensor shapes. For `T=84`, the Conv1D encoder follows `84 -> 42 -> 21` temporal samples and produces a shared 128-D representation, followed by `128->64->2` position and `128->32->1` uncertainty heads. The paper now states that current CNN training uses survey-derived map-constrained sequences rather than raw continuous MagWi trajectories, and corrects the static feature extractor to the actual instantaneous normalized-acceleration gravity proxy.
+
+### [ ] P11. Real-device magnetic centering / deployment gap uncovered during P6-P7
+
+The current magnetic-map trainer subtracts each phone's mean feature value before node averaging and interpolation. The synthetic CNN/fusion evaluation then samples directly from this centered survey map. A physical unseen phone would need a causal normalization/calibration procedure to map live `magN/magV/magH/dip` features into the same centered domain, but this step is not presently implemented or evaluated. Keep held-out-device claims separate from the magnetic fusion experiment and decide whether to add an online centering strategy in a future experiment or explicitly scope the current paper to the surveyed magnetic domain.
 
 ## Priority C - paper presentation / proofreading
 
