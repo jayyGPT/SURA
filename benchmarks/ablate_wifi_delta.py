@@ -176,11 +176,11 @@ def paired_difference(with_delta: np.ndarray, without_delta: np.ndarray) -> dict
     }
 
 
-def train_eval(model: nn.Module, data_train, data_test, device, *, magnetic: bool, epochs: int):
-    # Reset both initialization/minibatch-order RNGs for an apples-to-apples pair.
+def train_eval(model_factory, data_train, data_test, device, *, magnetic: bool, epochs: int):
+    # Reset before model construction AND before train_filter shuffles its indices.
     torch.manual_seed(SEED)
     np.random.seed(SEED)
-    model = model.to(device)
+    model = model_factory().to(device)
     model, history = train_filter(
         model, data_train, device, epochs=epochs, uses_magnetic=magnetic
     )
@@ -212,6 +212,7 @@ def run(args: argparse.Namespace) -> dict[str, object]:
             "train_seed": FUSION_TRAIN_SEED,
             "test_seed": FUSION_TEST_SEED,
             "model_and_shuffle_seed_reset_before_every_training": SEED,
+            "model_seed_is_reset_before_construction": True,
             "device": str(device),
         },
         "regimes": {},
@@ -245,22 +246,22 @@ def run(args: argparse.Namespace) -> dict[str, object]:
 
         print("  Wi-Fi-only with delta")
         wifi_with, wifi_with_hist = train_eval(
-            WiFiOnlyKalmanNet(FUSION_HIDDEN_SIZE), training, testing, device,
-            magnetic=False, epochs=args.fusion_epochs,
+            lambda: WiFiOnlyKalmanNet(FUSION_HIDDEN_SIZE),
+            training, testing, device, magnetic=False, epochs=args.fusion_epochs,
         )
         print("  Wi-Fi-only without delta")
         wifi_without, wifi_without_hist = train_eval(
-            WiFiOnlyNoDeltaKalmanNet(FUSION_HIDDEN_SIZE), training, testing, device,
-            magnetic=False, epochs=args.fusion_epochs,
+            lambda: WiFiOnlyNoDeltaKalmanNet(FUSION_HIDDEN_SIZE),
+            training, testing, device, magnetic=False, epochs=args.fusion_epochs,
         )
         print("  CNN Dual with delta")
         dual_with, dual_with_hist = train_eval(
-            CNNMagneticDualKalmanNet(FUSION_HIDDEN_SIZE, ref_logvar),
+            lambda: CNNMagneticDualKalmanNet(FUSION_HIDDEN_SIZE, ref_logvar),
             training, testing, device, magnetic=True, epochs=args.fusion_epochs,
         )
         print("  CNN Dual without delta")
         dual_without, dual_without_hist = train_eval(
-            CNNMagneticDualNoDeltaKalmanNet(FUSION_HIDDEN_SIZE, ref_logvar),
+            lambda: CNNMagneticDualNoDeltaKalmanNet(FUSION_HIDDEN_SIZE, ref_logvar),
             training, testing, device, magnetic=True, epochs=args.fusion_epochs,
         )
 
