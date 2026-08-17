@@ -104,9 +104,11 @@ The current magnetic-map trainer subtracts each phone's mean feature value befor
 
 ## Priority C - paper presentation / proofreading
 
-### [ ] P8. Fix `ell_ref` equation overflow (observation 4)
+### [x] P8. Fix `ell_ref` equation overflow (observation 4)
 
 The line defining the training-reference log variance is visually crossing/pressing the IEEE column boundary in the current PDF. Reformat using `aligned`, split the median definition and `q_ref = exp(ell_ref)` across lines, or otherwise guarantee both fit inside one column. Re-render the PDF after the fix.
+
+**Resolved:** split the training-reference definition into an `aligned` two-line equation and verified the rendered column boundary during the 7-page compression pass.
 
 ### [ ] P9. Present the 13 GRU inputs as a readable list (observation 5)
 
