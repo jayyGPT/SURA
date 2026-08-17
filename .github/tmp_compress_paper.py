@@ -11,16 +11,16 @@ def repl(old: str, new: str) -> None:
     text = text.replace(old, new, 1)
 
 # Slightly tighten float spacing without changing body font/line spacing.
-anchor = r"\usepackage{subcaption}\n"
+anchor = "\\usepackage{subcaption}\n"
 if anchor not in text:
     raise SystemExit('subcaption anchor missing')
 text = text.replace(
     anchor,
     anchor
-    + r"\setlength{\textfloatsep}{7pt plus 1pt minus 2pt}\n"
-    + r"\setlength{\floatsep}{6pt plus 1pt minus 2pt}\n"
-    + r"\setlength{\dbltextfloatsep}{7pt plus 1pt minus 2pt}\n"
-    + r"\setlength{\dblfloatsep}{6pt plus 1pt minus 2pt}\n",
+    + "\\setlength{\\textfloatsep}{7pt plus 1pt minus 2pt}\n"
+    + "\\setlength{\\floatsep}{6pt plus 1pt minus 2pt}\n"
+    + "\\setlength{\\dbltextfloatsep}{7pt plus 1pt minus 2pt}\n"
+    + "\\setlength{\\dblfloatsep}{6pt plus 1pt minus 2pt}\n",
     1,
 )
 
