@@ -292,7 +292,7 @@ and, crucially, the magnetic innovation directly uses the 2D output of the magne
 \begin{equation}
 \mathbf{y}_{mag} = \mathbf{z}_{mag} - \mathbf{x}_{\text{pred}} \in \mathbb{R}^2. \label{eq:kn_innovate_m}
 \end{equation}
-Thus the active fusion path contains no separate scalar anomaly observation $A_{\text{obs}}$, anomaly map $A(\mathbf{x})$, or spatial anomaly gradient $\nabla A$; the same CNN output introduced in Section~II-C is the magnetic measurement consumed by KalmanNet.
+The magnetic CNN output $\mathbf{z}_{mag}$ therefore serves directly as the magnetic position measurement consumed by KalmanNet.
 
 The CNN additionally predicts $\ell_{mag,t}=\log \sigma^2_{mag,t}$. Because the uncertainty head is used primarily to rank the reliability of magnetic fixes rather than as an absolute covariance, we normalize it using a training-only reference
 \begin{equation}
@@ -311,7 +311,12 @@ w_{mag,t}
 \end{equation}
 A prediction whose variance is above the training-set reference is therefore automatically down-weighted, whereas a relatively confident magnetic fix retains a larger correction. The log-variance itself is also retained as a GRU input so that the network may learn additional context-dependent reliability beyond this explicit weighting.
 
-The GRU receives 13 scalar inputs per time step: the Wi-Fi innovation $\mathbf{y}_{wifi}\in\mathbb{R}^2$, magnetic-CNN innovation $\mathbf{y}_{mag}\in\mathbb{R}^2$, temporal difference of consecutive Wi-Fi fixes $\Delta\mathbf{z}_{wifi}\in\mathbb{R}^2$, PDR control $\mathbf{u}_t\in\mathbb{R}^2$, previous state update $\Delta\mathbf{x}_{t-1}\in\mathbb{R}^2$, two binary availability masks $m_{wifi},m_{mag}\in\{0,1\}$, and the scalar magnetic log-variance $\ell_{mag,t}$. The GRU outputs eight values, reshaped into independent $2\!\times\!2$ matrices $\mathbf{K}_{wifi}$ and $\mathbf{K}_{mag}$. The posterior update is
+The GRU receives 13 scalar inputs per time step: the Wi-Fi innovation $\mathbf{y}_{wifi}\in\mathbb{R}^2$, magnetic-CNN innovation $\mathbf{y}_{mag}\in\mathbb{R}^2$, temporal difference of consecutive Wi-Fi fixes $\Delta\mathbf{z}_{wifi}\in\mathbb{R}^2$, PDR control $\mathbf{u}_t\in\mathbb{R}^2$, previous state update $\Delta\mathbf{x}_{t-1}\in\mathbb{R}^2$, two binary availability masks $m_{wifi},m_{mag}\in\{0,1\}$, and the scalar magnetic log-variance $\ell_{mag,t}$. Here,
+\begin{equation}
+\Delta\mathbf{z}_{wifi,t}=\mathbf{z}_{wifi,t}-\mathbf{z}_{wifi,t^-},
+\label{eq:wifi_delta}
+\end{equation}
+where $t^-$ denotes the most recent time at which a Wi-Fi fix was available; the feature is set to zero when no new Wi-Fi measurement is present. It provides the recurrent gain network with a short-term consistency cue: the current Wi-Fi innovation can be interpreted jointly with how much the Wi-Fi estimate itself has moved since its previous update, the current PDR displacement, and the GRU history. The GRU outputs eight values, reshaped into independent $2\!\times\!2$ matrices $\mathbf{K}_{wifi}$ and $\mathbf{K}_{mag}$. The posterior update is
 \begin{equation}
 \mathbf{x}_t = \mathbf{x}_{\text{pred}}
 + m_{wifi}\,\mathbf{K}_{wifi}\mathbf{y}_{wifi}
