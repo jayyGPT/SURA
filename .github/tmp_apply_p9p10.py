@@ -12,8 +12,10 @@ where $t^-$ denotes the most recent time at which a Wi-Fi fix was available; the
 
 new = r'''For readability, the 13-dimensional GRU input is listed explicitly below. Define the previous posterior displacement and the masked, numerically clipped magnetic-confidence feature as
 \begin{equation}
-\Delta\mathbf{x}_{t-1}=\mathbf{x}_{t-1}-\mathbf{x}_{t-2},\qquad
-c_{mag,t}=m_{mag}\,\operatorname{clip}(\ell_{mag,t},-6,8).
+\begin{aligned}
+\Delta\mathbf{x}_{t-1} &= \mathbf{x}_{t-1}-\mathbf{x}_{t-2},\\
+c_{mag,t} &= m_{mag}\,\operatorname{clip}(\ell_{mag,t},-6,8).
+\end{aligned}
 \label{eq:gru_aux}
 \end{equation}
 Then the input groups are
@@ -44,6 +46,23 @@ if old in text:
     text = text.replace(old, new, 1)
 elif 'For readability, the 13-dimensional GRU input is listed explicitly below.' not in text:
     raise SystemExit('expected GRU-input block not found')
+
+# Normalize the first P9 draft, whose auxiliary equation was too wide for one IEEE column.
+wide_aux = r'''\begin{equation}
+\Delta\mathbf{x}_{t-1}=\mathbf{x}_{t-1}-\mathbf{x}_{t-2},\qquad
+c_{mag,t}=m_{mag}\,\operatorname{clip}(\ell_{mag,t},-6,8).
+\label{eq:gru_aux}
+\end{equation}'''
+split_aux = r'''\begin{equation}
+\begin{aligned}
+\Delta\mathbf{x}_{t-1} &= \mathbf{x}_{t-1}-\mathbf{x}_{t-2},\\
+c_{mag,t} &= m_{mag}\,\operatorname{clip}(\ell_{mag,t},-6,8).
+\end{aligned}
+\label{eq:gru_aux}
+\end{equation}'''
+if wide_aux in text:
+    text = text.replace(wide_aux, split_aux, 1)
+
 paper.write_text(text, encoding='utf-8')
 
 review = Path('paper/reviews/prof_read_ieee_comments_draft.md')
