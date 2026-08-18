@@ -327,12 +327,35 @@ w_{mag,t}
 \end{equation}
 A magnetic prediction with an uncertainty score above the training reference is therefore down-weighted, whereas a relatively confident fix retains a larger correction. The log-uncertainty score itself is also retained as a GRU input so that the network may learn additional context-dependent reliability beyond this explicit weighting.
 
-The GRU receives 13 scalar inputs per time step: the Wi-Fi innovation $\mathbf{y}_{wifi}\in\mathbb{R}^2$, magnetic-CNN innovation $\mathbf{y}_{mag}\in\mathbb{R}^2$, temporal difference of consecutive Wi-Fi fixes $\Delta\mathbf{z}_{wifi}\in\mathbb{R}^2$, PDR control $\mathbf{u}_t\in\mathbb{R}^2$, previous state update $\Delta\mathbf{x}_{t-1}\in\mathbb{R}^2$, two binary availability masks $m_{wifi},m_{mag}\in\{0,1\}$, and the scalar magnetic log-uncertainty score $\ell_{mag,t}$. Here,
+For readability, the 13-dimensional GRU input is listed explicitly below. Define the previous posterior displacement and the masked, numerically clipped magnetic-confidence feature as
+\begin{equation}
+\Delta\mathbf{x}_{t-1}=\mathbf{x}_{t-1}-\mathbf{x}_{t-2},\qquad
+c_{mag,t}=m_{mag}\,\operatorname{clip}(\ell_{mag,t},-6,8).
+\label{eq:gru_aux}
+\end{equation}
+Then the input groups are
+\begin{center}
+\footnotesize
+\begin{tabular}{@{}lc@{}}
+\toprule
+\textbf{GRU feature} & \textbf{Dim.} \\ \midrule
+Wi-Fi innovation $\mathbf{y}_{wifi}$ & 2 \\
+Magnetic innovation $\mathbf{y}_{mag}$ & 2 \\
+Wi-Fi fix difference $\Delta\mathbf{z}_{wifi}$ & 2 \\
+PDR control $\mathbf{u}_t$ & 2 \\
+Previous posterior displacement $\Delta\mathbf{x}_{t-1}$ & 2 \\
+Wi-Fi availability $m_{wifi}$ & 1 \\
+Magnetic availability $m_{mag}$ & 1 \\
+Magnetic confidence $c_{mag,t}$ & 1 \\ \midrule
+\textbf{Total} & $\mathbf{13}$ \\ \bottomrule
+\end{tabular}
+\end{center}
+Here,
 \begin{equation}
 \Delta\mathbf{z}_{wifi,t}=\mathbf{z}_{wifi,t}-\mathbf{z}_{wifi,t^-},
 \label{eq:wifi_delta}
 \end{equation}
-where $t^-$ denotes the most recent time at which a Wi-Fi fix was available; the feature is set to zero when no new Wi-Fi measurement is present. It provides the recurrent gain network with a short-term consistency cue: the current Wi-Fi innovation can be interpreted jointly with how much the Wi-Fi estimate itself has moved since its previous update, the current PDR displacement, and the GRU history. The GRU outputs eight values, reshaped into independent $2\!\times\!2$ matrices $\mathbf{K}_{wifi}$ and $\mathbf{K}_{mag}$. The posterior update is
+where $t^-$ is the most recent time with an available Wi-Fi fix; the feature is zero when no new Wi-Fi measurement is present. It provides a short-term Wi-Fi consistency cue that the GRU interprets jointly with the current innovation, PDR displacement, and recurrent history. The GRU outputs eight values, reshaped into independent $2\!\times\!2$ matrices $\mathbf{K}_{wifi}$ and $\mathbf{K}_{mag}$. The posterior update is
 \begin{equation}
 \mathbf{x}_t = \mathbf{x}_{\text{pred}}
 + m_{wifi}\,\mathbf{K}_{wifi}\mathbf{y}_{wifi}
