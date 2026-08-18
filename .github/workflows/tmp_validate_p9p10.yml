@@ -8,25 +8,18 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
         with:
           ref: paper/p9-p10-gru-copyedit
       - name: Apply P9-P10 paper patch
         run: python .github/tmp_apply_p9p10.py
-      - name: Install LaTeX
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq texlive-latex-base texlive-latex-extra texlive-fonts-recommended texlive-pictures latexmk poppler-utils >/dev/null
-      - name: Compile and render paper
-        run: |
-          rm -rf /tmp/p9p10-paper /tmp/p9p10-render
-          mkdir -p /tmp/p9p10-paper /tmp/p9p10-render
-          cd paper
-          latexmk -pdf -interaction=nonstopmode -halt-on-error -outdir=/tmp/p9p10-paper main.tex
-          pdfinfo /tmp/p9p10-paper/main.pdf | grep '^Pages:' | tee /tmp/p9p10-paper/page_count.txt
-          pdftoppm -png -r 180 /tmp/p9p10-paper/main.pdf /tmp/p9p10-render/page
+      - name: Compile paper
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: main.tex
+          working_directory: paper
       - name: Commit permanent edits
         run: |
           git config user.name 'Jayendra Vijay Birhade'
@@ -37,7 +30,4 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: p9-p10-paper-preview
-          path: |
-            /tmp/p9p10-paper/main.pdf
-            /tmp/p9p10-paper/page_count.txt
-            /tmp/p9p10-render/*.png
+          path: paper/main.pdf
