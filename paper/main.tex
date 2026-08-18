@@ -329,8 +329,10 @@ A magnetic prediction with an uncertainty score above the training reference is 
 
 For readability, the 13-dimensional GRU input is listed explicitly below. Define the previous posterior displacement and the masked, numerically clipped magnetic-confidence feature as
 \begin{equation}
-\Delta\mathbf{x}_{t-1}=\mathbf{x}_{t-1}-\mathbf{x}_{t-2},\qquad
-c_{mag,t}=m_{mag}\,\operatorname{clip}(\ell_{mag,t},-6,8).
+\begin{aligned}
+\Delta\mathbf{x}_{t-1} &= \mathbf{x}_{t-1}-\mathbf{x}_{t-2},\\
+c_{mag,t} &= m_{mag}\,\operatorname{clip}(\ell_{mag,t},-6,8).
+\end{aligned}
 \label{eq:gru_aux}
 \end{equation}
 Then the input groups are
