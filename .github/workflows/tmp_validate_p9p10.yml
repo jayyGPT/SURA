@@ -1,13 +1,12 @@
 name: Temporary P9-P10 validation
 on:
-  push:
+  pull_request:
     branches:
-      - paper/p9-p10-gru-copyedit
+      - main
 permissions:
   contents: write
 jobs:
   validate:
-    if: "${{ startsWith(github.event.head_commit.message, 'test: run P9-P10') }}"
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
