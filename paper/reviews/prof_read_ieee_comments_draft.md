@@ -134,9 +134,12 @@ Source: annotated `Hybrid-WiFi-Magnetometer-V3-comments.pdf` and the two follow-
 
 ## G. General comments from Prof. Neel Kanth Kundu
 
-### [ ] G1. Make all statements and contribution claims more accurate, with appropriate citations
+### [x] G1. Make all statements and contribution claims more accurate, with appropriate citations
 
 Audit the abstract, introduction, related-work discussion, dataset claims, generalization claims, causality claims, robustness claims, and numerical contribution statements. Every strong statement should either be supported by our experiment/code or by a specific citation. Avoid absolute words such as "entirely", "universally", "inherently", "rigorously", "optimal", or "robust" unless justified.
+
+
+**Resolved in Jha framing pass:** audited strong claims in the abstract, introduction, training/results prose, and conclusion; removed unsupported generalized/Bayesian/trajectory-memorization/optimality language, narrowed evaluation scope, and removed the unused Wi-Fi heatmap-covariance claim from the active fusion description.
 
 ### [ ] G2. Improve mathematical definitions of variables
 
@@ -158,7 +161,7 @@ Use normal English capitalization: only proper nouns/acronyms should be capitali
 
 **Status:** still applicable as a global copy-edit.
 
-### [ ] J2. Rebuild the opening problem statement and verify what cited prior work actually uses
+### [x] J2. Rebuild the opening problem statement and verify what cited prior work actually uses
 
 Prof. Jha asks whether the cited prior works already use the same three sensors. The first paragraph should end with the **precise technical problem targeted by this paper**, not merely list modalities. Depending on the literature, the gap should be framed as something like sparse/noisy Wi-Fi requiring additional measurements, or existing multi-sensor systems lacking an architecture that can exploit them practically/causally.
 
@@ -170,13 +173,19 @@ Actions:
 
 **Status:** strongly applicable.
 
-### [ ] J3. Citation audit for the related-work paragraph and individual claims
+
+**Resolved:** the opening now explicitly acknowledges prior Wi-Fi+magnetic+PDR systems and states that sensor combination is not the contribution; it ends on the causal, reliability-varying state-correction problem targeted here.
+
+### [x] J3. Citation audit for the related-work paragraph and individual claims
 
 Prof. Jha explicitly questioned the citation range `[6]-[8]`, individual references `[6]?`, `[8]?`, and marked at least one uncited claim with "cite". Verify each citation supports the sentence it is attached to. Avoid grouped citations when different papers support different claims.
 
 **Status:** strongly applicable and overlaps G1.
 
-### [ ] J4. Replace jargon-heavy limitation claims with a mathematical/causal argument
+
+**Resolved:** replaced the old grouped `[6]-[8]` claim with paper-specific statements and citations, added direct prior three-sensor and adaptive Wi-Fi/PDR references, and placed a PDR citation at the location marked in the annotated PDF.
+
+### [x] J4. Replace jargon-heavy limitation claims with a mathematical/causal argument
 
 The V3 introduction described issues such as memorization/generalization in broad language. Prof. Jha asks us to start with the mathematical mechanism and then state its consequence. Example direction from his note: explain how temporal evolution can be sensitive to initial measurements/model structure, how lack of a particular correction produces accumulated error, and only then state the generalization consequence.
 
@@ -184,7 +193,10 @@ Do not write generic phrases like "pervasive limitations" or "critical limitatio
 
 **Status:** strongly applicable; current introduction still needs a contribution/limitation rewrite.
 
-### [ ] J5. Expand the critique of prior architectures beyond a single initialization issue
+
+**Resolved:** the limitation argument is now written through the PDR prediction, modality innovations, and correction matrices rather than trajectory-memorization/generalization jargon.
+
+### [x] J5. Expand the critique of prior architectures beyond a single initialization issue
 
 His concern: if the only problem is bad initialization, then properly initializing previous methods could undermine our claimed contribution. We need to establish whether previous approaches fail because of architecture, sensor treatment, causality, missing-data handling, uncertainty handling, or some other concrete reason.
 
@@ -196,7 +208,10 @@ Actions:
 
 **Status:** strongly applicable.
 
-### [ ] J6. Clarify terminology: "Bayesian", "state-space", "hybrid indoor", and "neural-Kalman"
+
+**Resolved:** the introduction distinguishes direct spatial models, adaptive factor-graph/neural fusion, and the proposed separate-gain causal correction structure; it explicitly states that the contribution is not an initialization fix.
+
+### [x] J6. Clarify terminology: "Bayesian", "state-space", "hybrid indoor", and "neural-Kalman"
 
 Prof. Jha questioned the phrase "Bayesian filter" and suggested the structure may more accurately be described as a state-space model. He also asked us to define/correct the meaning of "hybrid indoor" and suggested wording such as "In this work, we propose a ...".
 
@@ -207,6 +222,9 @@ Actions:
 - standardize KalmanNet/neural-Kalman naming and hyphenation.
 
 **Status:** strongly applicable.
+
+
+**Resolved:** removed the learned-Bayesian-filter wording, uses learned state-space estimation terminology, defines multimodal sensing, and standardizes KalmanNet/DualKalmanNet usage.
 
 ### [ ] J7. Redesign/recheck Fig. 1 as a signal-flow / functional-block diagram
 
@@ -220,13 +238,16 @@ Specific requested improvements from the annotation:
 
 **Status:** still applicable even though the figure has since changed; redraw/re-audit rather than assuming current Fig. 1 is final.
 
-### [ ] J8. Simplify the Wi-Fi normalization equation
+### [x] J8. Simplify the Wi-Fi normalization equation
 
 The V3 piecewise equation explicitly maps absent `-100 dBm` to zero, while the second branch's clipping/rescaling already maps `-100` to zero. Prof. Jha calls this redundant.
 
 Action: either simplify the equation to one clipped affine mapping with a clear missing-AP convention, or explain why the explicit absent-AP branch is semantically necessary.
 
 **Status:** still applicable to current Wi-Fi preprocessing text/equation.
+
+
+**Resolved:** the redundant absent-AP branch is removed; the paper now states the -100 dBm missing-AP convention followed by a single clipped affine normalization that maps missing APs to zero.
 
 ### [ ] J9. General notation/spacing/capitalization cleanup in the problem formulation
 
@@ -249,11 +270,14 @@ This is one of the most repeated comments in the PDF:
 
 **Status:** strongly applicable and directly matches G3. This should drive a structural rewrite rather than local edits.
 
-### [ ] J11. Give PDR a short module-level motivation and explain it top-down
+### [x] J11. Give PDR a short module-level motivation and explain it top-down
 
 Before equations, add 1-2 lines explaining why PDR is included, what sensor measurements it uses, and whether it is standard or novel; cite an appropriate PDR reference. Then define the output/control variable first and decompose its ingredients, instead of narrating implementation steps one after another.
 
 **Status:** strongly applicable, especially given P1/P2 methodology mismatch.
+
+
+**Resolved for module motivation/citation:** PDR now begins with its role between absolute updates and cites relevant smartphone PDR/fusion literature. Remaining global section restructuring is tracked separately under G3/J10.
 
 ### [ ] J12. Do not oversell standard signal-processing operations such as the low-pass filter
 
@@ -267,7 +291,7 @@ Instead of "Upon detection" without a mathematical object, define an indicator/e
 
 **Status:** applicable if the PDR equations remain after the methodology audit.
 
-### [ ] J14. Introduce KalmanNet and dual innovation mathematically, and distinguish it from EKF
+### [x] J14. Introduce KalmanNet and dual innovation mathematically, and distinguish it from EKF
 
 Prof. Jha asks for:
 - the missing/expanded abbreviation where needed;
@@ -278,6 +302,9 @@ Prof. Jha asks for:
 If the state-update equations are otherwise identical, do not claim the equations themselves solve variability; explain that the gain-generation mechanism is learned/context-dependent.
 
 **Status:** strongly applicable.
+
+
+**Resolved:** added the analytical EKF gain equation with definitions, explained that KalmanNet replaces analytical gain generation by a recurrent learned mapping, and explicitly defined the pair of Cartesian residuals as the dual innovation.
 
 ### [ ] J15. Legacy anomaly-map mathematics - preserve as a historical warning, do not reintroduce it
 
@@ -290,13 +317,16 @@ On V3 page 4 Prof. Jha asked to:
 
 **Current status:** the active architecture has removed `A_obs`, `A(x)`, and `nabla A`; therefore these exact comments are **superseded**. Their lasting lesson is that every new function/measurement we keep (`z_mag`, `ell_mag`, `w_mag`, heatmap covariance, etc.) must be defined with equal mathematical precision.
 
-### [ ] J16. Audit broad generalization/building-agnostic claims
+### [x] J16. Audit broad generalization/building-agnostic claims
 
 Prof. Jha questioned whether the statement that the framework is "entirely building-agnostic" / deployable to any building is accurate and suggested softening to a more defensible robustness statement.
 
 Action: distinguish **architecture portability** from **trained-model portability**. The mathematics may be reusable across buildings, while Wi-Fi/magnetic environment models generally require a new survey/training/calibration for a new site.
 
 **Status:** strongly applicable and overlaps G1.
+
+
+**Resolved:** removed building-agnostic/generalized framing and explicitly separates reusable architecture from site-specific survey/training and the scope of the current fixed-environment fusion evaluation.
 
 ### [ ] J17. Improve equation-to-equation prose flow
 
