@@ -1,17 +1,17 @@
-name: Temporary paper structure validation
+name: Temporary paper structure final validation
 
 on:
   pull_request:
     branches:
       - main
     types:
-      - opened
+      - synchronize
 
 permissions:
   contents: write
 
 jobs:
-  restructure-and-validate:
+  compact-and-validate:
     runs-on: ubuntu-latest
     steps:
       - name: Check out feature branch
@@ -20,8 +20,8 @@ jobs:
           ref: paper/measurement-method-separation
           fetch-depth: 0
 
-      - name: Apply structural rewrite
-        run: python tools/tmp_restructure_paper.py
+      - name: Compact structural prose
+        run: python tools/tmp_finalize_structure.py
 
       - name: Source consistency checks
         run: |
@@ -35,6 +35,9 @@ jobs:
           method = text.split('\\section{Proposed State-Space Estimator}', 1)[1].split('\\section{Experimental Setup and Training}', 1)[0]
           assert '\\mathcal{L}_{MLP}' not in method
           assert '\\mathcal{L}_{CNN}' not in method
+          assert '\\paragraph{Wi-Fi preprocessing.}' in text
+          assert '\\paragraph{Magnetic preprocessing.}' in text
+          assert '\\paragraph{Inertial inputs.}' in text
           print('Structural checks passed')
           PY
 
@@ -46,31 +49,36 @@ jobs:
           latexmk_use_xelatex: false
           args: -pdf -file-line-error -halt-on-error -interaction=nonstopmode -outdir=build
 
-      - name: Verify PDF and page count
+      - name: Require seven pages
         run: |
           test -f paper/build/main.pdf
           python -m pip install --quiet pypdf
           python - <<'PY'
           from pypdf import PdfReader
-          reader = PdfReader('paper/build/main.pdf')
-          pages = len(reader.pages)
+          pages = len(PdfReader('paper/build/main.pdf').pages)
           print(f'Compiled pages: {pages}')
-          if pages > 8:
-              raise SystemExit(f'Unexpected page growth: {pages} pages')
+          if pages != 7:
+              raise SystemExit(f'Expected 7 pages after compacting, got {pages}')
           PY
 
-      - name: Commit validated paper changes
+      - name: Remove temporary validation files
+        run: |
+          rm -f tools/tmp_restructure_paper.py tools/tmp_finalize_structure.py
+          rm -f paper/notes/tmp_structure_pass.md paper/notes/tmp_structure_pass_2.md paper/notes/tmp_structure_pass_3.md
+          rm -f .github/workflows/tmp-paper-structure.yml
+
+      - name: Commit final branch state
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add paper/main.tex paper/reviews/prof_read_ieee_comments_draft.md
-          git diff --cached --quiet && exit 1
-          git commit -m 'paper: separate measurements, method, and training'
+          git add -A
+          git diff --cached --check
+          git commit -m 'paper: finalize measurement-method separation'
           git push origin HEAD:paper/measurement-method-separation
 
       - name: Upload compiled PDF
         uses: actions/upload-artifact@v4
         with:
-          name: restructured-paper-pdf
+          name: final-structure-paper-pdf
           path: paper/build/main.pdf
           if-no-files-found: error
