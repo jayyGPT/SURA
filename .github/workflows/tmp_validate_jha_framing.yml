@@ -1,13 +1,12 @@
 name: Temporary Jha framing validation
 on:
-  push:
+  pull_request:
     branches:
-      - paper/jha-framing-citations
+      - main
 permissions:
   contents: write
 jobs:
   validate:
-    if: "${{ startsWith(github.event.head_commit.message, 'test: apply Jha framing pass') }}"
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
