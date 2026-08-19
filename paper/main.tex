@@ -10,6 +10,10 @@
 \usepackage{tikz}
 \usetikzlibrary{shapes,arrows,positioning,fit,backgrounds,calc,shadows}
 \usepackage{subcaption}
+\setlength{\textfloatsep}{7pt plus 1pt minus 2pt}
+\setlength{\floatsep}{6pt plus 1pt minus 2pt}
+\setlength{\dbltextfloatsep}{7pt plus 1pt minus 2pt}
+\setlength{\dblfloatsep}{6pt plus 1pt minus 2pt}
 
 \begin{document}
 
@@ -30,7 +34,7 @@ Email: neelkanth@iitd.ac.in}
 \maketitle
 
 \begin{abstract}
-Indoor positioning using hybrid smartphone sensors (Wi-Fi, magnetic field, and IMU) has seen growing interest, but deep-learning models often struggle to generalize in real-world deployments. This paper identifies key limitations in current regression methods, including trajectory memorization, body-frame magnetic direction dependency, and non-causal look-ahead bias. To address these issues, we propose a generalized, decoupled, and strictly causal Neural-Kalman fusion framework for hybrid indoor localization. A Multi-Layer Perceptron (MLP) environment model maps Wi-Fi fingerprints from $N$ Access Points to a 2D probability heatmap over $M$ discrete nodes, while a 1D Convolutional Neural Network (CNN) maps an 84-frame rotation-invariant magnetic sequence to a 2D position fix $\mathbf{z}_{mag}$ and a predicted log-variance. These spatial measurements are fused with a Pedestrian Dead Reckoning (PDR) motion model using a DualKalmanNet whose GRU predicts independent $2\times2$ Wi-Fi and magnetic gain matrices. The magnetic correction is further scaled by a relative confidence weight derived from the CNN variance and normalized using the median uncertainty observed on the fusion training trajectories. On 60 independent map-constrained test trajectories, the variance-weighted model achieves 0.494~m mean error (0.437~m median) under 1~Hz Wi-Fi, compared with 0.473~m (0.449~m median) for Wi-Fi-only KalmanNet. Under degraded Wi-Fi (5~s updates with 40\% AP dropout), it reduces the mean error from 1.533~m to 1.154~m, a 24.7\% improvement, while substantially reducing the high-error tail.
+Indoor positioning using hybrid smartphone sensors (Wi-Fi, magnetic field, and IMU) has seen growing interest, but deep-learning models often struggle to generalize in real-world deployments. This paper identifies key limitations in current regression methods, including trajectory memorization, body-frame magnetic direction dependency, and non-causal look-ahead bias. To address these issues, we propose a generalized, decoupled, and strictly causal Neural-Kalman fusion framework for hybrid indoor localization. A Multi-Layer Perceptron (MLP) environment model maps Wi-Fi fingerprints from $N$ Access Points to a 2D probability heatmap over $M$ discrete nodes, while a 1D Convolutional Neural Network (CNN) maps an 84-frame gravity-referenced magnetic sequence to a 2D position fix $\mathbf{z}_{mag}$ and a learned scalar log-uncertainty score. These spatial measurements are fused with a Pedestrian Dead Reckoning (PDR) motion model using a DualKalmanNet whose GRU predicts independent $2\times2$ Wi-Fi and magnetic gain matrices. The magnetic correction is further scaled by a relative confidence weight obtained by normalizing this score against the median uncertainty observed on the fusion training trajectories. On 60 independent map-constrained test trajectories, the uncertainty-weighted model achieves 0.494~m mean error (0.437~m median) under 1~Hz Wi-Fi, compared with 0.473~m (0.449~m median) for Wi-Fi-only KalmanNet. Under degraded Wi-Fi (5~s updates with 40\% AP dropout), it reduces the mean error from 1.533~m to 1.154~m, a 24.7\% improvement, while substantially reducing the high-error tail.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -61,7 +65,7 @@ Our proposed architecture functions as a modular, learned Bayesian filter design
     % Sensors / Measurements
     \node [block, fill=gray!15] (pdr) {PDR Model \\ ($\mathbf{u}_t$)};
     \node [block, fill=red!15, below=0.6cm of pdr] (wifi) {Wi-Fi MLP \\ ($\mathbf{z}_{wifi}$)};
-    \node [block, fill=orange!15, below=0.6cm of wifi] (mag) {Mag CNN \\ ($\mathbf{z}_{mag},\,\log\sigma^2_{mag}$)};
+    \node [block, fill=orange!15, below=0.6cm of wifi] (mag) {Mag CNN \\ ($\mathbf{z}_{mag},\,\ell_{mag}$)};
     
     % KF Steps
     \node [block, fill=cyan!15, right=1.5cm of pdr] (predict) {Predict \\ $\mathbf{x}_{\text{pred}}$};
@@ -75,7 +79,7 @@ Our proposed architecture functions as a modular, learned Bayesian filter design
     
     \path [line] (wifi) -- (innov);
     \path [line] (mag.east) -- ++(0.4,0) |- (innov.200); % Routes z_mag into innovations
-    \path [line] (mag) -- (gru) node[midway, below, font=\scriptsize] {$\log\sigma^2_{mag}$};
+    \path [line] (mag) -- (gru) node[midway, below, font=\scriptsize] {$\ell_{mag}$};
     
     \path [line] (predict) -- (innov);
     \path [line] (innov) -- (gru);
@@ -85,7 +89,7 @@ Our proposed architecture functions as a modular, learned Bayesian filter design
     \path [line] (predict.east) -- ++(0.4,0) |- (update.160);
 \end{tikzpicture}
 }
-\caption{The proposed Neural-Kalman fusion architecture. The Wi-Fi heatmap and magnetic CNN produce Cartesian innovations against the PDR prediction. The magnetic CNN also provides a log-variance confidence signal. A recurrent Dual GRU predicts independent $2\times2$ gain matrices, while relative magnetic uncertainty explicitly weights the magnetic correction before the posterior update.}
+\caption{The proposed Neural-Kalman fusion architecture. The Wi-Fi heatmap and magnetic CNN produce Cartesian innovations against the PDR prediction. The magnetic CNN also provides a learned scalar log-uncertainty score $\ell_{mag}$. A recurrent Dual GRU predicts independent $2\times2$ gain matrices, while relative magnetic uncertainty explicitly weights the magnetic correction before the posterior update.}
 \label{fig:arch_diagram}
 \end{figure}
 
@@ -150,14 +154,29 @@ During real-time inference, the continuous coordinate estimate $\mathbf{z}_{wifi
 \end{equation}
 where $\mathbf{c}_c \in \mathbb{R}^2$ denotes the physical coordinates of grid cell $c$. A concentrated heatmap yields a tightly bounded covariance, providing an honest, per-scan confidence estimate to the downstream filter.
 
-\subsection{Magnetic Sequence Matcher}
+\subsection{Magnetic Survey Processing and Sequence Matcher}
 
-To mitigate orientation bias inherent in raw $\mathbf{m}_t$ vectors, we extract 4 rotation-invariant scalar features per frame from the magnetic field vector and the estimated gravity direction $\hat{\mathbf{g}}_t$ (obtained from the low-pass filtered accelerometer):
+The magnetic path begins with gravity-referenced survey preprocessing. For each raw static sample, let $\mathbf{m}_t\in\mathbb{R}^3$ be the magnetometer vector and $\mathbf{a}_t\in\mathbb{R}^3$ the accelerometer vector. The implementation uses the instantaneous normalized acceleration
+\begin{equation}
+\hat{\mathbf{a}}_t=\frac{\mathbf{a}_t}{\|\mathbf{a}_t\|}
+\label{eq:mag_gravity_proxy}
+\end{equation}
+as a gravity-direction proxy for the static survey record, and computes
 \begin{align}
-m_N &= \|\mathbf{m}_t\|, \quad m_V = \frac{\mathbf{m}_t \cdot \hat{\mathbf{g}}_t}{\|\hat{\mathbf{g}}_t\|} \nonumber \\
-m_H &= \|\mathbf{m}_t - m_V \hat{\mathbf{g}}_t\|, \quad \delta = \arctan\!\left(\frac{m_V}{m_H}\right) \label{eq:mag_features}
+m_N &= \|\mathbf{m}_t\|, &
+m_V &= \mathbf{m}_t^T\hat{\mathbf{a}}_t, \nonumber\\
+m_H &= \sqrt{\max(m_N^2-m_V^2,0)}, &
+\delta &= \operatorname{atan2}(m_V,m_H).
+\label{eq:mag_features}
 \end{align}
-where $m_N$ is the field magnitude, $m_V$ the vertical projection, $m_H$ the horizontal component, and $\delta$ the magnetic dip angle. All four are scalar and invariant to device orientation. Because single-point magnetic matching is highly ambiguous, we use a 1D Convolutional Neural Network (CNN) to map a temporal sliding window of length $T$ over these 4-channel features to a spatial coordinate.
+These quantities are invariant to a common rigid rotation of the phone when $\hat{\mathbf{a}}_t$ is a valid gravity proxy. The processed survey database stores the mean and standard deviation of each quantity over a static visit. The magnetic-map trainer then subtracts each phone's mean feature value, averages the centered visit means at each surveyed node, and interpolates the four channels $(m_N,m_V,m_H,\delta)$ onto the same 1~m Cartesian environment grid used by the Wi-Fi model.
+
+The CNN is trained on survey-derived, map-constrained magnetic sequences rather than directly on the raw MagWi continuous recordings. Random corridor paths are sampled from the surveyed node graph, interpolated at 16.7~Hz, and used to bilinearly sample the four-channel magnetic map; channel-wise Gaussian noise is added using the measured within-node variability. A causal window ending at time $t$ is therefore
+\begin{equation}
+\mathbf{M}_t\in\mathbb{R}^{T\times4},\qquad T=84,
+\label{eq:mag_window}
+\end{equation}
+with the Cartesian position at the final frame used as its regression target. In the final fusion benchmark, the same 84-frame causal convention is used: a magnetic fix is emitted only after a complete window ending at the current fusion time is available.
 
 \begin{figure*}[htbp]
 \centering
@@ -169,57 +188,50 @@ where $m_N$ is the field magnitude, $m_V$ the vertical projection, $m_H$ the hor
     arrow/.style={draw, thick, -latex, color=black!70},
     groupbox/.style={rectangle, draw=black!30, dashed, thick, inner sep=6pt, rounded corners}
 ]
-    % Input
-    \node (input) {$\mathbb{R}^{T \times 4}$};
-    
-    % Encoder
+    \node (input) {$\mathbb{R}^{84 \times 4}$};
     \node[conv, right=0.5cm of input] (conv1) {Conv1D(32)\\$k\!=\!7$, BN, ReLU};
-    \node[pool, right=0.25cm of conv1] (pool1) {MaxPool};
+    \node[pool, right=0.25cm of conv1] (pool1) {MaxPool\\$84\!\to\!42$};
     \node[conv, right=0.25cm of pool1] (conv2) {Conv1D(64)\\$k\!=\!5$, BN, ReLU};
-    \node[pool, right=0.25cm of conv2] (pool2) {MaxPool};
+    \node[pool, right=0.25cm of conv2] (pool2) {MaxPool\\$42\!\to\!21$};
     \node[conv, right=0.25cm of pool2] (conv3) {Conv1D(128)\\$k\!=\!3$, BN, ReLU};
     \node[pool, right=0.25cm of conv3] (gap) {Adaptive\\AvgPool};
-    
-    % Group Encoder
     \begin{scope}[on background layer]
         \node[groupbox, fill=gray!5, fit=(conv1) (gap)] (encoder_box) {};
     \end{scope}
-
-    % Branching Heads
     \node[head, right=1cm of gap, yshift=0.8cm] (pos_head) {FC(64), ReLU\\Drop(0.2), FC(2)};
-    \node[head, right=1cm of gap, yshift=-0.8cm] (var_head) {FC(32), ReLU\\FC(1)};
-    
-    % Outputs
+    \node[head, right=1cm of gap, yshift=-0.8cm] (unc_head) {FC(32), ReLU\\FC(1)};
     \node[right=0.5cm of pos_head] (outpos) {$\mathbf{z}_{mag}$};
-    \node[right=0.5cm of var_head] (outvar) {$\log\sigma^2_{mag}$};
-
-    % Connections
+    \node[right=0.5cm of unc_head] (outunc) {$\ell_{mag}$};
     \path [arrow] (input) -- (conv1);
     \path [arrow] (conv1) -- (pool1);
     \path [arrow] (pool1) -- (conv2);
     \path [arrow] (conv2) -- (pool2);
     \path [arrow] (pool2) -- (conv3);
     \path [arrow] (conv3) -- (gap);
-    
     \draw [arrow] (gap.east) -- ++(0.3,0) |- (pos_head.west);
-    \draw [arrow] (gap.east) -- ++(0.3,0) |- (var_head.west);
-    
+    \draw [arrow] (gap.east) -- ++(0.3,0) |- (unc_head.west);
     \path [arrow] (pos_head) -- (outpos);
-    \path [arrow] (var_head) -- (outvar);
-    
+    \path [arrow] (unc_head) -- (outunc);
 \end{tikzpicture}
 }
-\caption{Architecture of the 1D-CNN Magnetic Sequence Matcher. A shared convolutional encoder with BatchNorm extracts temporal features, which are processed by two independent heads: a position head (with Dropout) predicting a 2D coordinate, and a variance head estimating heteroscedastic uncertainty.}
+\caption{Code-accurate architecture of the magnetic sequence CNN for $T=84$. The shared Conv1D encoder reduces the temporal length $84\to42\to21$ before adaptive global averaging into a 128-dimensional representation. Separate heads predict the 2D magnetic position fix $\mathbf{z}_{mag}$ and a scalar log-uncertainty score $\ell_{mag}$.}
 \label{fig:cnn_arch}
 \end{figure*}
 
-The CNN processes the input to yield both a continuous position fix $\mathbf{z}_{mag} \in \mathbb{R}^2$ and a predicted scalar log-variance $\ell_{mag}=\log(\sigma^2_{mag})$. It is optimized using a heteroscedastic Negative Log-Likelihood (NLL) loss, which balances coordinate accuracy against self-reported confidence:
-\begin{equation}
-\mathcal{L}_{CNN} = \frac{1}{B} \sum_{i=1}^{B} \left( \frac{\| \mathbf{z}_{mag}^{(i)} - \mathbf{z}_{true}^{(i)} \|^2}{2\sigma^{2(i)}_{mag}} + \frac{1}{2}\log(\sigma^{2(i)}_{mag}) \right) \label{eq:nll_loss}
-\end{equation}
-where $B$ is the batch size, $\mathbf{z}_{true}$ is the ground-truth coordinate, and the variance $\sigma^2_{mag} = \exp(\ell_{mag})$ is clamped to a minimum of 0.01 for numerical stability. In the fusion stage, the raw variance is not treated as an absolutely calibrated Kalman covariance. Instead, it is used as a relative confidence signal normalized by a reference uncertainty computed exclusively from the fusion training trajectories, as described in Section~\ref{sec:kalmannet}.
+For $T=84$, the encoder maps $[B,4,84]$ to $[B,32,84]$, $[B,32,42]$, $[B,64,42]$, $[B,64,21]$, and finally $[B,128,21]$. Adaptive average pooling aggregates all 21 temporal locations into a shared $128$-dimensional vector. The position head is $128\!\to\!64\!\to\!2$ with ReLU and dropout $p=0.2$, while the scalar uncertainty head is $128\!\to\!32\!\to\!1$ with ReLU in its hidden layer. Thus the second output is learned from the same complete 84-frame representation as the position estimate; it is not computed analytically from the position residual at inference time.
 
-Because all four input features ($m_N$, $m_V$, $m_H$, $\delta$) are rotation-invariant scalars derived from the field geometry rather than from the device body frame, the magnetic sequence matcher is inherently agnostic to device posture. The MagWi dataset covers three distinct holding modes---standard navigation hold, call-listening (device near the ear), and natural arm swinging---and no postural calibration or additional adaptation is required across any of them.
+Let $\ell_{mag}^{(i)}$ denote the scalar score for training window $i$ and define $q_{mag}^{(i)}=\exp(\ell_{mag}^{(i)})$. The historical training implementation uses the uncertainty-weighted regression objective
+\begin{equation}
+\mathcal{L}_{CNN}=\frac{1}{B}\sum_{i=1}^{B}\left[
+\frac{\|\mathbf{z}_{mag}^{(i)}-\mathbf{z}_{true}^{(i)}\|^2}{2\,\tilde q_{mag}^{(i)}}
++\frac{1}{2}\ell_{mag}^{(i)}\right],
+\label{eq:nll_loss}
+\end{equation}
+where $\tilde q_{mag}^{(i)}=\max(q_{mag}^{(i)},0.01)$. A difficult sample can therefore receive a larger learned scale, reducing the first term, while the positive log-scale penalty discourages arbitrarily large uncertainty scores.
+
+Importantly, (\ref{eq:nll_loss}) is \emph{not} the exact negative log-likelihood of a two-dimensional isotropic Gaussian: for a covariance $q\mathbf{I}_2$, the Gaussian normalization contributes $\log q$, rather than $\tfrac{1}{2}\log q$. We therefore do not interpret $q_{mag}$ as a calibrated Cartesian variance or covariance. It is used only as a learned relative uncertainty/difficulty scale. The separate calibration analysis shows that this score has useful reliability ordering but a conservative absolute scale; the fusion stage consequently uses only its training-normalized relative value.
+
+The current synthetic fusion evaluation samples its magnetic inputs from the per-phone-centered survey map described above. It therefore evaluates temporal fusion within that surveyed magnetic domain; it does not establish that an uncalibrated unseen handset can be mapped into the same centered feature domain without an additional causal normalization procedure.
 
 \subsection{Causal Pedestrian Dead Reckoning (PDR)}
 
@@ -292,32 +304,66 @@ and, crucially, the magnetic innovation directly uses the 2D output of the magne
 \begin{equation}
 \mathbf{y}_{mag} = \mathbf{z}_{mag} - \mathbf{x}_{\text{pred}} \in \mathbb{R}^2. \label{eq:kn_innovate_m}
 \end{equation}
-Thus the active fusion path contains no separate scalar anomaly observation $A_{\text{obs}}$, anomaly map $A(\mathbf{x})$, or spatial anomaly gradient $\nabla A$; the same CNN output introduced in Section~II-C is the magnetic measurement consumed by KalmanNet.
+The magnetic CNN output $\mathbf{z}_{mag}$ therefore serves directly as the magnetic position measurement consumed by KalmanNet.
 
-The CNN additionally predicts $\ell_{mag,t}=\log \sigma^2_{mag,t}$. Because the uncertainty head is used primarily to rank the reliability of magnetic fixes rather than as an absolute covariance, we normalize it using a training-only reference
+The CNN additionally predicts the scalar log-uncertainty score $\ell_{mag,t}$ and its positive scale $q_{mag,t}=\exp(\ell_{mag,t})$. Because only relative reliability is used in fusion, we normalize the score using a training-only reference
 \begin{equation}
-\ell_{ref}=\operatorname{median}_{(w,t)\in\mathcal{D}_{train}:\,m_{mag}=1}\ell_{mag,w,t},
-\qquad \sigma^2_{ref}=\exp(\ell_{ref}). \label{eq:mag_ref}
+\begin{aligned}
+\ell_{ref} &= \operatorname{median}_{(w,t)\in\mathcal{D}_{train}:\,m_{mag}=1}
+\ell_{mag,w,t},\\
+q_{ref} &= \exp(\ell_{ref}).
+\end{aligned}
+\label{eq:mag_ref}
 \end{equation}
 The relative magnetic confidence weight is then
 \begin{equation}
 \begin{aligned}
 w_{mag,t}
 &= \frac{1}{1+\exp(\ell_{mag,t}-\ell_{ref})} \\
-&= \frac{1}{1+\sigma^2_{mag,t}/\sigma^2_{ref}},
+&= \frac{1}{1+q_{mag,t}/q_{ref}},
 \qquad 0<w_{mag,t}<1 .
 \end{aligned}
 \label{eq:mag_weight}
 \end{equation}
-A prediction whose variance is above the training-set reference is therefore automatically down-weighted, whereas a relatively confident magnetic fix retains a larger correction. The log-variance itself is also retained as a GRU input so that the network may learn additional context-dependent reliability beyond this explicit weighting.
+A magnetic prediction with an uncertainty score above the training reference is therefore down-weighted, whereas a relatively confident fix retains a larger correction. The log-uncertainty score itself is also retained as a GRU input so that the network may learn additional context-dependent reliability beyond this explicit weighting.
 
-The GRU receives 13 scalar inputs per time step: the Wi-Fi innovation $\mathbf{y}_{wifi}\in\mathbb{R}^2$, magnetic-CNN innovation $\mathbf{y}_{mag}\in\mathbb{R}^2$, temporal difference of consecutive Wi-Fi fixes $\Delta\mathbf{z}_{wifi}\in\mathbb{R}^2$, PDR control $\mathbf{u}_t\in\mathbb{R}^2$, previous state update $\Delta\mathbf{x}_{t-1}\in\mathbb{R}^2$, two binary availability masks $m_{wifi},m_{mag}\in\{0,1\}$, and the scalar magnetic log-variance $\ell_{mag,t}$. The GRU outputs eight values, reshaped into independent $2\!\times\!2$ matrices $\mathbf{K}_{wifi}$ and $\mathbf{K}_{mag}$. The posterior update is
+For readability, the 13-dimensional GRU input is listed explicitly below. Define the previous posterior displacement and the masked, numerically clipped magnetic-confidence feature as
+\begin{equation}
+\begin{aligned}
+\Delta\mathbf{x}_{t-1} &= \mathbf{x}_{t-1}-\mathbf{x}_{t-2},\\
+c_{mag,t} &= m_{mag}\,\operatorname{clip}(\ell_{mag,t},-6,8).
+\end{aligned}
+\label{eq:gru_aux}
+\end{equation}
+Then the input groups are
+\begin{center}
+\footnotesize
+\begin{tabular}{@{}lc@{}}
+\toprule
+\textbf{GRU feature} & \textbf{Dim.} \\ \midrule
+Wi-Fi innovation $\mathbf{y}_{wifi}$ & 2 \\
+Magnetic innovation $\mathbf{y}_{mag}$ & 2 \\
+Wi-Fi fix difference $\Delta\mathbf{z}_{wifi}$ & 2 \\
+PDR control $\mathbf{u}_t$ & 2 \\
+Previous posterior displacement $\Delta\mathbf{x}_{t-1}$ & 2 \\
+Wi-Fi availability $m_{wifi}$ & 1 \\
+Magnetic availability $m_{mag}$ & 1 \\
+Magnetic confidence $c_{mag,t}$ & 1 \\ \midrule
+\textbf{Total} & $\mathbf{13}$ \\ \bottomrule
+\end{tabular}
+\end{center}
+Here,
+\begin{equation}
+\Delta\mathbf{z}_{wifi,t}=\mathbf{z}_{wifi,t}-\mathbf{z}_{wifi,t^-},
+\label{eq:wifi_delta}
+\end{equation}
+where $t^-$ is the most recent time with an available Wi-Fi fix; the feature is zero when no new Wi-Fi measurement is present. It provides a short-term Wi-Fi consistency cue that the GRU interprets jointly with the current innovation, PDR displacement, and recurrent history. The GRU outputs eight values, reshaped into independent $2\!\times\!2$ matrices $\mathbf{K}_{wifi}$ and $\mathbf{K}_{mag}$. The posterior update is
 \begin{equation}
 \mathbf{x}_t = \mathbf{x}_{\text{pred}}
 + m_{wifi}\,\mathbf{K}_{wifi}\mathbf{y}_{wifi}
 + m_{mag}\,w_{mag,t}\,\mathbf{K}_{mag}\mathbf{y}_{mag}. \label{eq:kn_correct}
 \end{equation}
-The availability masks preserve operation under missing modalities: setting $m_{wifi}=0$ or $m_{mag}=0$ removes the corresponding correction. When a magnetic window is available but its predicted variance is large, $w_{mag,t}$ suppresses that correction before it can dominate the state estimate. This combines the learned, context-dependent gains of KalmanNet with an explicit relative-confidence prior from the magnetic CNN.
+The availability masks preserve operation under missing modalities: setting $m_{wifi}=0$ or $m_{mag}=0$ removes the corresponding correction. When a magnetic window is available but its predicted uncertainty score is large, $w_{mag,t}$ suppresses that correction before it can dominate the state estimate. This combines the learned, context-dependent gains of KalmanNet with an explicit relative-confidence prior from the magnetic CNN.
 
 \section{Experimental Setup and Dataset}\label{sec:setup}
 
@@ -338,14 +384,14 @@ The final fusion benchmark is synthetic because the continuous MagWi recordings 
     where $b_t$ is a Gaussian random walk with per-frame standard deviation $0.5^{\circ}/\sqrt{16.7}$ and $\epsilon_t$ is zero-mean white noise with standard deviation $8.8^{\circ}$. Acceleration magnitude is synthesized as a step-frequency sinusoid (frequency sampled from 1.7--2.0~Hz) around gravity with additive Gaussian noise, then passed through the causal step detector of Section~II-D. Every detected step uses the fixed nominal $L_s=0.65$~m.
     \item \textbf{Wi-Fi measurements:} At each scheduled scan time, the nearest surveyed node to the true simulated position is located, one stored RSSI fingerprint from that node is sampled, and the actual trained Wi-Fi heatmap network produces $\mathbf{z}_{wifi}$. The degraded regime changes the scan interval to 5~s and independently drops 40\% of AP entries before inference.
     \item \textbf{Magnetic measurements:} The four rotation-invariant magnetic channels are bilinearly sampled from the survey-derived magnetic map along the simulated path, perturbed using the measured map-noise scale, and passed through the actual 84-frame magnetic CNN. Only causal windows ending at the current fusion time produce $\mathbf{z}_{mag}$ and $\ell_{mag}$.
-    \item \textbf{Estimator/ground-truth separation:} KalmanNet receives only binned PDR controls, Wi-Fi fixes and masks, magnetic CNN fixes and masks, and magnetic log-variance. The generated ground-truth positions are used only to construct the simulated sensor observations and as the supervised training/evaluation target; they are never included in the KalmanNet input vector.
+    \item \textbf{Estimator/ground-truth separation:} KalmanNet receives only binned PDR controls, Wi-Fi fixes and masks, magnetic CNN fixes and masks, and magnetic log-uncertainty score. The generated ground-truth positions are used only to construct the simulated sensor observations and as the supervised training/evaluation target; they are never included in the KalmanNet input vector.
 \end{itemize}
 
 We generate 250 fusion-training trajectories and 60 independent fusion-test trajectories, each represented by 160 fusion bins. This protocol provides controlled temporal ground truth while preserving a strict separation between the simulator's latent state and the observations supplied to the estimator.
 
 \subsection{Training Details}
 
-All neural network components were developed using the PyTorch framework. The MLP and CNN were optimized via Adam ($\beta_1 = 0.9, \beta_2 = 0.999$, weight decay $10^{-4}$) with an initial learning rate of $10^{-3}$, dynamically decayed via a ReduceLROnPlateau scheduler (patience 8, factor 0.5). The MLP uses a Dropout rate of $p = 0.3$ and a Gaussian target with spatial standard deviation $\sigma = 2.0$~m. The MLP was trained for 80 epochs; the CNN for 60 epochs. The 1D-CNN magnetic sequence matcher utilized an empirically optimal temporal window of $T = 84$ frames (5.0~s at 16.7~Hz), selected via a sweep over candidate $\{50, 84, 134, 167\}$ frames, providing sufficient spatial variation for unambiguous matching without overfitting long topological routes. The KalmanNet GRU was trained for 150 epochs via Adam with a learning rate of $2 \times 10^{-3}$, weight decay of $10^{-5}$, and MSE loss against ground-truth trajectories. For each signal-availability regime, the reference magnetic log-variance $\ell_{ref}$ in~(\ref{eq:mag_ref}) is computed only from the 250 fusion-training trajectories and is then frozen for evaluation.
+All neural network components were developed using the PyTorch framework. The MLP and CNN were optimized via Adam ($\beta_1 = 0.9, \beta_2 = 0.999$, weight decay $10^{-4}$) with an initial learning rate of $10^{-3}$, dynamically decayed via a ReduceLROnPlateau scheduler (patience 8, factor 0.5). The MLP uses a Dropout rate of $p = 0.3$ and a Gaussian target with spatial standard deviation $\sigma = 2.0$~m. The MLP was trained for 80 epochs; the CNN for 60 epochs. The 1D-CNN magnetic sequence matcher utilized an empirically optimal temporal window of $T = 84$ frames (5.0~s at 16.7~Hz), selected via a sweep over candidate $\{50, 84, 134, 167\}$ frames, providing sufficient spatial variation for unambiguous matching without overfitting long topological routes. The KalmanNet GRU was trained for 150 epochs via Adam with a learning rate of $2 \times 10^{-3}$, weight decay of $10^{-5}$, and MSE loss against ground-truth trajectories. For each signal-availability regime, the reference magnetic log-uncertainty score $\ell_{ref}$ in~(\ref{eq:mag_ref}) is computed only from the 250 fusion-training trajectories and is then frozen for evaluation.
 
 Device generalization is evaluated separately from temporal fusion. In the standalone Wi-Fi heatmap phone-split experiment and the real static KNN baseline, Samsung Galaxy S9+ fingerprints are held out from model fitting and used only for evaluation. The fusion benchmark instead uses survey-derived environment resources and evaluates 60 unseen synthetic trajectories; its reported KalmanNet errors should therefore be interpreted as trajectory-generalization results within the surveyed IT Engineering environment, not as held-out-device performance.
 
@@ -389,57 +435,55 @@ Full Wi-Fi (1 Hz)
 & WiFi-only KalmanNet & \textbf{0.473 $\pm$ 0.035 m} & 0.449 m \\
 & WiFi+Mag KNN (non-temp.) & 0.802 $\pm$ 0.038 m & 0.772 m \\
 & CNN DualKalmanNet & 0.506 $\pm$ 0.056 m & 0.440 m \\
-& CNN Dual + rel. variance & 0.494 $\pm$ 0.046 m & \textbf{0.437 m} \\ \midrule
+& CNN Dual + rel. confidence & 0.494 $\pm$ 0.046 m & \textbf{0.437 m} \\ \midrule
 Degraded Wi-Fi (5 s, 40\% drop)
 & WiFi-only KalmanNet & 1.533 $\pm$ 0.193 m & 1.392 m \\
 & WiFi+Mag KNN (non-temp.) & 2.606 $\pm$ 0.184 m & 2.560 m \\
 & CNN DualKalmanNet & 1.171 $\pm$ 0.139 m & \textbf{1.042 m} \\
-& \textbf{CNN Dual + rel. variance} & \textbf{1.154 $\pm$ 0.129 m} & 1.113 m \\ \bottomrule
+& \textbf{CNN Dual + rel. confidence} & \textbf{1.154 $\pm$ 0.129 m} & 1.113 m \\ \bottomrule
 \end{tabular}
 \end{table}
 
 \begin{figure*}[htbp]
 \centering
-\begin{subfigure}[t]{0.48\textwidth}
+\begin{subfigure}[t]{0.44\textwidth}
   \centering
   \includegraphics[width=\linewidth]{../benchmarks/knn/current_results/static_heldout_device/cdf.png}
   \caption{Real static fingerprints with S9+ held out.}
   \label{fig:knn_static}
 \end{subfigure}\hfill
-\begin{subfigure}[t]{0.48\textwidth}
+\begin{subfigure}[t]{0.44\textwidth}
   \centering
   \includegraphics[width=\linewidth]{../benchmarks/knn/current_results/trajectory_protocol/full/cdf.png}
   \caption{Matched trajectory protocol, full Wi-Fi (1~Hz).}
   \label{fig:knn_full}
 \end{subfigure}
 
-\vspace{0.15cm}
-\begin{subfigure}[t]{0.48\textwidth}
+\vspace{0.05cm}
+\begin{subfigure}[t]{0.44\textwidth}
   \centering
   \includegraphics[width=\linewidth]{../benchmarks/knn/current_results/trajectory_protocol/degraded/cdf.png}
   \caption{Matched trajectory protocol, degraded Wi-Fi.}
   \label{fig:knn_degraded}
 \end{subfigure}
-\caption{KNN baselines and current fusion CDFs. Panel (a) is a separate real static-fingerprint, held-out-device experiment and is not numerically comparable to the synthetic-walk errors in (b)--(c). Panels (b)--(c) use exactly the same 250-training/60-test synthetic trajectory generation as KalmanNet. The non-temporal KNN receives the contemporaneous Wi-Fi heatmap fix, magnetic-CNN fix and log-variance, and availability masks, but no PDR motion or recurrent history. Axes, ticks, and legends are regenerated at paper-readable sizes.}
+\caption{KNN baselines and fusion CDFs. Panel (a) is a separate real static-fingerprint held-out-device experiment and is not numerically comparable to the synthetic-walk results in (b)--(c). Panels (b)--(c) use the same 250-training/60-test trajectory protocol as KalmanNet; the non-temporal KNN uses contemporaneous Wi-Fi and magnetic fixes, magnetic log-uncertainty, and availability masks, without PDR or recurrent history.}
 \label{fig:knn_fusion_cdfs}
 \end{figure*}
 
-For the matched trajectory comparison in Fig.~\ref{fig:knn_fusion_cdfs}(b)--(c), KNN is intentionally non-temporal: it receives only the contemporaneous Wi-Fi heatmap position, magnetic-CNN position and log-variance, and the two availability masks. Its value of $K$ is selected by five-fold grouped cross-validation in which all bins from a trajectory remain in the same fold. Under full 1~Hz Wi-Fi, the KNN baseline obtains 0.802~m mean error, compared with 0.473~m for Wi-Fi-only KalmanNet and 0.494~m for the variance-weighted CNN fusion. The latter also improves median error slightly from 0.449~m to 0.437~m. Under degraded Wi-Fi, the gap is larger: non-temporal KNN reaches 2.606~m, Wi-Fi-only KalmanNet reaches 1.533~m, and the variance-weighted DualKalmanNet reaches 1.154~m. Direct CNN fusion without the explicit variance weight reaches 1.171~m, so relative magnetic-variance weighting yields a 24.7\% reduction over Wi-Fi-only KalmanNet and reduces the degraded-regime P90 from 2.064~m for unweighted CNN fusion to 1.612~m. The separation from KNN in Fig.~\ref{fig:knn_fusion_cdfs}(c) indicates that the gain does not arise merely from having both absolute sensor estimates available; PDR propagation and learned temporal, context-dependent fusion are important in sparse-Wi-Fi operation.
+For the matched trajectory comparison in Fig.~\ref{fig:knn_fusion_cdfs}(b)--(c), KNN is deliberately non-temporal, with $K$ selected by five-fold grouped cross-validation that keeps each trajectory within one fold. Under full 1~Hz Wi-Fi it obtains 0.802~m mean error, versus 0.473~m for Wi-Fi-only KalmanNet and 0.494~m for uncertainty-weighted CNN fusion; the latter also improves the median from 0.449~m to 0.437~m. Under degraded Wi-Fi, KNN reaches 2.606~m, Wi-Fi-only KalmanNet 1.533~m, unweighted CNN DualKalmanNet 1.171~m, and the uncertainty-weighted model 1.154~m. Thus relative magnetic uncertainty gives a 24.7\% mean-error reduction over Wi-Fi-only KalmanNet and lowers the unweighted model's P90 from 2.064~m to 1.612~m. The KNN gap shows that PDR propagation and recurrent context matter beyond simply having both absolute estimates available.
 
-\begin{figure*}[htbp]
+\begin{figure}[t]
 \centering
-\includegraphics[width=0.82\textwidth]{../benchmarks/knn/current_results/trajectory_protocol/representative_trajectory.png}
-\caption{Representative degraded-Wi-Fi test trajectory generated from the current experiment outputs. To avoid cherry-picking a best-case example, the displayed walk is selected from the interquartile range of per-walk fusion improvements and, within that central group, chosen to contain the largest accumulated heading change so that several corridor turns are visible. The plot compares ground truth, open-loop PDR, Wi-Fi-only KalmanNet, and the final CNN-output DualKalmanNet with relative magnetic-variance weighting; circles indicate the sparse Wi-Fi update times.}
+\includegraphics[width=0.98\columnwidth]{../benchmarks/knn/current_results/trajectory_protocol/representative_trajectory.png}
+\caption{Representative degraded-Wi-Fi synthetic/map-constrained test walk, selected from the interquartile range of fusion improvements and then by maximum heading-change score. Curves compare ground truth, open-loop PDR, Wi-Fi-only KalmanNet, and the final uncertainty-weighted CNN DualKalmanNet; circles mark Wi-Fi updates.}
 \label{fig:trajectory_current}
-\end{figure*}
+\end{figure}
 
-Figure~\ref{fig:trajectory_current} provides a geometric view of the degraded-Wi-Fi regime behind the aggregate statistics. Open-loop PDR accumulates heading and step errors through the sequence of corridor turns, while the Wi-Fi-only KalmanNet can only re-anchor when a sparse Wi-Fi update arrives. The CNN-output DualKalmanNet receives an additional absolute magnetic position innovation at each causal magnetic window, and the relative-variance weight suppresses corrections from windows that the CNN itself judges unreliable. Consequently, the fused path remains closer to the surveyed route between Wi-Fi updates rather than merely correcting after drift has already accumulated. The trajectory is intentionally a representative central-performance case rather than the walk with the largest improvement; its exact selection rule and per-walk errors are stored with the benchmark output for reproducibility.
+Figure~\ref{fig:trajectory_current} shows the same degraded regime geometrically. Open-loop PDR drifts through corridor turns and Wi-Fi-only KalmanNet can re-anchor only at sparse scans, whereas the CNN supplies causal magnetic position innovations between scans and relative uncertainty suppresses unreliable corrections. The fused path therefore remains closer to the surveyed route. The displayed walk is a central-performance case rather than the best improvement; its exact selection data are stored with the benchmark output.
 
 \section{Conclusion}\label{sec:conclusion}
 
-This paper introduced a generalized, decoupled Neural-Kalman fusion architecture designed to resolve pervasive limitations in deep-learning indoor positioning systems across Hybrid Wi-Fi, Magnetic, and IMU data regimes. By strictly separating spatial inference from temporal tracking modules, the framework successfully circumvents trajectory memorization and orientation-dependent data bias. The integration of a 1D-CNN magnetic sequence matcher alongside an MLP Wi-Fi probability heatmap provides two Cartesian spatial measurements in the same state space. Fusing these estimates through DualKalmanNet enables context-dependent $2\!\times\!2$ matrix gains, while the CNN-predicted magnetic variance supplies a relative confidence weight that suppresses uncertain magnetic corrections and availability masks preserve operation under missing sensor modalities.
-
-In challenging degraded scenarios, the CNN-output dual-innovation system effectively limits inertial drift. Relative magnetic-variance weighting reduces mean error from 1.533~m for Wi-Fi-only KalmanNet to 1.154~m, a 24.7\% improvement, while reducing the high-error tail by suppressing uncertain magnetic fixes. While current configurations necessitate building-specific training due to unique foundational AP signatures, the mathematical structure is universally applicable. Future research efforts will focus on expanding the architecture to facilitate full three-dimensional, multi-floor positioning by integrating barometric pressure altitude data into the KalmanNet state vector.
+This paper presented a decoupled Neural-Kalman architecture that separates spatial inference from temporal tracking. A Wi-Fi heatmap MLP and gravity-referenced magnetic sequence CNN provide Cartesian measurements, while DualKalmanNet predicts independent $2\!\times\!2$ gains; availability masks and relative magnetic uncertainty suppress missing or unreliable corrections. Under degraded Wi-Fi, the uncertainty-weighted model reduces mean error from 1.533~m for Wi-Fi-only KalmanNet to 1.154~m (24.7\%) and reduces the high-error tail. The present fusion results demonstrate trajectory generalization within a surveyed environment and still require building-specific environment resources. Future work will extend the state to three-dimensional, multi-floor positioning, including barometric altitude information.
 
 \section*{Acknowledgment}
 The authors acknowledge the Summer Undergraduate Research Award (SURA) program at the Indian Institute of Technology Delhi for supporting this research.

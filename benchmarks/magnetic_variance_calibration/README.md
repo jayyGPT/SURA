@@ -1,10 +1,12 @@
-# Magnetic CNN variance calibration
+# Magnetic CNN uncertainty calibration
 
-This benchmark compares the magnetic CNN's predicted `log(sigma^2)` with its actual 2-D position error on the same synthetic 60-walk test protocol used by the CNN-output DualKalmanNet experiment.
+This benchmark predates the P6/P7 terminology audit and stores the CNN scalar under historical names such as `log_variance` and `sigma`. The active training objective uses one scalar scale on the **summed 2-D radial squared error**, so this value is not interpreted as a calibrated Cartesian variance or covariance. In this document, `sqrt(q)` denotes the positive scale derived from the stored score, where `q = exp(ell_mag)`.
+
+The benchmark compares that learned scale with the actual 2-D position error on the same synthetic 60-walk test protocol used by the CNN-output DualKalmanNet experiment.
 
 ## Correlation summary
 
-| Regime | Samples | Mean error | Mean predicted sigma | Spearman uncertainty/error | Pearson logvar/error | Q4/Q1 mean-error ratio |
+| Regime | Samples | Mean error | Mean derived sqrt(q) | Spearman uncertainty/error | Pearson score/error | Q4/Q1 mean-error ratio |
 |---|---:|---:|---:|---:|---:|---:|
 | Full Wi-Fi (1 Hz) | 8458 | 3.363 m | 6.896 m | 0.310 | 0.359 | 2.41x |
 | Degraded Wi-Fi (5 s, 40% AP drop) | 8458 | 3.429 m | 6.917 m | 0.312 | 0.335 | 2.40x |
@@ -13,7 +15,7 @@ This benchmark compares the magnetic CNN's predicted `log(sigma^2)` with its act
 
 ### Full Wi-Fi (1 Hz)
 
-| Quartile | Samples | Predicted sigma | Mean actual error | Median actual error | Radial RMSE |
+| Quartile | Samples | Derived sqrt(q) | Mean actual error | Median actual error | Radial RMSE |
 |---|---:|---:|---:|---:|---:|
 | Q1 most confident | 2115 | 5.118 m | 2.258 m | 1.860 m | 2.795 m |
 | Q2 | 2114 | 5.978 m | 2.744 m | 2.440 m | 3.310 m |
@@ -22,7 +24,7 @@ This benchmark compares the magnetic CNN's predicted `log(sigma^2)` with its act
 
 ### Degraded Wi-Fi (5 s, 40% AP drop)
 
-| Quartile | Samples | Predicted sigma | Mean actual error | Median actual error | Radial RMSE |
+| Quartile | Samples | Derived sqrt(q) | Mean actual error | Median actual error | Radial RMSE |
 |---|---:|---:|---:|---:|---:|
 | Q1 most confident | 2115 | 5.123 m | 2.286 m | 1.954 m | 2.815 m |
 | Q2 | 2114 | 5.981 m | 2.855 m | 2.461 m | 3.473 m |
@@ -31,14 +33,20 @@ This benchmark compares the magnetic CNN's predicted `log(sigma^2)` with its act
 
 ## Interpretation
 
-The uncertainty head is **useful for ranking**, but it is **not absolutely calibrated**.
+The uncertainty head is **useful for ranking**, but its raw scale should **not be treated as an absolute covariance**.
 
-- Spearman correlation between predicted uncertainty and actual error is about **0.31** in both regimes: moderate, but clearly positive.
+- Spearman correlation between the learned uncertainty scale and actual radial error is about **0.31** in both regimes: moderate, but clearly positive.
 - The least-confident quartile has roughly **2.4x** the mean error of the most-confident quartile.
-- Mean predicted sigma is about **6.9 m**, while the actual mean magnetic position error is about **3.4 m**.
-- Mean predicted variance is about **4.4x** the empirical per-axis variance, so the raw variance is strongly conservative/overestimated.
-- About **92%** of magnetic errors fall inside one predicted sigma; for a perfectly calibrated isotropic 2-D Gaussian this would be much lower, confirming the overestimation.
+- The stored positive scale is conservative relative to the observed radial errors.
+- These results support confidence **ordering** far more strongly than a literal probabilistic calibration claim.
 
-This means we should not directly use `1/sigma^2` as an absolute Kalman covariance without calibration. A better first experiment is to use the variance as a **relative confidence signal** (for example, normalized against the median training uncertainty) so low-confidence magnetic fixes are down-weighted while high-confidence fixes remain useful.
+This is why the final fusion method does not insert the CNN scalar as a Kalman measurement covariance. It uses the training-normalized relative score
 
-The reproducible analysis is `benchmarks/analyze_magnetic_variance.py`. Running it also generates a decile calibration plot and per-sample CSV locally.
+```text
+ell_ref = median training ell_mag
+w_mag   = 1 / (1 + exp(ell_mag - ell_ref))
+```
+
+to suppress comparatively uncertain magnetic corrections.
+
+The numerical values above are unchanged from the original calibration run; only their mathematical interpretation has been tightened. The reproducible analysis is `benchmarks/analyze_magnetic_variance.py`.

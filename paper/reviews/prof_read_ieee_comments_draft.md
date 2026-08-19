@@ -54,25 +54,30 @@ Resolved in the methodology-consistency pass:
 
 ## Priority B - architecture consistency / explanation
 
-### [ ] P4. Remove obsolete magnetic-anomaly notation from active Section II-E (observation 3)
+### [x] P4. Remove obsolete magnetic-anomaly notation from active Section II-E (observation 3)
 
 The current Section II-E still mentions `A_obs`, `A(x)`, and `nabla A` in a sentence explaining that they are *not* used. This is technically a disclaimer rather than an active equation, but it is confusing now that the final architecture is CNN-output-only. Remove or rewrite the sentence so the active method contains no legacy anomaly notation at all.
 
-### [ ] P5. Explain why `Delta z_wifi` is a GRU input (observation 6)
+### [x] P5. Explain why `Delta z_wifi` is a GRU input (observation 6)
 
 Current code computes `wifi_delta = z_wifi,t - previous_wifi` when a new Wi-Fi fix is available. Its intended role is to tell the GRU whether successive absolute Wi-Fi fixes are spatially consistent or make a sudden jump. This gives the gain network information about short-term Wi-Fi stability/outlier behaviour beyond the instantaneous innovation `z_wifi - x_pred`.
 
 We should decide whether this feature is genuinely necessary, testable by ablation, and described clearly enough in the paper. It is zeroed when Wi-Fi is unavailable; `previous_wifi` holds the last available fix.
 
-### [ ] P6. Explain the CNN variance output precisely (observation 7)
+### P4-P5 implementation note
 
-The magnetic CNN has a shared Conv1D encoder followed by two heads: a 2D position head and a one-scalar variance head. The variance head outputs **log variance**, not variance directly. Training uses heteroscedastic Gaussian NLL:
+- **P4:** removed the legacy anomaly notation from the active KalmanNet subsection. The paper now states only that the magnetic CNN position output is consumed directly by the fusion network.
+- **P5:** retained `Delta z_wifi` after a paired full-protocol ablation (`benchmarks/wifi_delta_ablation/`). For the CNN DualKalmanNet, removing the two-scalar feature worsened mean error by `+0.0280 m` in full Wi-Fi (paired 95% CI `[+0.0016, +0.0545] m`) and by `+0.0918 m` in degraded Wi-Fi (CI `[-0.0224, +0.2060] m`). Wi-Fi-only differences were inconclusive. The manuscript now defines the feature using the most recent available Wi-Fi fix and explains it only as a short-term consistency cue, without claiming that every large Wi-Fi delta is an outlier.
 
-`0.5 * squared_position_error / exp(log_variance) + 0.5 * log_variance`.
+### [x] P6. Explain the CNN uncertainty output precisely (observation 7)
 
-This makes the network learn larger uncertainty for examples whose location is harder to predict, while the `+ log_variance` term prevents it from making uncertainty arbitrarily large. The current head is a **single isotropic scalar variance for the 2D position**, not separate x/y covariance entries. Our calibration experiment showed that its absolute scale is conservative, but its ranking is useful, which is why the final fusion uses relative variance weighting.
+**Resolved finding.** The second head outputs one learned scalar `ell_mag` from the shared 128-D CNN representation. The active implementation defines a positive scale `q_mag = exp(ell_mag)` and trains with
 
-### [ ] P7. Deep code-backed walkthrough of the complete magnetic CNN architecture (observation 9)
+`0.5 * ||position_error||^2 / q_mag + 0.5 * ell_mag`
+
+(with a numerical floor on the denominator). Because this one scalar weights the **summed 2-D radial squared error** while the normalization penalty is only `0.5 * ell_mag`, the exact objective is **not** the full negative log-likelihood of a 2-D isotropic Gaussian. We therefore do not call `q_mag` a calibrated Cartesian variance or covariance. It is a learned relative uncertainty/difficulty scale. The existing calibration benchmark shows useful confidence ordering but a conservative absolute scale, so final fusion uses only the training-normalized score difference `ell_mag - ell_ref`.
+
+### [x] P7. Deep code-backed walkthrough of the complete magnetic CNN architecture (observation 9)
 
 Prepare a full explanation directly from `models/magnetic_sequence_cnn.py` and `train/train_magnetic_sequence.py`, including tensor shapes and receptive/temporal processing:
 
@@ -83,18 +88,29 @@ Prepare a full explanation directly from `models/magnetic_sequence_cnn.py` and `
 - Conv1D 64->128, kernel 3 + BatchNorm + ReLU;
 - AdaptiveAvgPool1D(1) -> one 128-dimensional sequence representation;
 - position head: 128->64->2 with ReLU and Dropout(0.2);
-- variance head: 128->32->1 with ReLU;
-- joint heteroscedastic NLL training.
+- scalar uncertainty head: 128->32->1 with ReLU;
+- joint uncertainty-weighted radial regression training.
 
 Also inspect how the magnetic fingerprint map and synthetic causal 84-frame windows are generated, because the network architecture cannot be evaluated independently of that data-generation process.
 
+### P6-P7 implementation note
+
+- **P6:** the second CNN head is now described as a scalar **log-uncertainty score** rather than a calibrated Cartesian variance. The active loss is an uncertainty-weighted radial regression objective, `0.5*||e||^2/exp(ell) + 0.5*ell`; because a true 2-D isotropic Gaussian would carry a full `+ log(q)` normalization term, the paper no longer calls this exact objective a 2-D Gaussian NLL or treats `exp(ell)` as a covariance. The existing calibration benchmark supports relative reliability ranking, which is the only role used by final fusion.
+- **P7:** added `docs/architecture/magnetic_sequence_cnn.md` with the exact preprocessing/data-generation path and tensor shapes. For `T=84`, the Conv1D encoder follows `84 -> 42 -> 21` temporal samples and produces a shared 128-D representation, followed by `128->64->2` position and `128->32->1` uncertainty heads. The paper now states that current CNN training uses survey-derived map-constrained sequences rather than raw continuous MagWi trajectories, and corrects the static feature extractor to the actual instantaneous normalized-acceleration gravity proxy.
+
+### [ ] P11. Real-device magnetic centering / deployment gap uncovered during P6-P7
+
+The current magnetic-map trainer subtracts each phone's mean feature value before node averaging and interpolation. The synthetic CNN/fusion evaluation then samples directly from this centered survey map. A physical unseen phone would need a causal normalization/calibration procedure to map live `magN/magV/magH/dip` features into the same centered domain, but this step is not presently implemented or evaluated. Keep held-out-device claims separate from the magnetic fusion experiment and decide whether to add an online centering strategy in a future experiment or explicitly scope the current paper to the surveyed magnetic domain.
+
 ## Priority C - paper presentation / proofreading
 
-### [ ] P8. Fix `ell_ref` equation overflow (observation 4)
+### [x] P8. Fix `ell_ref` equation overflow (observation 4)
 
-The line defining the training-reference log variance is visually crossing/pressing the IEEE column boundary in the current PDF. Reformat using `aligned`, split the median definition and `sigma_ref^2 = exp(ell_ref)` across lines, or otherwise guarantee both fit inside one column. Re-render the PDF after the fix.
+The line defining the training-reference log variance is visually crossing/pressing the IEEE column boundary in the current PDF. Reformat using `aligned`, split the median definition and `q_ref = exp(ell_ref)` across lines, or otherwise guarantee both fit inside one column. Re-render the PDF after the fix.
 
-### [ ] P9. Present the 13 GRU inputs as a readable list (observation 5)
+**Resolved:** split the training-reference definition into an `aligned` two-line equation and verified the rendered column boundary during the 7-page compression pass.
+
+### [x] P9. Present the 13 GRU inputs as a readable list (observation 5)
 
 The current long prose sentence is hard to audit. Replace it with a compact aligned/list presentation, ideally one feature per line with its dimensionality, followed by the explicit total:
 
@@ -102,9 +118,13 @@ The current long prose sentence is hard to audit. Replace it with a compact alig
 
 This should make it much easier for a reviewer to verify the GRU input dimension against the implementation.
 
-### [ ] P10. Remove/standardize the em dash on page 2 (observation 8)
+**Resolved:** replaced the long prose sentence with an eight-row feature/dimension list. The paper now also defines `Delta x_(t-1) = x_(t-1) - x_(t-2)` and the actual masked/clipped GRU confidence input `c_mag,t = m_mag clip(ell_mag,t,-6,8)`, matching the active implementation.
+
+### [x] P10. Remove/standardize the em dash on page 2 (observation 8)
 
 Locate the page-2 final-line em dash and replace it with IEEE-consistent punctuation/wording if it is stylistically awkward. Perform this only during the final copy-edit pass so pagination changes do not make the page reference stale.
+
+**Resolved after re-pagination:** the current seven-page draft was visually checked and no manuscript-authored em dash remains at the end of page 2. The visible em dashes in `Abstract--`/`Index Terms--` are generated by the IEEEtran template and are standard IEEE formatting, so they are intentionally retained.
 
 ---
 

@@ -10,7 +10,7 @@ Two protocols are intentionally kept separate:
 
 2. ``trajectory``: a non-temporal KNN fusion baseline on the exact synthetic
    250-train/60-test walk protocol used by the current KalmanNet experiment.
-   Its inputs are the current Wi-Fi heatmap fix, magnetic-CNN fix/log-variance,
+   Its inputs are the current Wi-Fi heatmap fix, magnetic-CNN fix/log-uncertainty score,
    and availability masks. It never sees PDR motion or recurrent history.
 
 The trajectory protocol is the one that can be overlaid fairly with the current
@@ -407,7 +407,7 @@ def _plot_trajectory_cdf(
     for label, values in (
         ("Wi-Fi-only KalmanNet", baseline_errors),
         ("Wi-Fi + Magnetic KNN", knn_errors),
-        ("CNN Dual + relative variance", dual_errors),
+        ("CNN Dual + relative uncertainty", dual_errors),
     ):
         ordered = np.sort(values)
         cdf = np.arange(1, len(ordered) + 1) / len(ordered)
@@ -494,7 +494,7 @@ def _plot_representative_trajectory(
             label="PDR only", zorder=2)
     ax.plot(wifi[:, 0], wifi[:, 1], linewidth=2.2, label="Wi-Fi-only KalmanNet", zorder=3)
     ax.plot(dual[:, 0], dual[:, 1], linewidth=2.5,
-            label="CNN Dual + relative variance", zorder=4)
+            label="CNN Dual + relative uncertainty", zorder=4)
     ax.scatter(
         truth[wifi_updates, 0], truth[wifi_updates, 1],
         s=28, facecolors="none", edgecolors="0.25", linewidths=1.0,
