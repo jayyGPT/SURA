@@ -145,9 +145,11 @@ Audit the abstract, introduction, related-work discussion, dataset claims, gener
 
 Perform a notation audit across the whole paper. Define each signal/function/state before first use; distinguish scalars, vectors, matrices, functions, sets, random variables, and constants consistently; include time indices where relevant; avoid symbols whose domain/codomain is unclear; reuse equation numbers instead of redefining quantities informally.
 
-### [ ] G3. Separate measurements/preprocessing from methodology and loss-function design
+### [x] G3. Separate measurements/preprocessing from methodology and loss-function design
 
 Restructure the paper so that the reader first understands **what the phone/environment provides and how it is preprocessed**, then **what estimator/model consumes those measurements**, and finally **how each model is trained and what loss is used**. Do not mix sensor definitions, network architecture, target construction, and training loss in one subsection.
+
+**Resolved in measurement/method separation pass:** the manuscript now has separate top-level sections for sensor measurements and preprocessing, the proposed state-space estimator, and experimental setup/training. Wi-Fi and magnetic target/loss definitions were moved out of the model descriptions into a dedicated training-objectives subsection; simulator-specific heading generation remains in the evaluation protocol rather than the PDR method definition.
 
 ### [ ] G4. Improve flow between subsections/modules and perform a grammar pass
 
@@ -257,7 +259,7 @@ Action: perform a sentence-by-sentence notation/grammar pass once the section st
 
 **Status:** applicable; exact page positions may have moved.
 
-### [ ] J10. Separate signal definitions/preprocessing, proposed functions/method, and training/loss design
+### [x] J10. Separate signal definitions/preprocessing, proposed functions/method, and training/loss design
 
 This is one of the most repeated comments in the PDF:
 - "separate method into a new section";
@@ -268,7 +270,7 @@ This is one of the most repeated comments in the PDF:
 - move model functions into the proposed approach section;
 - move loss-function design into training.
 
-**Status:** strongly applicable and directly matches G3. This should drive a structural rewrite rather than local edits.
+**Resolved:** Section II now defines sensor observations and preprocessing only; Section III contains the Wi-Fi/magnetic measurement functions, causal PDR model, and DualKalmanNet state update; Section IV contains model-training targets/losses plus the synthetic evaluation protocol and optimizer settings. The previous Wi-Fi and magnetic subsections no longer mix preprocessing, architecture, target construction, and loss design.
 
 ### [x] J11. Give PDR a short module-level motivation and explain it top-down
 
