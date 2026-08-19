@@ -1,0 +1,30 @@
+name: Temporary Jha framing validation
+on:
+  push:
+    branches:
+      - tmp/jha-framing-validation
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile paper
+        uses: xu-cheng/latex-action@v4
+        with:
+          root_file: main.tex
+          working_directory: paper
+      - name: Render pages
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq poppler-utils >/dev/null
+          mkdir -p /tmp/jha-render
+          pdftoppm -png -r 180 paper/build/main.pdf /tmp/jha-render/page
+      - uses: actions/upload-artifact@v4
+        with:
+          name: jha-framing-paper-preview
+          path: |
+            paper/build/main.pdf
+            /tmp/jha-render/*.png
