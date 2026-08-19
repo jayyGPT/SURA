@@ -1,0 +1,77 @@
+name: Temporary paper structure validation
+
+on:
+  push:
+    branches:
+      - paper/measurement-method-separation
+    paths:
+      - .github/workflows/tmp-paper-structure.yml
+
+permissions:
+  contents: write
+
+jobs:
+  restructure-and-validate:
+    if: github.event.head_commit.message == 'temp: run paper restructuring validation'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: paper/measurement-method-separation
+          fetch-depth: 0
+
+      - name: Apply structural rewrite
+        run: python tools/tmp_restructure_paper.py
+
+      - name: Source consistency checks
+        run: |
+          git diff --check
+          python - <<'PY'
+          from pathlib import Path
+          text = Path('paper/main.tex').read_text(encoding='utf-8')
+          assert '\\section{Sensor Measurements and Preprocessing}\\label{sec:measurements}' in text
+          assert '\\section{Proposed State-Space Estimator}\\label{sec:architecture}' in text
+          assert '\\section{Experimental Setup and Training}\\label{sec:setup}' in text
+          method = text.split('\\section{Proposed State-Space Estimator}', 1)[1].split('\\section{Experimental Setup and Training}', 1)[0]
+          assert '\\mathcal{L}_{MLP}' not in method
+          assert '\\mathcal{L}_{CNN}' not in method
+          print('Structural checks passed')
+          PY
+
+      - name: Compile IEEE paper
+        uses: xu-cheng/latex-action@v3
+        with:
+          root_file: main.tex
+          working_directory: paper
+          latexmk_use_xelatex: false
+          args: -pdf -file-line-error -halt-on-error -interaction=nonstopmode -outdir=build
+
+      - name: Verify PDF and page count
+        run: |
+          test -f paper/build/main.pdf
+          python -m pip install --quiet pypdf
+          python - <<'PY'
+          from pypdf import PdfReader
+          reader = PdfReader('paper/build/main.pdf')
+          pages = len(reader.pages)
+          print(f'Compiled pages: {pages}')
+          if pages > 8:
+              raise SystemExit(f'Unexpected page growth: {pages} pages')
+          PY
+
+      - name: Commit validated paper changes
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add paper/main.tex paper/reviews/prof_read_ieee_comments_draft.md
+          git diff --cached --quiet && exit 1
+          git commit -m 'paper: separate measurements, method, and training'
+          git push origin HEAD:paper/measurement-method-separation
+
+      - name: Upload compiled PDF
+        uses: actions/upload-artifact@v4
+        with:
+          name: restructured-paper-pdf
+          path: paper/build/main.pdf
+          if-no-files-found: error
