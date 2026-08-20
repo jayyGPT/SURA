@@ -101,82 +101,78 @@ The estimator forms Wi-Fi and magnetic Cartesian measurements, propagates PDR mo
 
 \begin{figure*}[t]
 \centering
-\resizebox{0.98\textwidth}{!}{
+\resizebox{0.97\textwidth}{!}{
 \begin{tikzpicture}[
     signal/.style={rectangle, rounded corners=7pt, draw=blue!70!black, thick, fill=blue!8, minimum height=0.72cm, minimum width=2.05cm, text centered, font=\scriptsize},
-    block/.style={rectangle, rounded corners=2pt, draw=black!70, thick, fill=gray!8, minimum height=1.05cm, text width=3.55cm, text centered, font=\scriptsize},
-    learned/.style={block, fill=purple!10, text width=3.65cm},
-    confidence/.style={block, fill=orange!12, text width=3.55cm},
-    correction/.style={block, fill=green!10, text width=5.1cm},
+    block/.style={rectangle, rounded corners=2pt, draw=black!70, thick, fill=gray!8, minimum height=1.05cm, text width=3.65cm, text centered, font=\scriptsize},
+    learned/.style={block, fill=purple!10, text width=3.7cm},
+    confidence/.style={block, fill=orange!12, text width=3.7cm},
+    correction/.style={block, fill=green!10, text width=3.8cm},
     line/.style={draw, -latex, thick, color=black!80},
     auxline/.style={draw, -latex, thick, dashed, color=black!55},
     lab/.style={font=\scriptsize, fill=white, inner sep=1pt}
 ]
     % External/current-step signals.
-    \node[signal] (xprev) at (0,2.6) {$\mathbf{x}_{t-1}$};
-    \node[signal] (motion) at (0,1.55) {$\mathbf{u}_t$};
-    \node[signal] (wifi) at (0,0.20) {$\mathbf{z}_{\mathrm{wifi},t}$};
-    \node[signal] (mag) at (0,-0.85) {$\mathbf{z}_{\mathrm{mag},t}$};
-    \node[signal] (ell) at (0,-1.90) {$\ell_{\mathrm{mag},t}$};
-    \node[signal, minimum width=2.65cm] (masks) at (0,-2.95) {$m_{\mathrm{wifi},t},\ m_{\mathrm{mag},t}$};
-    \node[signal, minimum width=3.35cm] (history) at (0,-4.00) {$\Delta\mathbf{z}_{\mathrm{wifi},t},\ \Delta\mathbf{x}_{t-1}$};
+    \node[signal] (xprev) at (0,3.55) {$\mathbf{x}_{t-1}$};
+    \node[signal] (motion) at (0,2.55) {$\mathbf{u}_t$};
+    \node[signal] (wifi) at (0,1.15) {$\mathbf{z}_{\mathrm{wifi},t}$};
+    \node[signal] (mag) at (0,0.15) {$\mathbf{z}_{\mathrm{mag},t}$};
+    \node[signal] (ell) at (0,-1.25) {$\ell_{\mathrm{mag},t}$};
+    \node[signal, minimum width=2.65cm] (masks) at (0,-2.25) {$m_{\mathrm{wifi},t},\ m_{\mathrm{mag},t}$};
+    \node[signal, minimum width=3.35cm] (history) at (0,-3.25) {$\Delta\mathbf{z}_{\mathrm{wifi},t},\ \Delta\mathbf{x}_{t-1}$};
 
-    % Deterministic state-space transformations.
-    \node[block] (prior) at (3.45,2.10) {Prior propagation\\[-1pt]$\mathbf{x}_t^-=\mathbf{x}_{t-1}+\mathbf{u}_t$};
-    \node[block, text width=4.45cm] (innov) at (5.45,0.25) {Innovation formation\\[-1pt]
+    % Top lane: prior state propagation and posterior output.
+    \node[block] (prior) at (3.25,3.05) {Prior propagation\\[-1pt]$\mathbf{x}_t^-=\mathbf{x}_{t-1}+\mathbf{u}_t$};
+    \node[correction] (update) at (13.35,2.85) {Posterior correction\\[-1pt]Eq.~(\ref{eq:kn_correct})};
+    \node[signal, draw=green!55!black, fill=green!8, minimum width=1.85cm] (xout) at (16.25,2.85) {$\mathbf{x}_t$};
+
+    % Middle lane: innovations -> recurrent features -> gains.
+    \node[block, text width=4.55cm] (innov) at (4.15,0.70) {Innovation formation\\[-1pt]
       $\mathbf{y}_{\mathrm{wifi},t}=\mathbf{z}_{\mathrm{wifi},t}-\mathbf{x}_t^-$\\[-1pt]
       $\mathbf{y}_{\mathrm{mag},t}=\mathbf{z}_{\mathrm{mag},t}-\mathbf{x}_t^-$};
-    \node[block, text width=4.3cm] (features) at (5.45,-2.65) {13-D feature assembly\\[-1pt]
-      $\boldsymbol{\phi}_t\in\mathbb{R}^{13}$\\[-1pt]
-      innovations, motion, history, masks, confidence};
-    \node[confidence] (conf) at (4.00,-4.35) {Relative magnetic confidence\\[-1pt]
+    \node[block, text width=3.65cm] (features) at (7.85,0.70) {13-D feature assembly\\[-1pt]$\boldsymbol{\phi}_t\in\mathbb{R}^{13}$};
+    \node[learned] (gru) at (11.05,0.70) {GRUCell + linear gain head\\[-1pt]
+      $(\boldsymbol{\phi}_t,\mathbf{h}_{t-1})\mapsto$\\[-1pt]
+      $\mathbf{K}_{\mathrm{wifi},t},\ \mathbf{K}_{\mathrm{mag},t},\ \mathbf{h}_t$};
+
+    % Bottom lane: auxiliary recurrent inputs and explicit confidence weighting.
+    \node[block, text width=4.5cm] (aux) at (4.15,-1.75) {Auxiliary recurrent features\\[-1pt]
+      $\mathbf{u}_t,\ \Delta\mathbf{z}_{\mathrm{wifi},t},\ \Delta\mathbf{x}_{t-1},$\\[-1pt]
+      $m_{\mathrm{wifi},t},\ m_{\mathrm{mag},t},\ c_{\mathrm{mag},t}$};
+    \node[confidence] (conf) at (8.25,-2.55) {Relative magnetic confidence\\[-1pt]
       $w_{\mathrm{mag},t}=\bigl[1+e^{\ell_{\mathrm{mag},t}-\ell_{\mathrm{ref}}}\bigr]^{-1}$};
+    \node[signal] (hprev) at (11.05,-2.55) {$\mathbf{h}_{t-1}$};
 
-    % Learned recurrent gain generation.
-    \node[signal] (hprev) at (8.85,-4.00) {$\mathbf{h}_{t-1}$};
-    \node[learned] (gru) at (9.00,-2.10) {GRUCell + 8-D linear head\\[-1pt]
-      $\mathbf{h}_t=\operatorname{GRUCell}(\boldsymbol{\phi}_t,\mathbf{h}_{t-1})$\\[-1pt]
-      $\mathbf{g}_t\mapsto(\mathbf{K}_{\mathrm{wifi},t},\mathbf{K}_{\mathrm{mag},t})$};
-
-    % Posterior correction and explicit output signal.
-    \node[correction] (update) at (12.65,0.55) {Posterior correction\\[-1pt]
-      $\mathbf{x}_t=\mathbf{x}_t^-+m_{\mathrm{wifi},t}\mathbf{K}_{\mathrm{wifi},t}\mathbf{y}_{\mathrm{wifi},t}$\\[-1pt]
-      $\quad +m_{\mathrm{mag},t}w_{\mathrm{mag},t}\mathbf{K}_{\mathrm{mag},t}\mathbf{y}_{\mathrm{mag},t}$};
-    \node[signal, draw=green!55!black, fill=green!8, minimum width=1.85cm] (xout) at (16.10,0.55) {$\mathbf{x}_t$};
-
-    % Main state/measurement paths.
+    % State and measurement flow.
     \path[line] (xprev) -- (prior);
     \path[line] (motion) -- (prior);
-    \path[line] (prior.east) -- ++(0.55,0) |- (innov.north) node[pos=0.28, lab] {$\mathbf{x}_t^-$};
+    \path[line] (prior.east) -- ++(7.0,0) -- ++(0, -0.20) -- (update.west) node[pos=0.48, lab] {$\mathbf{x}_t^-$};
+    \path[line] (prior.south) -- ++(0,-0.65) -| (innov.north) node[pos=0.30, lab] {$\mathbf{x}_t^-$};
     \path[line] (wifi) -- (innov.west);
-    \path[line] (mag.east) -- ++(1.15,0) |- (innov.205);
-    \path[line] (innov.south) -- (features.north) node[midway, lab] {$\mathbf{y}_{\mathrm{wifi},t},\ \mathbf{y}_{\mathrm{mag},t}$};
-
-    % Recurrent feature paths.
-    \path[auxline] (motion.east) -- ++(1.0,0) |- (features.165);
-    \path[auxline] (history.east) -- ++(2.0,0) |- (features.210);
-    \path[auxline] (masks.east) -- ++(1.45,0) |- (features.195);
-    \path[auxline] (ell.east) -- ++(1.05,0) |- (features.180) node[pos=0.63, lab] {$c_{\mathrm{mag},t}$};
+    \path[line] (mag.east) -- ++(1.05,0) |- (innov.205);
+    \path[line] (innov) -- (features) node[midway, above, lab] {$\mathbf{y}_{\mathrm{wifi},t},\ \mathbf{y}_{\mathrm{mag},t}$};
     \path[line] (features) -- (gru) node[midway, above, lab] {$\boldsymbol{\phi}_t$};
-    \path[auxline] (hprev) -- (gru.south);
+    \path[line] (gru.north) -- ++(0,1.00) -| (update.south) node[pos=0.42, lab] {$\mathbf{K}_{\mathrm{wifi},t},\ \mathbf{K}_{\mathrm{mag},t}$};
+    \path[line] (innov.north east) -- ++(0.65,0.55) -- ++(5.85,0) |- (update.195) node[pos=0.48, lab] {$\mathbf{y}_{\mathrm{wifi},t},\ \mathbf{y}_{\mathrm{mag},t}$};
 
-    % Confidence and posterior paths.
-    \path[line] (ell.east) -- ++(0.65,0) |- (conf.west);
-    \path[auxline] (masks.east) -- ++(0.85,0) |- (conf.165);
-    \path[line] (conf.east) -- ++(5.25,0) |- (update.south) node[pos=0.73, lab] {$w_{\mathrm{mag},t}$};
-    \path[line] (gru.east) -- ++(1.05,0) |- (update.205) node[pos=0.30, lab] {$\mathbf{K}_{\mathrm{wifi},t},\ \mathbf{K}_{\mathrm{mag},t}$};
-    \path[line] (innov.east) -- ++(1.0,0) |- (update.175) node[pos=0.38, lab] {$\mathbf{y}_{\mathrm{wifi},t},\ \mathbf{y}_{\mathrm{mag},t}$};
-    \path[line] (prior.east) -- ++(6.15,0) |- (update.155) node[pos=0.73, lab] {$\mathbf{x}_t^-$};
-    \path[auxline] (masks.east) -- ++(10.1,0) |- (update.190);
+    % Auxiliary feature assembly.
+    \path[auxline] (motion.east) -- ++(1.25,0) |- (aux.155);
+    \path[auxline] (ell.east) -- ++(1.15,0) |- (aux.175) node[pos=0.58, lab] {$c_{\mathrm{mag},t}$};
+    \path[auxline] (masks) -- (aux.west);
+    \path[auxline] (history.east) -- ++(1.15,0) |- (aux.205);
+    \path[auxline] (aux.east) -- ++(1.15,0) |- (features.south) node[pos=0.55, lab] {auxiliary features};
+
+    % Confidence and recurrent hidden-state paths.
+    \path[line] (ell.east) -- ++(5.05,0) |- (conf.west);
+    \path[line] (conf.east) -- ++(3.00,0) |- (update.south east) node[pos=0.48, lab] {$w_{\mathrm{mag},t}$};
+    \path[auxline] (hprev.north) -- (gru.south);
+    \path[auxline] (masks.east) -- ++(11.25,0) |- (update.south west) node[pos=0.78, lab] {availability masks};
+
     \path[line] (update) -- (xout);
-
-    % Recurrent state retained for the next update.
-    \node[signal, minimum width=1.75cm] (hout) at (10.95,-4.00) {$\mathbf{h}_t$};
-    \path[auxline] (gru.south east) -- ++(0.40,-0.45) -| (hout.north);
-    \node[font=\scriptsize, text=black!60] at (10.95,-4.62) {retained for step $t+1$};
+    \node[font=\scriptsize, text=black!60] at (11.05,-3.15) {$\mathbf{h}_t$ is retained for fusion step $t+1$};
 \end{tikzpicture}
 }
-\caption{Functional signal flow of DualKalmanNet at fusion step $t$. Blue rounded nodes denote input or retained signals, gray blocks deterministic state-space transformations, the purple block the learned recurrent gain generator, the orange block explicit relative magnetic-confidence weighting, and the green block the posterior correction. The PDR control $\mathbf{u}_t$ and learned Cartesian fixes $\mathbf{z}_{\mathrm{wifi},t}$ and $\mathbf{z}_{\mathrm{mag},t}$ enter as signals. The previous posterior $\mathbf{x}_{t-1}$ and PDR control form the prior $\mathbf{x}_t^-$; both absolute measurements form innovations against that same prior. These innovations and the auxiliary history/mask/confidence features form $\boldsymbol{\phi}_t$, from which the GRU predicts independent gain matrices. The posterior block applies the availability masks and $w_{\mathrm{mag},t}$ and emits the final state $\mathbf{x}_t$.}
+\caption{Functional signal flow of DualKalmanNet at fusion step $t$. Blue rounded nodes are input or retained signals; gray blocks are deterministic transformations; the purple block is the learned recurrent gain generator; the orange block computes explicit relative magnetic confidence; and the green block performs the posterior correction. The previous state and PDR control form $\mathbf{x}_t^-$, while the Wi-Fi and magnetic fixes form separate innovations against that prior. The innovations and auxiliary recurrent features form $\boldsymbol{\phi}_t$, the GRU produces independent $2\times2$ gain matrices, and the posterior correction applies the gains together with availability masks and $w_{\mathrm{mag},t}$ before emitting $\mathbf{x}_t$. Dashed arrows denote auxiliary or recurrent paths.}
 \label{fig:arch_diagram}
 \end{figure*}
 
