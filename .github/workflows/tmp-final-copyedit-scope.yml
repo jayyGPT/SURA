@@ -20,7 +20,9 @@ jobs:
           fetch-depth: 0
 
       - name: Apply copyedit and Route A scope pass
-        run: python tools/tmp_final_copyedit_scope.py
+        run: |
+          python tools/tmp_final_copyedit_scope.py
+          sed -i 's/[[:space:]]\+$//' paper/main.tex paper/reviews/prof_read_ieee_comments_draft.md
 
       - name: Source consistency checks
         run: |
