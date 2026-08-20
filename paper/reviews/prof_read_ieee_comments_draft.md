@@ -98,9 +98,11 @@ Also inspect how the magnetic fingerprint map and synthetic causal 84-frame wind
 - **P6:** the second CNN head is now described as a scalar **log-uncertainty score** rather than a calibrated Cartesian variance. The active loss is an uncertainty-weighted radial regression objective, `0.5*||e||^2/exp(ell) + 0.5*ell`; because a true 2-D isotropic Gaussian would carry a full `+ log(q)` normalization term, the paper no longer calls this exact objective a 2-D Gaussian NLL or treats `exp(ell)` as a covariance. The existing calibration benchmark supports relative reliability ranking, which is the only role used by final fusion.
 - **P7:** added `docs/architecture/magnetic_sequence_cnn.md` with the exact preprocessing/data-generation path and tensor shapes. For `T=84`, the Conv1D encoder follows `84 -> 42 -> 21` temporal samples and produces a shared 128-D representation, followed by `128->64->2` position and `128->32->1` uncertainty heads. The paper now states that current CNN training uses survey-derived map-constrained sequences rather than raw continuous MagWi trajectories, and corrects the static feature extractor to the actual instantaneous normalized-acceleration gravity proxy.
 
-### [ ] P11. Real-device magnetic centering / deployment gap uncovered during P6-P7
+### [x] P11. Real-device magnetic centering / deployment gap uncovered during P6-P7
 
-The current magnetic-map trainer subtracts each phone's mean feature value before node averaging and interpolation. The synthetic CNN/fusion evaluation then samples directly from this centered survey map. A physical unseen phone would need a causal normalization/calibration procedure to map live `magN/magV/magH/dip` features into the same centered domain, but this step is not presently implemented or evaluated. Keep held-out-device claims separate from the magnetic fusion experiment and decide whether to add an online centering strategy in a future experiment or explicitly scope the current paper to the surveyed magnetic domain.
+The current magnetic-map trainer subtracts each phone's mean feature value before node averaging and interpolation. The synthetic CNN/fusion evaluation then samples directly from this centered survey map. A physical unseen phone would need a causal normalization/calibration procedure to map live `magN/magV/magH/dip` features into the same centered domain, but this step is not presently implemented or evaluated.
+
+**Resolved via Route A:** the manuscript now explicitly scopes magnetic fusion to the surveyed, per-phone-centered feature domain in the preprocessing, experimental-setup, device-generalization, and conclusion text. It does not claim causal alignment or plug-and-play magnetic fusion for an uncalibrated unseen handset. A causal alignment strategy is retained below as a non-blocking future-work item rather than being added ad hoc to the present experiment.
 
 ## Priority C - paper presentation / proofreading
 
@@ -153,17 +155,19 @@ Restructure the paper so that the reader first understands **what the phone/envi
 
 **Resolved in measurement/method separation pass:** the manuscript now has separate top-level sections for sensor measurements and preprocessing, the proposed state-space estimator, and experimental setup/training. Wi-Fi and magnetic target/loss definitions were moved out of the model descriptions into a dedicated training-objectives subsection; simulator-specific heading generation remains in the evaluation protocol rather than the PDR method definition.
 
-### [ ] G4. Improve flow between subsections/modules and perform a grammar pass
+### [x] G4. Improve flow between subsections/modules and perform a grammar pass
 
 Add short motivation/transition sentences between Wi-Fi, magnetic, PDR, and KalmanNet modules; prefer top-down explanations; remove abrupt jumps; fix capitalization, punctuation, abbreviations, article usage, hyphenation, and awkward phrasing.
 
+**Resolved in final copy-edit/scope pass:** module transitions now explain the functional role of each branch (Wi-Fi anchor, magnetic sequence measurement/confidence, PDR propagation, and recurrent correction), while the full manuscript was edited for grammar, punctuation, articles, hyphenation, and sentence flow without changing reported results.
+
 ## J. Prof. Nilesh Jha - annotated V3 comments
 
-### [ ] J1. Capitalization, abbreviations, and standard English usage throughout - especially the abstract
+### [x] J1. Capitalization, abbreviations, and standard English usage throughout - especially the abstract
 
 Use normal English capitalization: only proper nouns/acronyms should be capitalized. Standardize terms such as Wi-Fi, magnetic field, inertial measurement unit (IMU), KalmanNet/neural-Kalman wording, etc. Apply the correction to the abstract as well as body text.
 
-**Status:** still applicable as a global copy-edit.
+**Resolved in final copy-edit/scope pass:** standardized common-noun capitalization and first-use abbreviations in the abstract/body (including multilayer perceptron, convolutional neural network, gated recurrent unit, access points, RSSI, softmax, Wi-Fi, and magnetic field) while preserving proper names such as KalmanNet and DualKalmanNet.
 
 ### [x] J2. Rebuild the opening problem statement and verify what cited prior work actually uses
 
@@ -310,7 +314,7 @@ If the state-update equations are otherwise identical, do not claim the equation
 
 **Resolved:** added the analytical EKF gain equation with definitions, explained that KalmanNet replaces analytical gain generation by a recurrent learned mapping, and explicitly defined the pair of Cartesian residuals as the dual innovation.
 
-### [ ] J15. Legacy anomaly-map mathematics - preserve as a historical warning, do not reintroduce it
+### [x] J15. Legacy anomaly-map mathematics - preserve as a historical warning, do not reintroduce it
 
 On V3 page 4 Prof. Jha asked to:
 - define the anomaly map mathematically and say how it is obtained;
@@ -319,7 +323,7 @@ On V3 page 4 Prof. Jha asked to:
 - avoid using an unbold capital letter ambiguously as a function/scalar;
 - combine equations with clear references ("combining (..)-(..), we update ...").
 
-**Current status:** the active architecture has removed `A_obs`, `A(x)`, and `nabla A`; therefore these exact comments are **superseded**. Their lasting lesson is that every new function/measurement we keep (`z_mag`, `ell_mag`, `w_mag`, heatmap covariance, etc.) must be defined with equal mathematical precision.
+**Resolved / superseded:** the active architecture has removed `A_obs`, `A(x)`, and `nabla A`, so the V3 anomaly-map equations are intentionally not reintroduced. The retained warning is historical: every active function/measurement must remain mathematically defined with the precision now used for $\mathbf{z}_{\mathrm{mag}}$, $\ell_{\mathrm{mag}}$, and $w_{\mathrm{mag}}$.
 
 ### [x] J16. Audit broad generalization/building-agnostic claims
 
@@ -338,21 +342,20 @@ Use explicit transitions such as "Combining (15)-(17), the posterior update is..
 
 **Resolved in notation/math-flow pass:** state prediction, dual innovations, relative magnetic confidence, GRU gain generation, and posterior correction now form an explicit equation-to-equation chain with cross-references rather than disconnected symbol introductions.
 
-### [ ] J18. Final grammar/punctuation micro-edits from the annotations
+### [x] J18. Final grammar/punctuation micro-edits from the annotations
 
 Preserve the small marked fixes for the final copy-edit pass: article usage (`the`), semicolon/punctuation corrections, spacing, capitalization, and awkward sentence fragments. Do these after the structural rewrite so page/line locations do not become stale.
 
-**Status:** applicable as final pass.
+**Resolved in final copy-edit/scope pass:** completed sentence-level article, punctuation, spacing, capitalization, hyphenation, and awkward-phrase cleanup after the structural and mathematical revisions stabilized.
 
 ---
 
-## Consolidated order for the next session
+## Current review status
 
-1. **Validity first:** P1, P2, P3 - reconcile the experiment with the paper and audit leakage/generalization claims.
-2. **Scientific framing:** G1, J2-J6, J16 - establish exactly what problem/contribution is defensible and verify the literature/citations.
-3. **Paper architecture:** G3, J10 - separate measurements/preprocessing, methodology, and training/losses.
-4. **Mathematical definitions:** G2, J11-J14, J17 plus P4-P7 - make every retained module/code path mathematically auditable.
-5. **Figures/presentation:** J7, P8, P9, J8-J9.
-6. **Copy-edit:** G4, J1, J12-J13 where relevant, J18, P10.
+All manuscript changes tracked from the professor/reviewer comments above are resolved in the current draft. Remaining work below is future expansion rather than a blocker for the present paper.
 
-The goal is to finish the next revision as a **methodologically consistent new draft**, not to patch the old V3 sentence-by-sentence.
+## Future extensions (non-blocking)
+
+### [ ] F1. Causal unseen-phone magnetic domain alignment (Route B)
+
+Develop and evaluate a causal procedure that maps live magnetic features from an uncalibrated handset into the survey-centered magnetic feature domain without using position ground truth. A valid study should separate handset bias from spatial magnetic structure (rather than naively subtracting a short-walk mean), specify the required calibration horizon/information, and evaluate the resulting magnetic CNN/fusion pipeline on genuinely held-out devices. This is a potential future research extension, not part of the current reported experiment.
