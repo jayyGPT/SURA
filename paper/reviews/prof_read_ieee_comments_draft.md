@@ -141,9 +141,11 @@ Audit the abstract, introduction, related-work discussion, dataset claims, gener
 
 **Resolved in Jha framing pass:** audited strong claims in the abstract, introduction, training/results prose, and conclusion; removed unsupported generalized/Bayesian/trajectory-memorization/optimality language, narrowed evaluation scope, and removed the unused Wi-Fi heatmap-covariance claim from the active fusion description.
 
-### [ ] G2. Improve mathematical definitions of variables
+### [x] G2. Improve mathematical definitions of variables
 
 Perform a notation audit across the whole paper. Define each signal/function/state before first use; distinguish scalars, vectors, matrices, functions, sets, random variables, and constants consistently; include time indices where relevant; avoid symbols whose domain/codomain is unclear; reuse equation numbers instead of redefining quantities informally.
+
+**Resolved in notation/math-flow pass:** raw sample $n$ and fusion step $t$ are now distinct; magnetic features are collected into an explicit $\mathbb{R}^4$ vector; Wi-Fi/magnetic measurements, masks, prior/posterior states, uncertainty scores, and gain matrices carry consistent time/modality indices; the 13-D GRU input is named explicitly; the GRU recurrence and 8-D gain head are defined mathematically; and the benchmark now states its known-start initialization condition.
 
 ### [x] G3. Separate measurements/preprocessing from methodology and loss-function design
 
@@ -251,13 +253,13 @@ Action: either simplify the equation to one clipped affine mapping with a clear 
 
 **Resolved:** the redundant absent-AP branch is removed; the paper now states the -100 dBm missing-AP convention followed by a single clipped affine normalization that maps missing APs to zero.
 
-### [ ] J9. General notation/spacing/capitalization cleanup in the problem formulation
+### [x] J9. General notation/spacing/capitalization cleanup in the problem formulation
 
 Annotations include "notation and space is missing", "capitalization", wording such as "The objective in indoor localization", and a request to use enumeration rather than nested subsections where the material is conceptually one block.
 
 Action: perform a sentence-by-sentence notation/grammar pass once the section structure is stable.
 
-**Status:** applicable; exact page positions may have moved.
+**Resolved in notation/math-flow pass:** standardized prior/posterior and modality notation, separated raw-sample index $n$ from fusion-step index $t$, and aligned symbols in the problem formulation with the code-backed estimator equations.
 
 ### [x] J10. Separate signal definitions/preprocessing, proposed functions/method, and training/loss design
 
@@ -281,17 +283,17 @@ Before equations, add 1-2 lines explaining why PDR is included, what sensor meas
 
 **Resolved for module motivation/citation:** PDR now begins with its role between absolute updates and cites relevant smartphone PDR/fusion literature. Remaining global section restructuring is tracked separately under G3/J10.
 
-### [ ] J12. Do not oversell standard signal-processing operations such as the low-pass filter
+### [x] J12. Do not oversell standard signal-processing operations such as the low-pass filter
 
 Prof. Jha questioned wording around the EMA/low-pass filter because low-pass filtering is standard signal processing. Phrase it as a chosen preprocessing/detection component, not as if the filter itself were a methodological novelty.
 
-**Status:** applicable.
+**Resolved in notation/math-flow pass:** the EMA is presented only as the baseline used by the standard causal threshold detector; no novelty is attributed to the filter itself.
 
-### [ ] J13. Define a step-detection indicator and say explicitly what condition (11) detects
+### [x] J13. Define a step-detection indicator and say explicitly what condition (11) detects
 
 Instead of "Upon detection" without a mathematical object, define an indicator/event such as `d_t in {0,1}` for a detected step and state that condition (11) defines `d_t = 1`. Define any remaining variables at first use.
 
-**Status:** applicable if the PDR equations remain after the methodology audit.
+**Resolved in notation/math-flow pass:** introduced the binary detector output $d_n$, defined its threshold/refractory event explicitly, defined the per-sample step displacement, and then defined the fusion-bin PDR control as the sum of detected-step displacements.
 
 ### [x] J14. Introduce KalmanNet and dual innovation mathematically, and distinguish it from EKF
 
@@ -330,11 +332,11 @@ Action: distinguish **architecture portability** from **trained-model portabilit
 
 **Resolved:** removed building-agnostic/generalized framing and explicitly separates reusable architecture from site-specific survey/training and the scope of the current fixed-environment fusion evaluation.
 
-### [ ] J17. Improve equation-to-equation prose flow
+### [x] J17. Improve equation-to-equation prose flow
 
 Use explicit transitions such as "Combining (15)-(17), the posterior update is..." and refer back to equation numbers rather than reintroducing undefined symbols in prose. This applies across Wi-Fi, magnetic, PDR, and KalmanNet sections.
 
-**Status:** applicable and overlaps G2/G4.
+**Resolved in notation/math-flow pass:** state prediction, dual innovations, relative magnetic confidence, GRU gain generation, and posterior correction now form an explicit equation-to-equation chain with cross-references rather than disconnected symbol introductions.
 
 ### [ ] J18. Final grammar/punctuation micro-edits from the annotations
 
