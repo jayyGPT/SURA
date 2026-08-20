@@ -73,9 +73,11 @@ The magnetic path begins with gravity-referenced survey preprocessing. For raw s
 \end{equation}
 as a gravity-direction proxy and computes
 \begin{align}
-m_{N,n} &= \|\mathbf{m}_n\|, &
-m_{V,n} &= \mathbf{m}_n^T\hat{\mathbf{a}}_n, \nonumber\\
-m_{H,n} &= \sqrt{\max(m_{N,n}^2-m_{V,n}^2,0)}, &
+m_{N,n} &= \|\mathbf{m}_n\|,
+& m_{V,n} &= \mathbf{m}_n^T\hat{\mathbf{a}}_n,
+\nonumber\\
+m_{H,n} &= \sqrt{\max(m_{N,n}^2-m_{V,n}^2,0)},
+\nonumber\\
 \delta_n &= \operatorname{atan2}(m_{V,n},m_{H,n}).
 \label{eq:mag_features}
 \end{align}
