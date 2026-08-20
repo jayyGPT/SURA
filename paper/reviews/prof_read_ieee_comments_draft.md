@@ -230,7 +230,7 @@ Actions:
 
 **Resolved:** removed the learned-Bayesian-filter wording, uses learned state-space estimation terminology, defines multimodal sensing, and standardizes KalmanNet/DualKalmanNet usage.
 
-### [ ] J7. Redesign/recheck Fig. 1 as a signal-flow / functional-block diagram
+### [x] J7. Redesign/recheck Fig. 1 as a signal-flow / functional-block diagram
 
 Specific requested improvements from the annotation:
 - `u_t`, `z_wifi,t`, `z_mag,t` are inputs and should use a consistent visual convention/color;
@@ -240,7 +240,7 @@ Specific requested improvements from the annotation:
 - show where `x_{t-1}` enters;
 - show the final `x_t` as an output arrow outside the block, analogous to Fig. 2.
 
-**Status:** still applicable even though the figure has since changed; redraw/re-audit rather than assuming current Fig. 1 is final.
+**Resolved in signal-flow figure pass:** Fig. 1 now treats $\mathbf{u}_t$, $\mathbf{z}_{\mathrm{wifi},t}$, and $\mathbf{z}_{\mathrm{mag},t}$ as consistently styled input signals; shows $\mathbf{x}_{t-1}$ entering the explicit prior-propagation function; defines both Cartesian innovations inside their functional block; shows the 13-D feature assembly, recurrent hidden state, GRU/linear gain generator, relative magnetic-confidence path, masks, and posterior correction; and places $\mathbf{x}_t$ outside the update block as the estimator output. The diagram is aligned with the active 13-input DualKalmanNet implementation rather than the obsolete anomaly-fusion architecture.
 
 ### [x] J8. Simplify the Wi-Fi normalization equation
 
