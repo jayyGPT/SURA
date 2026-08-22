@@ -20,11 +20,13 @@ The earlier professor/reviewer tracker remains the historical record of those re
 
 ## Priority B — statistical/protocol correctness
 
-### [ ] R3. Define and correct median/P90/CDF semantics
+### [ ] R3. Define and correct median/P90/CDF semantics and make P90 baselines unambiguous
 
 **Finding.** The active fusion evaluation first computes one MAE per walk and then reports median/P90/CDF over the 60 walk-level MAEs. The manuscript wording reads like ordinary pointwise localization-error percentiles. These are materially different statistics; in full Wi-Fi, the pointwise median comparison even changes direction relative to the median of walk MAEs.
 
-**Required action.** Choose and state the convention explicitly. Preferred final reporting: mean and CI over per-walk MAE for trajectory-level uncertainty, while median/P90/max/CDF use all pointwise localization errors. Regenerate affected table values, discussion text, and CDF figures from the frozen final test set.
+The current manuscript also uses two correct-but-easy-to-confuse degraded-regime P90 comparisons without naming the baseline clearly enough: the abstract gives **2.643 m → 1.612 m**, meaning Wi-Fi-only KalmanNet → final uncertainty-weighted CNN DualKalmanNet, whereas the results discussion gives **2.064 m → 1.612 m**, meaning unweighted CNN DualKalmanNet → weighted CNN DualKalmanNet. These are not numerically contradictory, but the text can easily be read as if they refer to the same baseline.
+
+**Required action.** Choose and state the percentile convention explicitly. Preferred final reporting: mean and CI over per-walk MAE for trajectory-level uncertainty, while median/P90/max/CDF use all pointwise localization errors. Regenerate affected table values, discussion text, and CDF figures from the frozen final test set. Wherever a P90 improvement is quoted, explicitly name the compared models/baseline so the 2.643→1.612 and 2.064→1.612 comparisons cannot be confused.
 
 ### [ ] R4. Define what the reported ± / 95% CI actually measures
 
@@ -48,9 +50,9 @@ The earlier professor/reviewer tracker remains the historical record of those re
 
 ### [ ] R7. Correct the Wi-Fi training scheduler statement
 
-**Finding.** The paper says both the Wi-Fi MLP and magnetic CNN use `ReduceLROnPlateau`. The magnetic trainer does; the active and historical Wi-Fi heatmap trainers do not.
+**Finding.** The paper says both the Wi-Fi MLP and magnetic CNN use `ReduceLROnPlateau`. This is false for the current implementation. The Wi-Fi MLP uses **Adam only with a fixed learning rate** (`lr=1e-3`, `weight_decay=1e-4`) and no learning-rate scheduler. The magnetic CNN also uses Adam but additionally uses `ReduceLROnPlateau` with patience 8 and factor 0.5.
 
-**Required action.** Split the optimizer/training-details sentence so the scheduler applies only to the magnetic CNN unless a reproduced Wi-Fi experiment actually uses one.
+**Required action.** Split the optimizer/training-details sentence so it states explicitly: **Wi-Fi MLP = Adam with fixed learning rate; magnetic CNN = Adam + ReduceLROnPlateau**. Do not imply the MLP has a scheduler unless a newly reproduced Wi-Fi experiment actually uses one.
 
 ### [ ] R8. Reproduce the standalone Wi-Fi table with complete provenance
 
