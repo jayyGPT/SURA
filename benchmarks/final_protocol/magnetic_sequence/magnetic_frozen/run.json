@@ -1,0 +1,112 @@
+{
+  "run_name": "magnetic_frozen",
+  "run_directory": "/mnt/data/sura_final_work/benchmarks/final_protocol/magnetic_sequence/magnetic_frozen",
+  "git_commit": null,
+  "model": "magnetic_sequence_cnn",
+  "database": {
+    "directory": "/mnt/data/sura_final_work/data/processed/fingerprint_db/it_engineering",
+    "visits": 1701,
+    "unique_nodes": 132,
+    "access_points": 250,
+    "phones": [
+      "A8",
+      "G7",
+      "LG G6",
+      "LG Q6",
+      "S8",
+      "S9+"
+    ],
+    "modes": [
+      "Call listening",
+      "Navigation",
+      "Swinging"
+    ],
+    "wifi_coverage_fraction": 0.47971781305114636,
+    "x_range_m": [
+      1.0,
+      90.0
+    ],
+    "y_range_m": [
+      14.0,
+      27.0
+    ]
+  },
+  "features": [
+    "magN",
+    "magV",
+    "magH",
+    "dip"
+  ],
+  "window_frames": [
+    84
+  ],
+  "magnetic_map_shape": [
+    4,
+    90,
+    14
+  ],
+  "corridor_nodes": 132,
+  "device": "cpu",
+  "epochs": 60,
+  "config": {
+    "seed": 42,
+    "features": [
+      "magN",
+      "magV",
+      "magH",
+      "dip"
+    ],
+    "grid_cell_m": 1.0,
+    "window_frames": 84,
+    "window_sweep_frames": [
+      50,
+      84,
+      134,
+      167
+    ],
+    "hidden_size": 128,
+    "position_dropout": 0.2,
+    "minimum_variance": 0.01,
+    "batch_size": 128,
+    "epochs": 60,
+    "learning_rate": 0.001,
+    "weight_decay": 0.0001,
+    "scheduler_patience": 8,
+    "scheduler_factor": 0.5,
+    "epsilon_m": 1.6,
+    "minimum_path_m": 30.0,
+    "sampling_hz": 16.7,
+    "speed_min_mps": 1.0,
+    "speed_max_mps": 1.35,
+    "train_walks": 300,
+    "development_walks": 60,
+    "development_seed": 200,
+    "train_stride_frames": 5,
+    "development_stride_frames": 10,
+    "included_modes": [
+      "Navigation",
+      "Call listening",
+      "Swinging"
+    ]
+  },
+  "results": [
+    {
+      "window_frames": 84,
+      "train_windows": 37549,
+      "development_windows": 3953,
+      "checkpoint": "/mnt/data/sura_final_work/benchmarks/final_protocol/magnetic_sequence/magnetic_frozen/window_84/model.pt",
+      "metrics": {
+        "count": 3953,
+        "mean_m": 2.3679707106377323,
+        "median_m": 1.5722721152336392,
+        "p90_m": 4.670981644404701,
+        "maximum_m": 48.217059914417355,
+        "ci95_half_width_m": 0.09800064862072923
+      },
+      "selection_split": "development"
+    }
+  ],
+  "best_window_frames": 84,
+  "best_checkpoint": "/mnt/data/sura_final_work/benchmarks/final_protocol/magnetic_sequence/magnetic_frozen/window_84/model.pt",
+  "standalone_final_test_reported": false
+}

@@ -1,0 +1,199 @@
+{
+  "protocol": {
+    "train_seed": 1,
+    "development_seed_reserved": 2,
+    "retired_invalid_seed": 3,
+    "final_test_seed": 4,
+    "train_walks": 250,
+    "final_test_walks": 60,
+    "bins": 160,
+    "fusion_epochs": 150,
+    "final_test_policy": "seed 4 first inspected only after corrected pairing, preprocessing, architecture, and metrics were frozen",
+    "percentiles": "pointwise over 9600 errors",
+    "mean_ci": "60 per-trajectory mean errors; 1.96 standard-error half-width; fixed trained model"
+  },
+  "database_pairing": {
+    "pairing_rule": "exact_mode_scenario_phone_user_timestamp_filename",
+    "magnetic_files_total": 2245,
+    "wifi_files_total": 1711,
+    "magnetic_visits_parsed": 2245,
+    "wifi_exact_candidates": 969,
+    "wifi_exact_unique_attached": 969,
+    "wifi_exact_duplicate_key_rejected": 0,
+    "wifi_exact_unreadable_rejected": 0,
+    "wifi_no_exact_match": 1276,
+    "rows_written": 2245,
+    "access_points": 250,
+    "unique_magnetic_nodes": 168
+  },
+  "checkpoints": {
+    "wifi_heatmap_sha256": "e2f62ede0a1b878b4e6015df3e5e8babd194445d331f9514ef23dafbf25a39d0",
+    "magnetic_sequence_sha256": "ea2287a9811c734338ecaa2695d24cd5d164d07bda44e72349f7151a3bf3dd96"
+  },
+  "regimes": {
+    "full": {
+      "wifi_only_kalmannet": {
+        "walks": 60,
+        "points": 9600,
+        "mean_m": 0.5234313284357389,
+        "median_m": 0.42270527780056,
+        "p90_m": 1.02849258184433,
+        "max_m": 3.186763048171997,
+        "ci95_half_width_m": 0.0519935306959145,
+        "ci95_basis": "1.96 * SD(per-walk mean error) / sqrt(number of walks); fixed trained model"
+      },
+      "wifi_mag_knn": {
+        "k": 5,
+        "group_cv": [
+          {
+            "k": 1,
+            "mean_group_cv_error_m": 0.8745298147201538
+          },
+          {
+            "k": 3,
+            "mean_group_cv_error_m": 0.7923875570297241
+          },
+          {
+            "k": 5,
+            "mean_group_cv_error_m": 0.791755223274231
+          },
+          {
+            "k": 7,
+            "mean_group_cv_error_m": 0.8020341277122498
+          },
+          {
+            "k": 9,
+            "mean_group_cv_error_m": 0.8153097033500671
+          },
+          {
+            "k": 11,
+            "mean_group_cv_error_m": 0.8295045971870423
+          },
+          {
+            "k": 15,
+            "mean_group_cv_error_m": 0.8540931582450867
+          },
+          {
+            "k": 20,
+            "mean_group_cv_error_m": 0.8797203660011291
+          }
+        ],
+        "features": [
+          "wifi_fix_x",
+          "wifi_fix_y",
+          "magnetic_cnn_x",
+          "magnetic_cnn_y",
+          "magnetic_log_variance",
+          "wifi_available",
+          "magnetic_available"
+        ],
+        "uses_pdr": false,
+        "uses_temporal_history": false,
+        "magnetic_log_variance_fill_training": 3.3948659896850586,
+        "metrics": {
+          "walks": 60,
+          "points": 9600,
+          "mean_m": 0.7451027323802312,
+          "median_m": 0.5099658966064453,
+          "p90_m": 1.6128921508789062,
+          "max_m": 9.51605224609375,
+          "ci95_half_width_m": 0.03372570500763334,
+          "ci95_basis": "1.96 * SD(per-walk mean error) / sqrt(number of walks); fixed trained model"
+        }
+      },
+      "cnn_dual_relative_confidence": {
+        "walks": 60,
+        "points": 9600,
+        "mean_m": 0.4900261665383975,
+        "median_m": 0.4032580554485321,
+        "p90_m": 0.9763809084892274,
+        "max_m": 2.1249513626098633,
+        "ci95_half_width_m": 0.04585115285842834,
+        "ci95_basis": "1.96 * SD(per-walk mean error) / sqrt(number of walks); fixed trained model"
+      },
+      "relative_mean_error_reduction_percent": 6.381956922061182
+    },
+    "degraded": {
+      "wifi_only_kalmannet": {
+        "walks": 60,
+        "points": 9600,
+        "mean_m": 1.7340216845273972,
+        "median_m": 1.2433593273162842,
+        "p90_m": 3.7666050434112552,
+        "max_m": 11.288595199584961,
+        "ci95_half_width_m": 0.2431982123418181,
+        "ci95_basis": "1.96 * SD(per-walk mean error) / sqrt(number of walks); fixed trained model"
+      },
+      "wifi_mag_knn": {
+        "k": 20,
+        "group_cv": [
+          {
+            "k": 1,
+            "mean_group_cv_error_m": 2.567538595199585
+          },
+          {
+            "k": 3,
+            "mean_group_cv_error_m": 2.359672260284424
+          },
+          {
+            "k": 5,
+            "mean_group_cv_error_m": 2.3068583965301515
+          },
+          {
+            "k": 7,
+            "mean_group_cv_error_m": 2.282446336746216
+          },
+          {
+            "k": 9,
+            "mean_group_cv_error_m": 2.269020748138428
+          },
+          {
+            "k": 11,
+            "mean_group_cv_error_m": 2.257837247848511
+          },
+          {
+            "k": 15,
+            "mean_group_cv_error_m": 2.232072925567627
+          },
+          {
+            "k": 20,
+            "mean_group_cv_error_m": 2.218995761871338
+          }
+        ],
+        "features": [
+          "wifi_fix_x",
+          "wifi_fix_y",
+          "magnetic_cnn_x",
+          "magnetic_cnn_y",
+          "magnetic_log_variance",
+          "wifi_available",
+          "magnetic_available"
+        ],
+        "uses_pdr": false,
+        "uses_temporal_history": false,
+        "magnetic_log_variance_fill_training": 3.3930208683013916,
+        "metrics": {
+          "walks": 60,
+          "points": 9600,
+          "mean_m": 2.0189566612243652,
+          "median_m": 1.281835913658142,
+          "p90_m": 4.411957073211671,
+          "max_m": 27.94786834716797,
+          "ci95_half_width_m": 0.18718341238691197,
+          "ci95_basis": "1.96 * SD(per-walk mean error) / sqrt(number of walks); fixed trained model"
+        }
+      },
+      "cnn_dual_relative_confidence": {
+        "walks": 60,
+        "points": 9600,
+        "mean_m": 0.9004553000132243,
+        "median_m": 0.7095000147819519,
+        "p90_m": 1.8454467296600345,
+        "max_m": 4.2855024337768555,
+        "ci95_half_width_m": 0.10140753394345917,
+        "ci95_basis": "1.96 * SD(per-walk mean error) / sqrt(number of walks); fixed trained model"
+      },
+      "relative_mean_error_reduction_percent": 48.0712779979657
+    }
+  }
+}

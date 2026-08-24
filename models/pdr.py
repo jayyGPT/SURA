@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Iterable
-
 import numpy as np
 
 
@@ -52,76 +50,3 @@ class StepDetector:
             self.last_step = self.frame
             return True
         return False
-
-
-def pdr_controls(
-    acceleration: np.ndarray,
-    heading: np.ndarray,
-    *,
-    heading_offset: float,
-    step_length: float,
-    detector: StepDetector | None = None,
-) -> np.ndarray:
-    """Convert accelerometer and heading streams into per-frame displacement vectors."""
-    acceleration = np.asarray(acceleration, dtype=float)
-    heading = np.asarray(heading, dtype=float)
-    if acceleration.ndim != 2 or acceleration.shape[1] != 3:
-        raise ValueError("acceleration must have shape [time,3]")
-    if heading.ndim != 1 or len(heading) != len(acceleration):
-        raise ValueError("heading must have shape [time]")
-    if step_length <= 0:
-        raise ValueError("step_length must be positive")
-
-    step_detector = detector or StepDetector()
-    magnitude = np.linalg.norm(acceleration, axis=1)
-    corrected_heading = heading + heading_offset
-    controls = np.zeros((len(acceleration), 2), dtype=float)
-    for index, sample in enumerate(magnitude):
-        if step_detector.update(float(sample)):
-            controls[index] = step_length * np.array(
-                [np.cos(corrected_heading[index]), np.sin(corrected_heading[index])]
-            )
-    return controls
-
-
-def fit_heading_offset(true_positions: np.ndarray, device_heading: np.ndarray) -> float:
-    """Estimate the circular-mean rotation from device heading to the map frame."""
-    positions = np.asarray(true_positions, dtype=float)
-    heading = np.asarray(device_heading, dtype=float)
-    if positions.ndim != 2 or positions.shape[1] != 2:
-        raise ValueError("true_positions must have shape [time,2]")
-    if heading.ndim != 1 or len(heading) != len(positions):
-        raise ValueError("device_heading must have shape [time]")
-    delta = np.gradient(positions, axis=0)
-    true_heading = np.arctan2(delta[:, 1], delta[:, 0])
-    difference = true_heading - heading
-    return float(np.arctan2(np.mean(np.sin(difference)), np.mean(np.cos(difference))))
-
-
-def calibrate_step_length(
-    walks: Iterable[tuple[np.ndarray, np.ndarray]],
-    *,
-    heading_offset: float,
-    detector_config: StepDetectorConfig | None = None,
-) -> float:
-    """Estimate mean step length from acceleration/heading streams with true positions."""
-    estimates: list[float] = []
-    for sensor_stream, true_positions in walks:
-        sensor_stream = np.asarray(sensor_stream, dtype=float)
-        true_positions = np.asarray(true_positions, dtype=float)
-        if sensor_stream.ndim != 2 or sensor_stream.shape[1] != 4:
-            raise ValueError("sensor_stream must contain ax, ay, az, heading")
-        unit_controls = pdr_controls(
-            sensor_stream[:, :3],
-            sensor_stream[:, 3],
-            heading_offset=heading_offset,
-            step_length=1.0,
-            detector=StepDetector(detector_config),
-        )
-        step_count = int(np.count_nonzero(np.any(unit_controls != 0, axis=1)))
-        path_length = float(np.linalg.norm(np.diff(true_positions, axis=0), axis=1).sum())
-        if step_count > 0:
-            estimates.append(path_length / step_count)
-    if not estimates:
-        raise ValueError("no steps were detected in the calibration walks")
-    return float(np.mean(estimates))

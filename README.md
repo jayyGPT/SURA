@@ -1,167 +1,123 @@
 # SURA Indoor Localization
 
-Research code, dataset, benchmarks, and the IEEE paper for smartphone indoor localization using
-Wi-Fi, magnetic, and inertial measurements.
+Research code, data, canonical benchmarks, and the IEEE manuscript for smartphone indoor localization using Wi-Fi, magnetic, and inertial measurements.
 
-The project was developed under IIT Delhi's Summer Undergraduate Research Award by Jayendra
-Vijay Birhade and Utkarsh Agrawal under the supervision of Dr. Neel Kanth Kundu.
+The project was developed under IIT Delhi's Summer Undergraduate Research Award by Jayendra Vijay Birhade and Utkarsh Agrawal under the supervision of Dr. Neel Kanth Kundu.
 
-## Repository
+## Active repository layout
 
 ```text
 SURA/
-├── data/           tracked MagWi dataset + processed fingerprint database
-├── models/         model definitions only
-├── train/          scripts you actually run to train models
-├── tools/          small dataset/preprocessing utilities
-├── benchmarks/     benchmark summary, baselines, and generated runs
-├── paper/          current IEEE LaTeX paper
-├── references/     research papers
-├── docs/           useful architecture/data notes and project history
-└── archive/        old code and historical artifacts
+├── data/           raw MagWi source data + corrected processed fingerprint database
+├── models/         active model definitions
+├── train/          active training and fusion scripts
+├── tools/          dataset/preprocessing utilities
+├── checkpoints/   selected Wi-Fi and magnetic checkpoints with SHA-256 provenance
+├── benchmarks/     frozen final protocol, KNN baseline, canonical metrics/predictions/CDF
+└── paper/          current IEEE LaTeX manuscript, bibliography, and final audit records
 ```
 
-There is no custom Python package, CLI framework, config directory, CI workflow, or test
-framework. Hyperparameters are written clearly near the top of each training script.
+Historical experiments, temporary audit helpers, local literature copies, and stale project reports are intentionally excluded from the active tree. They remain recoverable from Git history.
 
 ## Setup
 
 ```bash
 python -m venv .venv
-```
-
-Windows:
-
-```powershell
-.venv\Scripts\Activate.ps1
-```
-
-Linux/macOS:
-
-```bash
-source .venv/bin/activate
-```
-
-Install dependencies:
-
-```bash
+source .venv/bin/activate   # Linux/macOS
 python -m pip install -r requirements.txt
 ```
 
+On Windows, activate with `.venv\\Scripts\\Activate.ps1`.
+
 ## Dataset
 
-The tracked raw dataset is already included at:
-
-```text
-data/raw/magwi/
-├── Magnetic field dataset/
-└── WiFi dataset/
-```
-
-Verified source counts:
-
-- 4,135 static magnetic files
-- 127 continuous magnetic files
-- 2,831 Wi-Fi files
-- 7,093 source files total
-
-These counts match the original directory manifest that was uploaded.
-
-The processed IT Engineering fingerprint database is included at:
+Raw MagWi data are retained under `data/raw/magwi/`. The paper uses the corrected IT Engineering processed database at:
 
 ```text
 data/processed/fingerprint_db/it_engineering/
 ```
 
-Quick checks:
+The corrected builder keeps each static magnetic visit as one database row and attaches a Wi-Fi scan only when mode, scenario, phone, user, and timestamped filename all match exactly. The magnetic static survey coordinate is the common map coordinate; raw Wi-Fi coordinates are retained separately for audit.
+
+Rebuild/check:
 
 ```bash
 python tools/count_dataset.py
+python tools/build_fingerprint_db.py
 python tools/check_fingerprint_db.py
 ```
 
-Rebuild the processed fingerprint database only when needed:
+Canonical database facts are recorded in `data/processed/fingerprint_db/it_engineering/pairing_audit.json`.
 
-```bash
-python tools/build_fingerprint_db.py --dry-run
-python tools/build_fingerprint_db.py
+## Selected checkpoints
+
+```text
+checkpoints/wifi_heatmap.pt
+checkpoints/magnetic_sequence.pt
 ```
 
-## Training
+Their SHA-256 hashes are stored in `checkpoints/SHA256SUMS.txt` and the final result manifest.
 
-The normal workflow is simply:
+## Training / development
 
-```bash
-cd train
-python train_wifi_heatmap.py
-python train_magnetic_sequence.py
-```
-
-Or from the repository root:
+Standalone model entry points:
 
 ```bash
 python train/train_wifi_heatmap.py
 python train/train_magnetic_sequence.py
 ```
 
-Before a long run, use the built-in dry run:
+The magnetic sequence window was selected on the development protocol; no standalone magnetic final-test headline number is claimed in the paper.
+
+The active temporal fusion implementation is:
 
 ```bash
-python train/train_wifi_heatmap.py --dry-run
-python train/train_magnetic_sequence.py --dry-run
+python train/kalmannet_wifiheatmap_magneticCNN_pdr.py
 ```
 
-Useful options:
+The final paper-facing trajectory protocol is frozen under `benchmarks/final_protocol/`. Earlier development results are not canonical.
 
-```bash
-python train/train_wifi_heatmap.py --epochs 5 --split random
-python train/train_wifi_heatmap.py --device cuda
+## Frozen final protocol
 
-python train/train_magnetic_sequence.py --epochs 5
-python train/train_magnetic_sequence.py --sweep
-python train/train_magnetic_sequence.py --device cuda
-```
+- Fusion training seed: **1** (250 trajectories)
+- Development seed: **2**
+- Seed **3**: retired after the Wi-Fi/magnetic registration bug was discovered
+- Final test seed: **4** (60 trajectories × 160 bins)
+- Heading: strictly causal backward displacement + simulated drift/white noise
+- Path graph: Euclidean survey-node proximity graph, epsilon = 1.6 m; no wall/obstacle geometry
+- Mean/CI: across 60 per-trajectory mean errors
+- Median/P90/max/CDF: across all 9,600 pointwise localization errors
 
-To change model/training settings, edit the `Configuration` block near the top of the relevant
-training script. No separate YAML config is required.
-
-Each training run writes its checkpoint, metrics, predictions, CDF, and training curve under:
+Canonical results and provenance:
 
 ```text
-benchmarks/runs/
+benchmarks/final_protocol/README.md
+benchmarks/final_protocol/current_results/metrics.json
+benchmarks/final_protocol/current_results/manifest.json
 ```
-
-The generated run directory is ignored by Git; benchmark numbers that we decide to keep are
-recorded in `benchmarks/results.yaml`.
-
-## Dataset tools
-
-```bash
-python tools/count_dataset.py
-python tools/check_fingerprint_db.py
-python tools/analyze_dataset.py
-python tools/build_fingerprint_db.py
-```
-
-## Benchmarks
-
-See [`benchmarks/README.md`](benchmarks/README.md) for the current benchmark table and the
-status of each result. Older KNN baselines are kept under `benchmarks/knn/`.
 
 ## Paper
 
-The current paper source is:
+Active manuscript:
 
 ```text
 paper/main.tex
 ```
 
-Compile locally with:
+Build with:
 
 ```bash
 cd paper
-latexmk -pdf -outdir=build main.tex
+latexmk -pdf main.tex
 ```
 
-The next research step is to replace the legacy magnetic-anomaly DualKalmanNet with fusion that
-uses the magnetic CNN's 2-D position estimate and uncertainty directly.
+Final audit records are under `paper/reviews/`, especially:
+
+- `pre_final_reaudit_todo.md` — R1–R13 final disposition
+- `final_claim_code_audit.md` — claim/equation-to-code audit
+- `numerical_traceability.json` — manuscript-number traceability
+- `repository_cleanup_record.md` — retained/removed inventory
+
+## Scope
+
+The reported temporal results are controlled synthetic trajectory experiments within one surveyed environment with a known initial 2-D position. They are not claimed as real continuously labeled trajectory validation, building-independent deployment, obstacle-aware path simulation, or causal magnetic-domain alignment for an uncalibrated unseen handset.

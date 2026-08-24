@@ -1,46 +1,14 @@
 # Data
 
-The dataset is tracked directly in this repository.
+Raw MagWi source data are retained under `data/raw/magwi/`. The paper uses the IT Engineering processed database under `data/processed/fingerprint_db/it_engineering/`.
 
-```text
-data/
-├── raw/
-│   └── magwi/
-│       ├── Magnetic field dataset/
-│       │   ├── Static Data/
-│       │   └── Continuous Data/
-│       └── WiFi dataset/
-└── processed/
-    └── fingerprint_db/
-        └── it_engineering/
-            ├── nodes.csv
-            ├── bssid_vocab.json
-            └── coverage.png
-```
+The processed database is anchored to the static magnetic survey coordinate frame. A Wi-Fi scan is attached only by exact normalized mode/scenario/phone/user plus timestamped filename. `nodes.csv` retains the raw Wi-Fi coordinate as `wifi_x_raw,wifi_y_raw` for audit, while `pairing_audit.json` records attachment counts and coordinate-discrepancy statistics.
 
-Verified raw-source counts:
-
-| Source | Files |
-|---|---:|
-| Magnetic static | 4,135 |
-| Magnetic continuous | 127 |
-| Wi-Fi | 2,831 |
-| **Total** | **7,093** |
-
-These counts match the original uploaded directory manifest.
-
-Do not rename the folders inside `data/raw/magwi/`; the preprocessing scripts use the original
-MagWi directory names.
-
-Useful commands from the repository root:
+Rebuild and check:
 
 ```bash
-python tools/count_dataset.py
-python tools/check_fingerprint_db.py
-python tools/analyze_dataset.py
-python tools/build_fingerprint_db.py --dry-run
 python tools/build_fingerprint_db.py
+python tools/check_fingerprint_db.py
 ```
 
-The processed fingerprint database is also tracked, so normal model training does **not** require
-rebuilding it first.
+Do not rename the original MagWi directories; the builder follows their source layout.
