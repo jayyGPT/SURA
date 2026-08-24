@@ -126,13 +126,18 @@ def save_error_cdf(errors: np.ndarray, output: str | Path, title: str) -> None:
 
 
 def save_training_curve(
-    history: list[dict[str, float | int]], output: str | Path, title: str
+    history: list[dict[str, float | int]],
+    output: str | Path,
+    title: str,
+    *,
+    error_key: str = "test_mean_error_m",
+    error_label: str = "Test mean error (m)",
 ) -> None:
     if not history:
         return
     epochs = [int(row["epoch"]) for row in history]
     losses = [float(row["training_loss"]) for row in history]
-    errors = [float(row["test_mean_error_m"]) for row in history]
+    errors = [float(row[error_key]) for row in history]
 
     fig, ax1 = plt.subplots(figsize=(6, 4))
     ax1.plot(epochs, losses, label="training loss")
@@ -140,8 +145,8 @@ def save_training_curve(
     ax1.set_ylabel("Training loss")
     ax1.grid(True, alpha=0.3)
     ax2 = ax1.twinx()
-    ax2.plot(epochs, errors, linestyle="--", label="test mean error")
-    ax2.set_ylabel("Test mean error (m)")
+    ax2.plot(epochs, errors, linestyle="--", label=error_label.lower())
+    ax2.set_ylabel(error_label)
     ax1.set_title(title)
     fig.tight_layout()
     fig.savefig(output, dpi=200, bbox_inches="tight")

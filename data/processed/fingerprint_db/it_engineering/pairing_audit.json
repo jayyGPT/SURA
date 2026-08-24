@@ -1,0 +1,24 @@
+{
+  "pairing_rule": "exact_mode_scenario_phone_user_timestamp_filename",
+  "magnetic_files_total": 2245,
+  "wifi_files_total": 1711,
+  "magnetic_visits_parsed": 2245,
+  "wifi_exact_candidates": 969,
+  "wifi_exact_unique_attached": 969,
+  "wifi_exact_duplicate_key_rejected": 0,
+  "wifi_exact_unreadable_rejected": 0,
+  "wifi_no_exact_match": 1276,
+  "rows_written": 2245,
+  "access_points": 250,
+  "unique_magnetic_nodes": 168,
+  "paired_raw_coordinate_comparison": {
+    "count": 969,
+    "identical_count": 57,
+    "mean_distance_m": 15.727187861249066,
+    "median_distance_m": 8.0,
+    "p90_distance_m": 42.0,
+    "max_distance_m": 51.0,
+    "interpretation": "raw Wi-Fi coordinates are retained only as audit metadata; matched capture identity registers Wi-Fi scans to the magnetic survey frame"
+  },
+  "included_modes_exact_wifi_attached": 759
+}

@@ -1,0 +1,2 @@
+e2f62ede0a1b878b4e6015df3e5e8babd194445d331f9514ef23dafbf25a39d0  checkpoints/wifi_heatmap.pt
+ea2287a9811c734338ecaa2695d24cd5d164d07bda44e72349f7151a3bf3dd96  checkpoints/magnetic_sequence.pt

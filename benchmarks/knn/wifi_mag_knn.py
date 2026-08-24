@@ -52,7 +52,7 @@ from train.kalmannet_wifiheatmap_magneticCNN_pdr import (
     DEFAULT_TRAIN_WALKS,
     DEFAULT_WIFI_CHECKPOINT,
     FUSION_HIDDEN_SIZE,
-    FUSION_TEST_SEED,
+    FUSION_FINAL_TEST_SEED,
     FUSION_TRAIN_SEED,
     INCLUDED_MODES,
     evaluate_filter,
@@ -283,6 +283,9 @@ def run_static(database: Path, output: Path, held_out_phone: str) -> dict[str, o
         "train_visits": int(len(train)),
         "test_visits": int(len(test)),
         "access_points": int(len(ap_columns)),
+        "access_point_vocabulary_scope": "common_survey_database",
+        "held_out_phone_can_contribute_ap_identities": True,
+        "held_out_rows_excluded_from_fit_and_hyperparameter_selection": True,
         "magnetic_features": list(MAG_COLUMNS),
         "variants": variants,
     }
@@ -311,7 +314,7 @@ def run_static(database: Path, output: Path, held_out_phone: str) -> dict[str, o
     return payload
 
 
-def _trajectory_features(data: tuple[np.ndarray, ...]) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+def _trajectory_features(data: tuple[np.ndarray, ...], reference_logvar: float) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     _, wifi, wifi_mask, mag, mag_logvar, mag_mask, target, _ = data
     mag_available = mag_mask[..., 0] > 0.5
     wifi_available = wifi_mask[..., 0] > 0.5
@@ -320,11 +323,7 @@ def _trajectory_features(data: tuple[np.ndarray, ...]) -> tuple[np.ndarray, np.n
     # neutral coordinate imputation and let the explicit mask identify missing magnetics.
     mag_filled[~mag_available] = wifi[~mag_available]
     logvar = np.clip(mag_logvar[..., 0], -6.0, 8.0)
-    if mag_available.any():
-        reference_logvar = float(np.median(logvar[mag_available]))
-    else:
-        reference_logvar = 0.0
-    logvar[~mag_available] = reference_logvar
+    logvar[~mag_available] = float(reference_logvar)
 
     features = np.concatenate(
         (
@@ -370,8 +369,15 @@ def _select_trajectory_k(x: np.ndarray, y: np.ndarray, groups: np.ndarray) -> tu
 
 
 def _fit_trajectory_knn(training: tuple[np.ndarray, ...], testing: tuple[np.ndarray, ...]) -> tuple[np.ndarray, np.ndarray, dict[str, object]]:
-    x_train, y_train, train_groups = _trajectory_features(training)
-    x_test, y_test, _ = _trajectory_features(testing)
+    training_mag_available = training[5][..., 0] > 0.5
+    training_logvar = np.clip(training[4][..., 0], -6.0, 8.0)
+    reference_logvar = (
+        float(np.median(training_logvar[training_mag_available]))
+        if training_mag_available.any()
+        else 0.0
+    )
+    x_train, y_train, train_groups = _trajectory_features(training, reference_logvar)
+    x_test, y_test, _ = _trajectory_features(testing, reference_logvar)
     k, cv = _select_trajectory_k(x_train, y_train, train_groups)
     mean, std = _standardize_fit(x_train)
     model = KNeighborsRegressor(
@@ -392,7 +398,8 @@ def _fit_trajectory_knn(training: tuple[np.ndarray, ...], testing: tuple[np.ndar
         ],
         "uses_pdr": False,
         "uses_temporal_history": False,
-        "metrics": summarize(per_walk_mean),
+        "magnetic_log_variance_fill_training": reference_logvar,
+        "metrics": summarize(per_walk_mean, errors_per_bin),
     }
 
 
@@ -409,10 +416,11 @@ def _plot_trajectory_cdf(
         ("Wi-Fi + Magnetic KNN", knn_errors),
         ("CNN Dual + relative uncertainty", dual_errors),
     ):
+        values = np.asarray(values, dtype=float).reshape(-1)
         ordered = np.sort(values)
         cdf = np.arange(1, len(ordered) + 1) / len(ordered)
         ax.plot(ordered, cdf, linewidth=2.4, label=f"{label} ({values.mean():.2f} m)")
-    ax.set_xlabel("Per-walk mean error (m)", fontsize=14)
+    ax.set_xlabel("Position error (m)", fontsize=14)
     ax.set_ylabel("CDF", fontsize=14)
     ax.set_title(title, fontsize=14)
     ax.tick_params(axis="both", labelsize=12)
@@ -435,31 +443,14 @@ def _trajectory_turn_score(target: np.ndarray) -> float:
 
 
 def _select_representative_walk(
-    baseline_errors: np.ndarray,
-    dual_errors: np.ndarray,
     target: np.ndarray,
 ) -> tuple[int, dict[str, float | int | str]]:
-    """Pick a typical-but-geometrically-informative walk without cherry-picking.
-
-    Candidate walks are restricted to the interquartile range of per-walk
-    improvements (Wi-Fi-only error minus weighted-Dual error). Within that
-    central 50% we choose the path with the largest accumulated heading change,
-    so the figure contains several corridor turns while remaining a typical
-    performance case rather than a best-case example.
-    """
-    improvement = np.asarray(baseline_errors) - np.asarray(dual_errors)
-    q25, q75 = np.percentile(improvement, [25, 75])
-    candidates = np.flatnonzero((improvement >= q25) & (improvement <= q75))
-    if not len(candidates):
-        candidates = np.arange(len(improvement))
+    """Select a visualization path using geometry only, never model error."""
     scores = np.asarray([_trajectory_turn_score(path) for path in target], dtype=float)
-    index = int(candidates[np.argmax(scores[candidates])])
+    index = int(np.argmax(scores))
     return index, {
-        "selection_rule": "max turn score among walks in the interquartile improvement range",
+        "selection_rule": "maximum accumulated heading change; outcome-blind",
         "walk_index_zero_based": index,
-        "improvement_q25_m": float(q25),
-        "improvement_q75_m": float(q75),
-        "selected_improvement_m": float(improvement[index]),
         "selected_turn_score_rad": float(scores[index]),
     }
 
@@ -553,7 +544,7 @@ def run_trajectory(
             wifi_period_s=wifi_period, ap_dropout=dropout, bins=bins,
         )
         testing = make_dataset(
-            test_walks, seed=FUSION_TEST_SEED, env=env, device=device,
+            test_walks, seed=FUSION_FINAL_TEST_SEED, env=env, device=device,
             wifi_period_s=wifi_period, ap_dropout=dropout, bins=bins,
         )
         split_audit = validate_trajectory_split(training, testing)
@@ -581,6 +572,11 @@ def run_trajectory(
         dual, _ = train_filter(dual, training, device, epochs=epochs, uses_magnetic=True)
         dual_errors, dual_prediction = evaluate_filter(dual, testing, device, uses_magnetic=True)
 
+        target_relative = testing[6] - testing[7][:, None, :]
+        baseline_pointwise = np.linalg.norm(baseline_prediction - target_relative, axis=2)
+        knn_pointwise = np.linalg.norm(knn_prediction - testing[6], axis=2)
+        dual_pointwise = np.linalg.norm(dual_prediction - target_relative, axis=2)
+
         regime_dir = trajectory_dir / key
         regime_dir.mkdir(parents=True, exist_ok=True)
         np.savez_compressed(
@@ -588,6 +584,9 @@ def run_trajectory(
             wifi_only_per_walk_error=baseline_errors,
             knn_per_walk_error=knn_errors,
             dual_weighted_per_walk_error=dual_errors,
+            wifi_only_pointwise_error=baseline_pointwise,
+            knn_pointwise_error=knn_pointwise,
+            dual_weighted_pointwise_error=dual_pointwise,
             wifi_only_prediction=baseline_prediction,
             knn_prediction=knn_prediction,
             dual_weighted_prediction=dual_prediction,
@@ -598,7 +597,7 @@ def run_trajectory(
             magnetic_mask=testing[5],
         )
         _plot_trajectory_cdf(
-            regime_dir / "cdf.png", name, baseline_errors, knn_errors, dual_errors
+            regime_dir / "cdf.png", name, baseline_pointwise, knn_pointwise, dual_pointwise
         )
         trajectory_cache[key] = {
             "target": testing[6],
@@ -618,13 +617,15 @@ def run_trajectory(
             "trajectory_split_audit": split_audit,
             "simulation_protocol": {
                 "nominal_step_length_m": 0.65,
-                "heading_source": "true_path_tangent_plus_random_walk_and_white_noise",
+                "heading_source": "backward_path_displacement_plus_random_walk_and_white_noise",
+                "path_graph": "euclidean_survey_node_proximity_graph",
+                "wall_or_obstacle_geometry_used": False,
                 "survey_phones_used_to_construct_environment": list(env.survey_phones),
                 "fusion_device_generalization_claim": False,
             },
-            "wifi_only_kalmannet": summarize(baseline_errors),
+            "wifi_only_kalmannet": summarize(baseline_errors, baseline_pointwise),
             "wifi_mag_knn": knn_report,
-            "cnn_dual_relative_variance": summarize(dual_errors),
+            "cnn_dual_relative_variance": summarize(dual_errors, dual_pointwise),
             "magnetic_reference_log_variance_training": reference_logvar,
         }
 

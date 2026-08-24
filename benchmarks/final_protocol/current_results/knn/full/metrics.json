@@ -1,0 +1,59 @@
+{
+  "k": 5,
+  "group_cv": [
+    {
+      "k": 1,
+      "mean_group_cv_error_m": 0.8745298147201538
+    },
+    {
+      "k": 3,
+      "mean_group_cv_error_m": 0.7923875570297241
+    },
+    {
+      "k": 5,
+      "mean_group_cv_error_m": 0.791755223274231
+    },
+    {
+      "k": 7,
+      "mean_group_cv_error_m": 0.8020341277122498
+    },
+    {
+      "k": 9,
+      "mean_group_cv_error_m": 0.8153097033500671
+    },
+    {
+      "k": 11,
+      "mean_group_cv_error_m": 0.8295045971870423
+    },
+    {
+      "k": 15,
+      "mean_group_cv_error_m": 0.8540931582450867
+    },
+    {
+      "k": 20,
+      "mean_group_cv_error_m": 0.8797203660011291
+    }
+  ],
+  "features": [
+    "wifi_fix_x",
+    "wifi_fix_y",
+    "magnetic_cnn_x",
+    "magnetic_cnn_y",
+    "magnetic_log_variance",
+    "wifi_available",
+    "magnetic_available"
+  ],
+  "uses_pdr": false,
+  "uses_temporal_history": false,
+  "magnetic_log_variance_fill_training": 3.3948659896850586,
+  "metrics": {
+    "walks": 60,
+    "points": 9600,
+    "mean_m": 0.7451027323802312,
+    "median_m": 0.5099658966064453,
+    "p90_m": 1.6128921508789062,
+    "max_m": 9.51605224609375,
+    "ci95_half_width_m": 0.03372570500763334,
+    "ci95_basis": "1.96 * SD(per-walk mean error) / sqrt(number of walks); fixed trained model"
+  }
+}

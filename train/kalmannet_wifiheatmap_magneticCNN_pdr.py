@@ -6,7 +6,7 @@ The magnetic branch used by the KalmanNet is the 2-D position estimate produced 
 ``MagSequenceMatcher``. Its predicted log-variance is also provided to the GRU as a
 confidence feature.
 
-The experiment keeps the previous synthetic-corridor evaluation protocol so the new
+The experiment uses synthetic trajectories on a survey-node proximity graph so the new
 fusion can be compared with the Wi-Fi-only KalmanNet under full and degraded Wi-Fi.
 """
 
@@ -54,7 +54,8 @@ HEADING_WHITE_NOISE_STD_RAD = np.deg2rad(8.8)
 HEADING_DRIFT_STD_RAD = np.deg2rad(0.5) / np.sqrt(SAMPLING_HZ)
 NOMINAL_STEP_LENGTH_M = 0.65
 FUSION_TRAIN_SEED = 1
-FUSION_TEST_SEED = 2
+FUSION_DEVELOPMENT_SEED = 2
+FUSION_FINAL_TEST_SEED = 4
 SPEED_MIN_MPS = 1.0
 SPEED_MAX_MPS = 1.35
 STEP_FREQ_MIN_HZ = 1.7
@@ -72,12 +73,8 @@ FUSION_WEIGHT_DECAY = 1e-5
 FUSION_HIDDEN_SIZE = 64
 
 DEFAULT_DATABASE = REPO_ROOT / "data" / "processed" / "fingerprint_db" / "it_engineering"
-DEFAULT_WIFI_CHECKPOINT = (
-    REPO_ROOT / "archive" / "legacy_experiments" / "Models" / "dl_models" / "best_wifi_heatmap.pth"
-)
-DEFAULT_MAG_CHECKPOINT = (
-    REPO_ROOT / "archive" / "legacy_experiments" / "Models" / "dl_models" / "best_mag_sequence.pth"
-)
+DEFAULT_WIFI_CHECKPOINT = REPO_ROOT / "checkpoints" / "wifi_heatmap.pt"
+DEFAULT_MAG_CHECKPOINT = REPO_ROOT / "checkpoints" / "magnetic_sequence.pt"
 DEFAULT_OUTPUT = REPO_ROOT / "benchmarks" / "runs" / "cnn_dual_kalmannet"
 
 
@@ -457,6 +454,21 @@ def sample_path(graph: CorridorGraph, rng: np.random.Generator) -> np.ndarray | 
     return None
 
 
+def causal_path_heading(positions: np.ndarray) -> np.ndarray:
+    """Return heading from current and previous positions only."""
+    positions = np.asarray(positions, dtype=float)
+    if positions.ndim != 2 or positions.shape[1] != 2 or len(positions) == 0:
+        raise ValueError("positions must have shape [time,2]")
+    heading = np.zeros(len(positions), dtype=float)
+    for index in range(1, len(positions)):
+        dx, dy = positions[index] - positions[index - 1]
+        if abs(dx) > 1e-12 or abs(dy) > 1e-12:
+            heading[index] = math.atan2(dy, dx)
+        else:
+            heading[index] = heading[index - 1]
+    return heading
+
+
 def synthesize_walk(path: np.ndarray, rng: np.random.Generator) -> tuple[np.ndarray, np.ndarray, np.ndarray] | None:
     segment = np.diff(path, axis=0)
     lengths = np.linalg.norm(segment, axis=1)
@@ -473,8 +485,7 @@ def synthesize_walk(path: np.ndarray, rng: np.random.Generator) -> tuple[np.ndar
     y = np.interp(distance, cumulative, path[:, 1])
     truth = np.column_stack((x, y))
 
-    true_heading = np.unwrap(np.arctan2(np.gradient(y), np.gradient(x)))
-    true_heading = np.convolve(true_heading, np.ones(7) / 7.0, mode="same")
+    true_heading = causal_path_heading(truth)
     drift = np.cumsum(rng.normal(0.0, HEADING_DRIFT_STD_RAD, frames))
     measured_heading = true_heading + drift + rng.normal(0.0, HEADING_WHITE_NOISE_STD_RAD, frames)
 
@@ -682,7 +693,7 @@ def validate_trajectory_split(
     training: tuple[np.ndarray, ...],
     testing: tuple[np.ndarray, ...],
 ) -> dict[str, object]:
-    """Fail if an identical generated target trajectory occurs in train and test."""
+    """Fail only on exact duplicate binned target trajectories."""
     train_signatures = {_trajectory_signature(target) for target in training[6]}
     test_signatures = {_trajectory_signature(target) for target in testing[6]}
     overlap = sorted(train_signatures.intersection(test_signatures))
@@ -692,11 +703,13 @@ def validate_trajectory_split(
         )
     return {
         "train_seed": FUSION_TRAIN_SEED,
-        "test_seed": FUSION_TEST_SEED,
+        "development_seed_reserved": FUSION_DEVELOPMENT_SEED,
+        "final_test_seed": FUSION_FINAL_TEST_SEED,
         "train_walks": int(len(training[6])),
         "test_walks": int(len(testing[6])),
         "exact_target_trajectory_overlap_count": 0,
         "signature_rounding_m": 1e-4,
+        "overlap_check_scope": "exact_binned_target_trajectory_only",
     }
 
 
@@ -800,15 +813,31 @@ def evaluate_filter(
     return errors.mean(axis=1), output.cpu().numpy()
 
 
-def summarize(values: np.ndarray) -> dict[str, float | int]:
-    values = np.asarray(values, dtype=float)
-    ci = 1.96 * values.std(ddof=1) / np.sqrt(len(values)) if len(values) > 1 else 0.0
+def summarize(
+    per_walk_mean: np.ndarray,
+    pointwise_errors: np.ndarray | None = None,
+) -> dict[str, float | int | str]:
+    """Summarize trajectory means and pointwise localization errors separately."""
+    walk_values = np.asarray(per_walk_mean, dtype=float).reshape(-1)
+    point_values = (
+        walk_values
+        if pointwise_errors is None
+        else np.asarray(pointwise_errors, dtype=float).reshape(-1)
+    )
+    ci = (
+        1.96 * walk_values.std(ddof=1) / np.sqrt(len(walk_values))
+        if len(walk_values) > 1
+        else 0.0
+    )
     return {
-        "walks": int(len(values)),
-        "mean_m": float(values.mean()),
-        "median_m": float(np.median(values)),
-        "p90_m": float(np.percentile(values, 90)),
+        "walks": int(len(walk_values)),
+        "points": int(len(point_values)),
+        "mean_m": float(walk_values.mean()),
+        "median_m": float(np.median(point_values)),
+        "p90_m": float(np.percentile(point_values, 90)),
+        "max_m": float(point_values.max()),
         "ci95_half_width_m": float(ci),
+        "ci95_basis": "1.96 * SD(per-walk mean error) / sqrt(number of walks); fixed trained model",
     }
 
 
@@ -828,11 +857,12 @@ def plot_cdf(results: dict[str, dict[str, np.ndarray]], output: Path) -> None:
     fig, axes = plt.subplots(1, len(results), figsize=(7 * len(results), 5), squeeze=False)
     for axis, (regime, arrays) in zip(axes[0], results.items()):
         for label, values in arrays.items():
+            values = np.asarray(values, dtype=float).reshape(-1)
             sorted_values = np.sort(values)
             cdf = np.arange(1, len(sorted_values) + 1) / len(sorted_values)
             axis.plot(sorted_values, cdf, linewidth=2, label=f"{label} ({values.mean():.2f} m)")
         axis.set_title(regime)
-        axis.set_xlabel("Per-walk mean error (m)")
+        axis.set_xlabel("Position error (m)")
         axis.set_ylabel("CDF")
         axis.grid(alpha=0.3)
         axis.legend(fontsize=9)
@@ -858,6 +888,7 @@ def run_experiment(
     }
     report: dict[str, object] = {}
     cdf_data: dict[str, dict[str, np.ndarray]] = {}
+    output.mkdir(parents=True, exist_ok=True)
 
     for regime_key, (regime_name, wifi_period, dropout) in regimes.items():
         if regime_key not in regimes_to_run:
@@ -873,10 +904,10 @@ def run_experiment(
             ap_dropout=dropout,
             bins=bins,
         )
-        print("  generating test set")
+        print("  generating final test set")
         testing = make_dataset(
             test_walks,
-            seed=FUSION_TEST_SEED,
+            seed=FUSION_FINAL_TEST_SEED,
             env=env,
             device=device,
             wifi_period_s=wifi_period,
@@ -903,7 +934,7 @@ def run_experiment(
         baseline, baseline_history = train_filter(
             baseline, training, device, epochs=fusion_epochs, uses_magnetic=False
         )
-        baseline_errors, _ = evaluate_filter(
+        baseline_errors, baseline_prediction = evaluate_filter(
             baseline, testing, device, uses_magnetic=False
         )
 
@@ -912,14 +943,17 @@ def run_experiment(
             hidden_size=FUSION_HIDDEN_SIZE,
             magnetic_reference_log_variance=magnetic_reference_log_variance,
         ).to(device)
-        print("  training CNN-output DualKalmanNet")
+        print("  training relative-confidence CNN-output DualKalmanNet")
         dual, dual_history = train_filter(
             dual, training, device, epochs=fusion_epochs, uses_magnetic=True
         )
-        dual_errors, _ = evaluate_filter(dual, testing, device, uses_magnetic=True)
+        dual_errors, dual_prediction = evaluate_filter(dual, testing, device, uses_magnetic=True)
 
-        baseline_summary = summarize(baseline_errors)
-        dual_summary = summarize(dual_errors)
+        target_relative = testing[6] - testing[7][:, None, :]
+        baseline_pointwise = np.linalg.norm(baseline_prediction - target_relative, axis=2)
+        dual_pointwise = np.linalg.norm(dual_prediction - target_relative, axis=2)
+        baseline_summary = summarize(baseline_errors, baseline_pointwise)
+        dual_summary = summarize(dual_errors, dual_pointwise)
         improvement = 100.0 * (
             float(baseline_summary["mean_m"]) - float(dual_summary["mean_m"])
         ) / float(baseline_summary["mean_m"])
@@ -942,7 +976,10 @@ def run_experiment(
             "magnetic_measurement": magnetic_measurement_summary(testing),
             "trajectory_split_audit": split_audit,
             "simulation_protocol": {
-                "heading_source": "true_path_tangent_plus_random_walk_and_white_noise",
+                "heading_source": "backward_path_displacement_plus_random_walk_and_white_noise",
+                "path_graph": "euclidean_survey_node_proximity_graph",
+                "path_graph_epsilon_m": CORRIDOR_EPSILON_M,
+                "wall_or_obstacle_geometry_used": False,
                 "heading_white_noise_std_deg": float(np.rad2deg(HEADING_WHITE_NOISE_STD_RAD)),
                 "heading_random_walk_step_std_deg": float(np.rad2deg(HEADING_DRIFT_STD_RAD)),
                 "nominal_step_length_m": NOMINAL_STEP_LENGTH_M,
@@ -960,11 +997,35 @@ def run_experiment(
             "dual_training_loss": dual_history,
         }
         cdf_data[regime_name] = {
-            "Wi-Fi-only KalmanNet": baseline_errors,
-            "CNN DualKalmanNet": dual_errors,
+            "Wi-Fi-only KalmanNet": baseline_pointwise,
+            "CNN DualKalmanNet (relative confidence)": dual_pointwise,
         }
+        regime_dir = output / regime_key
+        regime_dir.mkdir(parents=True, exist_ok=True)
+        torch.save(
+            {"state_dict": baseline.state_dict(), "model": "wifi_only_kalmannet"},
+            regime_dir / "wifi_only_kalmannet.pt",
+        )
+        torch.save(
+            {
+                "state_dict": dual.state_dict(),
+                "model": "cnn_dual_relative_confidence",
+                "magnetic_reference_log_variance": magnetic_reference_log_variance,
+            },
+            regime_dir / "cnn_dual_relative_confidence.pt",
+        )
+        np.savez_compressed(
+            regime_dir / "predictions_and_errors.npz",
+            target_relative=target_relative,
+            start=testing[7],
+            motion=testing[0],
+            wifi_mask=testing[2],
+            wifi_only_prediction=baseline_prediction,
+            wifi_only_pointwise_error=baseline_pointwise,
+            dual_relative_prediction=dual_prediction,
+            dual_relative_pointwise_error=dual_pointwise,
+        )
 
-    output.mkdir(parents=True, exist_ok=True)
     (output / "metrics.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     if cdf_data:
         plot_cdf(cdf_data, output / "cdf.png")

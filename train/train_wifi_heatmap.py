@@ -54,7 +54,7 @@ DROPOUT = 0.3
 BATCH_SIZE = 64
 NUM_WORKERS = 0
 DEFAULT_EPOCHS = 80
-TEST_FRACTION = 0.20
+DEV_FRACTION = 0.20
 LEARNING_RATE = 1e-3
 WEIGHT_DECAY = 1e-4
 HELD_OUT_DEVICE = "S9+"
@@ -76,7 +76,7 @@ def config_dict() -> dict[str, object]:
         "dropout": DROPOUT,
         "batch_size": BATCH_SIZE,
         "epochs": DEFAULT_EPOCHS,
-        "test_fraction": TEST_FRACTION,
+        "development_fraction": DEV_FRACTION,
         "learning_rate": LEARNING_RATE,
         "weight_decay": WEIGHT_DECAY,
         "held_out_device": HELD_OUT_DEVICE,
@@ -93,7 +93,7 @@ def split_indices(database: FingerprintDatabase, split: str) -> tuple[np.ndarray
     elif split == "random":
         generator = np.random.default_rng(SEED)
         order = generator.permutation(len(frame))
-        count = min(len(frame) - 1, max(1, int(round(len(frame) * TEST_FRACTION))))
+        count = min(len(frame) - 1, max(1, int(round(len(frame) * DEV_FRACTION))))
         test = np.zeros(len(frame), dtype=bool)
         test[order[:count]] = True
     else:
@@ -191,7 +191,7 @@ def train_one_split(
             {
                 "epoch": epoch + 1,
                 "training_loss": running_loss / max(batches, 1),
-                "test_mean_error_m": summary.mean_m,
+                "development_mean_error_m": summary.mean_m,
             }
         )
         print(
@@ -227,6 +227,7 @@ def train_one_split(
             "access_point_columns": access_points,
             "config": config_dict(),
             "split": split,
+            "selection_split": "development" if split == "random" else "held_out_phone_evaluation",
             "metrics": summary.as_dict(),
         },
         checkpoint,
@@ -241,7 +242,13 @@ def train_one_split(
     write_json(output / "history.json", {"epochs": history})
     write_json(output / "metrics.json", summary.as_dict())
     save_error_cdf(errors, output / "error_cdf.png", f"Wi-Fi heatmap ({split})")
-    save_training_curve(history, output / "training_curve.png", f"Wi-Fi heatmap ({split})")
+    save_training_curve(
+        history,
+        output / "training_curve.png",
+        f"Wi-Fi heatmap ({split})",
+        error_key="development_mean_error_m" if split == "random" else "development_mean_error_m",
+        error_label="Development mean error (m)",
+    )
 
     return {
         "split": split,

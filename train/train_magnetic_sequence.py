@@ -113,7 +113,7 @@ def build_corridor_graph(database, epsilon_m: float = 1.6) -> CorridorGraph:
     tree = cKDTree(coordinates)
     pairs = list(tree.query_pairs(epsilon_m))
     if not pairs:
-        raise ValueError("corridor graph has no edges")
+        raise ValueError("survey-node proximity graph has no edges")
 
     rows: list[int] = []
     columns: list[int] = []
@@ -164,7 +164,7 @@ def sample_corridor_path(
             return graph.coordinates[np.asarray(indices)]
 
     raise RuntimeError(
-        f"could not sample a corridor path of at least {minimum_length_m:.1f} m"
+        f"could not sample a survey-node path of at least {minimum_length_m:.1f} m"
     )
 
 
@@ -280,10 +280,10 @@ SAMPLING_HZ = 16.7
 SPEED_MIN_MPS = 1.0
 SPEED_MAX_MPS = 1.35
 TRAIN_WALKS = 300
-TEST_WALKS = 60
-TEST_SEED = 200
+DEV_WALKS = 60
+DEV_SEED = 200
 TRAIN_STRIDE_FRAMES = 5
-TEST_STRIDE_FRAMES = 10
+DEV_STRIDE_FRAMES = 10
 
 INCLUDED_MODES = ["Navigation", "Call listening", "Swinging"]
 
@@ -313,10 +313,10 @@ def config_dict() -> dict[str, object]:
         "speed_min_mps": SPEED_MIN_MPS,
         "speed_max_mps": SPEED_MAX_MPS,
         "train_walks": TRAIN_WALKS,
-        "test_walks": TEST_WALKS,
-        "test_seed": TEST_SEED,
+        "development_walks": DEV_WALKS,
+        "development_seed": DEV_SEED,
         "train_stride_frames": TRAIN_STRIDE_FRAMES,
-        "test_stride_frames": TEST_STRIDE_FRAMES,
+        "development_stride_frames": DEV_STRIDE_FRAMES,
         "included_modes": INCLUDED_MODES,
     }
 
@@ -346,11 +346,11 @@ def train_window(
         seed=SEED,
         stride_frames=TRAIN_STRIDE_FRAMES,
     )
-    test_x, test_y = generate_magnetic_windows(
+    dev_x, dev_y = generate_magnetic_windows(
         **common_generation,
-        walks=TEST_WALKS,
-        seed=TEST_SEED,
-        stride_frames=TEST_STRIDE_FRAMES,
+        walks=DEV_WALKS,
+        seed=DEV_SEED,
+        stride_frames=DEV_STRIDE_FRAMES,
     )
 
     loader = DataLoader(
@@ -375,7 +375,7 @@ def train_window(
         patience=SCHEDULER_PATIENCE,
         factor=SCHEDULER_FACTOR,
     )
-    test_x_tensor = torch.from_numpy(test_x).to(device)
+    dev_x_tensor = torch.from_numpy(dev_x).to(device)
 
     best_mean = float("inf")
     best_state: dict[str, torch.Tensor] | None = None
@@ -404,14 +404,14 @@ def train_window(
 
         model.eval()
         with torch.no_grad():
-            predicted, _ = model(test_x_tensor)
-        summary = summarize_errors(position_errors(predicted.cpu().numpy(), test_y))
+            predicted, _ = model(dev_x_tensor)
+        summary = summarize_errors(position_errors(predicted.cpu().numpy(), dev_y))
         scheduler.step(summary.mean_m)
         history.append(
             {
                 "epoch": epoch + 1,
                 "training_loss": running_loss / max(batches, 1),
-                "test_mean_error_m": summary.mean_m,
+                "development_mean_error_m": summary.mean_m,
             }
         )
         print(
@@ -430,11 +430,11 @@ def train_window(
     model.load_state_dict(best_state)
     model.eval()
     with torch.no_grad():
-        predicted, log_variance = model(test_x_tensor)
+        predicted, log_variance = model(dev_x_tensor)
 
     prediction = predicted.cpu().numpy()
     log_variance_array = log_variance.cpu().numpy()
-    errors = position_errors(prediction, test_y)
+    errors = position_errors(prediction, dev_y)
     summary = summarize_errors(errors)
 
     output = run_directory / f"window_{window_frames}"
@@ -447,13 +447,14 @@ def train_window(
             "features": FEATURES,
             "config": config_dict(),
             "metrics": summary.as_dict(),
+            "selection_split": "development",
         },
         checkpoint,
     )
     np.savez_compressed(
         output / "predictions.npz",
         predicted=prediction,
-        truth=test_y,
+        truth=dev_y,
         log_variance=log_variance_array,
     )
     write_json(output / "history.json", {"epochs": history})
@@ -467,14 +468,17 @@ def train_window(
         history,
         output / "training_curve.png",
         f"Magnetic CNN ({window_frames} frames)",
+        error_key="development_mean_error_m",
+        error_label="Development mean error (m)",
     )
 
     return {
         "window_frames": window_frames,
         "train_windows": int(len(train_x)),
-        "test_windows": int(len(test_x)),
+        "development_windows": int(len(dev_x)),
         "checkpoint": str(checkpoint),
         "metrics": summary.as_dict(),
+        "selection_split": "development",
     }
 
 
@@ -537,6 +541,7 @@ def main() -> int:
         "results": results,
         "best_window_frames": best["window_frames"],
         "best_checkpoint": best["checkpoint"],
+        "standalone_final_test_reported": False,
     }
     write_json(run_directory / "run.json", payload)
     print(json.dumps(payload, indent=2))

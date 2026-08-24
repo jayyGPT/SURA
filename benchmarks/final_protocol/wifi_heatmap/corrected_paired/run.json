@@ -1,0 +1,74 @@
+{
+  "run_name": "corrected_paired",
+  "run_directory": "/mnt/data/sura_final_work/benchmarks/final_protocol/wifi_corrected/wifi_heatmap/corrected_paired",
+  "git_commit": null,
+  "model": "wifi_heatmap",
+  "database": {
+    "directory": "/mnt/data/sura_final_work/data/processed/fingerprint_db/it_engineering",
+    "visits": 759,
+    "unique_nodes": 132,
+    "access_points": 250,
+    "phones": [
+      "A8",
+      "G7",
+      "S8",
+      "S9+"
+    ],
+    "modes": [
+      "Call listening",
+      "Navigation",
+      "Swinging"
+    ],
+    "wifi_coverage_fraction": 1.0,
+    "x_range_m": [
+      1.0,
+      90.0
+    ],
+    "y_range_m": [
+      14.0,
+      27.0
+    ]
+  },
+  "splits": [
+    "random"
+  ],
+  "device": "cpu",
+  "epochs": 80,
+  "config": {
+    "seed": 0,
+    "grid_cell_m": 1.0,
+    "gaussian_sigma_m": 2.0,
+    "rss_absent_dbm": -100.0,
+    "rss_clip_min_dbm": -90.0,
+    "rss_clip_max_dbm": -30.0,
+    "hidden_size": 256,
+    "dropout": 0.3,
+    "batch_size": 64,
+    "epochs": 80,
+    "development_fraction": 0.2,
+    "learning_rate": 0.001,
+    "weight_decay": 0.0001,
+    "held_out_device": "S9+",
+    "included_modes": [
+      "Navigation",
+      "Call listening",
+      "Swinging"
+    ]
+  },
+  "results": [
+    {
+      "split": "random",
+      "train_visits": 607,
+      "test_visits": 152,
+      "checkpoint": "/mnt/data/sura_final_work/benchmarks/final_protocol/wifi_corrected/wifi_heatmap/corrected_paired/random/model.pt",
+      "metrics": {
+        "count": 152,
+        "mean_m": 1.6128603893002116,
+        "median_m": 1.1742655229120746,
+        "p90_m": 3.1601192489954806,
+        "maximum_m": 9.252024353278227,
+        "ci95_half_width_m": 0.26557497092336463
+      }
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "k": 20,
+  "group_cv": [
+    {
+      "k": 1,
+      "mean_group_cv_error_m": 2.567538595199585
+    },
+    {
+      "k": 3,
+      "mean_group_cv_error_m": 2.359672260284424
+    },
+    {
+      "k": 5,
+      "mean_group_cv_error_m": 2.3068583965301515
+    },
+    {
+      "k": 7,
+      "mean_group_cv_error_m": 2.282446336746216
+    },
+    {
+      "k": 9,
+      "mean_group_cv_error_m": 2.269020748138428
+    },
+    {
+      "k": 11,
+      "mean_group_cv_error_m": 2.257837247848511
+    },
+    {
+      "k": 15,
+      "mean_group_cv_error_m": 2.232072925567627
+    },
+    {
+      "k": 20,
+      "mean_group_cv_error_m": 2.218995761871338
+    }
+  ],
+  "features": [
+    "wifi_fix_x",
+    "wifi_fix_y",
+    "magnetic_cnn_x",
+    "magnetic_cnn_y",
+    "magnetic_log_variance",
+    "wifi_available",
+    "magnetic_available"
+  ],
+  "uses_pdr": false,
+  "uses_temporal_history": false,
+  "magnetic_log_variance_fill_training": 3.3930208683013916,
+  "metrics": {
+    "walks": 60,
+    "points": 9600,
+    "mean_m": 2.0189566612243652,
+    "median_m": 1.281835913658142,
+    "p90_m": 4.411957073211671,
+    "max_m": 27.94786834716797,
+    "ci95_half_width_m": 0.18718341238691197,
+    "ci95_basis": "1.96 * SD(per-walk mean error) / sqrt(number of walks); fixed trained model"
+  }
+}
