@@ -25,6 +25,7 @@ import argparse
 import json
 import math
 import sys
+import time
 from pathlib import Path
 
 import matplotlib
@@ -384,7 +385,17 @@ def _fit_trajectory_knn(training: tuple[np.ndarray, ...], testing: tuple[np.ndar
         n_neighbors=k, metric="euclidean", weights="uniform", algorithm="auto", n_jobs=-1
     )
     model.fit((x_train - mean) / std, y_train)
-    predicted_flat = model.predict((x_test - mean) / std)
+    x_test_scaled = (x_test - mean) / std
+    # Warm-up run
+    model.predict(x_test_scaled)
+    # Timed runs
+    timings: list[float] = []
+    for _ in range(100):
+        t0 = time.perf_counter()
+        predicted_flat = model.predict(x_test_scaled)
+        timings.append(time.perf_counter() - t0)
+    median_elapsed = float(np.median(timings))
+    per_step_ms = (median_elapsed / len(x_test)) * 1000.0
     walks, bins = testing[6].shape[:2]
     predicted = predicted_flat.reshape(walks, bins, 2)
     errors_per_bin = np.linalg.norm(predicted - testing[6], axis=2)
@@ -399,6 +410,7 @@ def _fit_trajectory_knn(training: tuple[np.ndarray, ...], testing: tuple[np.ndar
         "uses_pdr": False,
         "uses_temporal_history": False,
         "magnetic_log_variance_fill_training": reference_logvar,
+        "per_step_latency_ms": per_step_ms,
         "metrics": summarize(per_walk_mean, errors_per_bin),
     }
 
@@ -557,7 +569,7 @@ def run_trajectory(
         baseline = WiFiOnlyKalmanNet(hidden_size=FUSION_HIDDEN_SIZE).to(device)
         print("  training Wi-Fi-only KalmanNet for matched CDF")
         baseline, _ = train_filter(baseline, training, device, epochs=epochs, uses_magnetic=False)
-        baseline_errors, baseline_prediction = evaluate_filter(
+        baseline_errors, baseline_prediction, baseline_latency_ms = evaluate_filter(
             baseline, testing, device, uses_magnetic=False
         )
 
@@ -570,7 +582,7 @@ def run_trajectory(
         ).to(device)
         print("  training variance-weighted CNN DualKalmanNet for matched CDF")
         dual, _ = train_filter(dual, training, device, epochs=epochs, uses_magnetic=True)
-        dual_errors, dual_prediction = evaluate_filter(dual, testing, device, uses_magnetic=True)
+        dual_errors, dual_prediction, dual_latency_ms = evaluate_filter(dual, testing, device, uses_magnetic=True)
 
         target_relative = testing[6] - testing[7][:, None, :]
         baseline_pointwise = np.linalg.norm(baseline_prediction - target_relative, axis=2)
@@ -632,7 +644,7 @@ def run_trajectory(
     if "degraded" in trajectory_cache:
         degraded = trajectory_cache["degraded"]
         representative_index, selection = _select_representative_walk(
-            degraded["wifi_error"], degraded["dual_error"], degraded["target"]
+            degraded["target"]
         )
         selection.update(
             {

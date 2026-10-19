@@ -1,0 +1,8 @@
+{
+  "selection_rule": "maximum accumulated heading change; outcome-blind",
+  "walk_index_zero_based": 3,
+  "selected_turn_score_rad": 4.712389605590148,
+  "wifi_only_mean_error_m": 1.965003252029419,
+  "weighted_dual_mean_error_m": 1.8365709781646729,
+  "regime": "Degraded Wi-Fi (5 s, 40% AP drop)"
+}
