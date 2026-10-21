@@ -1,0 +1,234 @@
+{
+  "timestamp_utc": "2026-10-19T08:40:51.123239+00:00",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "python_version": "3.14.8",
+  "torch_version": "2.14.1+cpu",
+  "sklearn_version": "1.9.1",
+  "numpy_version": "2.5.4",
+  "device": "cpu",
+  "cpu": {
+    "logical_cores": 8,
+    "name": "Intel(R) Core(TM) Ultra 5 325",
+    "physical_cores": 8
+  },
+  "power_scheme": "Power Scheme GUID: ab6534a3-bc02-4c44-94d1-a8535b2eb070  (SAMSUNG MODE)",
+  "battery_status": "Discharging (Battery)",
+  "thread_settings": {
+    "torch_num_threads": 8,
+    "torch_interop_threads": 8,
+    "omp_num_threads": "8",
+    "mkl_num_threads": "8"
+  },
+  "blas_backend": "Intel MKL (AVX2)",
+  "benchmark_protocol": {
+    "repeats": 3,
+    "threads": 8,
+    "warmup_policy": {
+      "kalmannet_warmup_walks": 1,
+      "knn_warmup_queries": 50
+    },
+    "method_order": [
+      "wifi_only_kalmannet",
+      "cnn_dual_kalmannet",
+      "knn_k5",
+      "knn_k20"
+    ],
+    "test_walks": 60,
+    "bins_per_walk": 160,
+    "steps_per_walk_method": 9600,
+    "regime_order": [
+      "full",
+      "degraded"
+    ]
+  },
+  "results": {
+    "degraded": {
+      "wifi_only_kalmannet": {
+        "repeat_means_ms": [
+          0.27599,
+          0.28238,
+          0.27777
+        ],
+        "repeat_medians_ms": [
+          0.2118,
+          0.2124,
+          0.212
+        ],
+        "inter_repeat_mean_ms": 0.27872,
+        "inter_repeat_std_ms": 0.0033,
+        "coefficient_of_variation_pct": 1.184,
+        "ci95_ms": 0.00819,
+        "pooled_mean_ms": 0.27872,
+        "pooled_median_ms": 0.2121,
+        "pooled_std_ms": 0.32034,
+        "pooled_p95_ms": 0.49101,
+        "pooled_p99_ms": 1.9913,
+        "pooled_max_ms": 6.9006,
+        "pooled_min_ms": 0.1391
+      },
+      "cnn_dual_kalmannet": {
+        "repeat_means_ms": [
+          0.46645,
+          0.46463,
+          0.46627
+        ],
+        "repeat_medians_ms": [
+          0.3576,
+          0.3565,
+          0.3607
+        ],
+        "inter_repeat_mean_ms": 0.46578,
+        "inter_repeat_std_ms": 0.001,
+        "coefficient_of_variation_pct": 0.216,
+        "ci95_ms": 0.00249,
+        "pooled_mean_ms": 0.46578,
+        "pooled_median_ms": 0.3581,
+        "pooled_std_ms": 0.47395,
+        "pooled_p95_ms": 1.05991,
+        "pooled_p99_ms": 3.05835,
+        "pooled_max_ms": 7.9104,
+        "pooled_min_ms": 0.234
+      },
+      "knn_k5": {
+        "repeat_means_ms": [
+          0.85245,
+          0.86433,
+          0.88315
+        ],
+        "repeat_medians_ms": [
+          0.64195,
+          0.64235,
+          0.6611
+        ],
+        "inter_repeat_mean_ms": 0.86664,
+        "inter_repeat_std_ms": 0.01548,
+        "coefficient_of_variation_pct": 1.786,
+        "ci95_ms": 0.03844,
+        "pooled_mean_ms": 0.86664,
+        "pooled_median_ms": 0.648,
+        "pooled_std_ms": 0.68839,
+        "pooled_p95_ms": 1.98321,
+        "pooled_p99_ms": 4.32872,
+        "pooled_max_ms": 11.967,
+        "pooled_min_ms": 0.3737
+      },
+      "knn_k20": {
+        "repeat_means_ms": [
+          0.90275,
+          0.90069,
+          0.87791
+        ],
+        "repeat_medians_ms": [
+          0.6758,
+          0.6771,
+          0.6752
+        ],
+        "inter_repeat_mean_ms": 0.89378,
+        "inter_repeat_std_ms": 0.01378,
+        "coefficient_of_variation_pct": 1.542,
+        "ci95_ms": 0.03424,
+        "pooled_mean_ms": 0.89378,
+        "pooled_median_ms": 0.67595,
+        "pooled_std_ms": 0.69145,
+        "pooled_p95_ms": 2.0111,
+        "pooled_p99_ms": 4.40082,
+        "pooled_max_ms": 13.6654,
+        "pooled_min_ms": 0.4021
+      }
+    },
+    "full": {
+      "wifi_only_kalmannet": {
+        "repeat_means_ms": [
+          0.08272,
+          0.08449,
+          0.32237
+        ],
+        "repeat_medians_ms": [
+          0.0713,
+          0.0717,
+          0.212
+        ],
+        "inter_repeat_mean_ms": 0.1632,
+        "inter_repeat_std_ms": 0.13786,
+        "coefficient_of_variation_pct": 84.473,
+        "ci95_ms": 0.34245,
+        "pooled_mean_ms": 0.1632,
+        "pooled_median_ms": 0.0755,
+        "pooled_std_ms": 0.58789,
+        "pooled_p95_ms": 0.33361,
+        "pooled_p99_ms": 1.18541,
+        "pooled_max_ms": 78.6887,
+        "pooled_min_ms": 0.066
+      },
+      "cnn_dual_kalmannet": {
+        "repeat_means_ms": [
+          0.1409,
+          0.19733,
+          0.51982
+        ],
+        "repeat_medians_ms": [
+          0.1204,
+          0.1328,
+          0.3604
+        ],
+        "inter_repeat_mean_ms": 0.28602,
+        "inter_repeat_std_ms": 0.20444,
+        "coefficient_of_variation_pct": 71.476,
+        "ci95_ms": 0.50785,
+        "pooled_mean_ms": 0.28602,
+        "pooled_median_ms": 0.14375,
+        "pooled_std_ms": 0.46788,
+        "pooled_p95_ms": 0.6281,
+        "pooled_p99_ms": 1.88011,
+        "pooled_max_ms": 21.9546,
+        "pooled_min_ms": 0.1104
+      },
+      "knn_k5": {
+        "repeat_means_ms": [
+          0.34019,
+          0.57833,
+          0.84651
+        ],
+        "repeat_medians_ms": [
+          0.28435,
+          0.42465,
+          0.6413
+        ],
+        "inter_repeat_mean_ms": 0.58834,
+        "inter_repeat_std_ms": 0.25331,
+        "coefficient_of_variation_pct": 43.054,
+        "ci95_ms": 0.62925,
+        "pooled_mean_ms": 0.58834,
+        "pooled_median_ms": 0.44795,
+        "pooled_std_ms": 0.54235,
+        "pooled_p95_ms": 1.27191,
+        "pooled_p99_ms": 3.33967,
+        "pooled_max_ms": 9.0983,
+        "pooled_min_ms": 0.2428
+      },
+      "knn_k20": {
+        "repeat_means_ms": [
+          0.34891,
+          0.90943,
+          0.89829
+        ],
+        "repeat_medians_ms": [
+          0.2934,
+          0.6463,
+          0.6755
+        ],
+        "inter_repeat_mean_ms": 0.71888,
+        "inter_repeat_std_ms": 0.32045,
+        "coefficient_of_variation_pct": 44.576,
+        "ci95_ms": 0.79604,
+        "pooled_mean_ms": 0.71888,
+        "pooled_median_ms": 0.60075,
+        "pooled_std_ms": 0.75228,
+        "pooled_p95_ms": 1.73513,
+        "pooled_p99_ms": 3.96938,
+        "pooled_max_ms": 26.1936,
+        "pooled_min_ms": 0.2475
+      }
+    }
+  }
+}

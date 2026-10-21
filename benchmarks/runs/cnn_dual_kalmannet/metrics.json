@@ -1,0 +1,184 @@
+{
+  "full": {
+    "name": "Full Wi-Fi (1 Hz)",
+    "wifi_period_s": 1.0,
+    "ap_dropout": 0.0,
+    "magnetic_measurement": {
+      "availability_fraction": 0.884375,
+      "mean_error_m": 3.6843955516815186,
+      "median_error_m": 1.7416990995407104
+    },
+    "trajectory_split_audit": {
+      "train_seed": 1,
+      "development_seed_reserved": 2,
+      "final_test_seed": 4,
+      "train_walks": 12,
+      "test_walks": 4,
+      "exact_target_trajectory_overlap_count": 0,
+      "signature_rounding_m": 0.0001,
+      "overlap_check_scope": "exact_binned_target_trajectory_only"
+    },
+    "simulation_protocol": {
+      "heading_source": "backward_path_displacement_plus_random_walk_and_white_noise",
+      "path_graph": "euclidean_survey_node_proximity_graph",
+      "path_graph_epsilon_m": 1.6,
+      "wall_or_obstacle_geometry_used": false,
+      "heading_white_noise_std_deg": 8.8,
+      "heading_random_walk_step_std_deg": 0.12235219605809909,
+      "nominal_step_length_m": 0.65,
+      "step_frequency_range_hz": [
+        1.7,
+        2.0
+      ],
+      "speed_range_mps": [
+        1.0,
+        1.35
+      ],
+      "survey_phones_used_to_construct_environment": [
+        "A8",
+        "G7",
+        "LG G6",
+        "LG Q6",
+        "S8",
+        "S9+"
+      ],
+      "fusion_device_generalization_claim": false
+    },
+    "magnetic_reference_log_variance_training": 3.1480636596679688,
+    "magnetic_reference_sigma_training_m": 4.826066901521617,
+    "wifi_only_kalmannet": {
+      "walks": 4,
+      "points": 320,
+      "mean_m": 0.8099542260169983,
+      "median_m": 0.6505695581436157,
+      "p90_m": 1.5619643449783327,
+      "max_m": 4.199692726135254,
+      "ci95_half_width_m": 0.2543402093614975,
+      "ci95_basis": "1.96 * SD(per-walk mean error) / sqrt(number of walks); fixed trained model",
+      "per_step_latency_ms": 0.0541749999683816
+    },
+    "cnn_dual_kalmannet": {
+      "walks": 4,
+      "points": 320,
+      "mean_m": 0.7956906408071518,
+      "median_m": 0.6872249245643616,
+      "p90_m": 1.4300797224044806,
+      "max_m": 3.995760679244995,
+      "ci95_half_width_m": 0.2765966811646941,
+      "ci95_basis": "1.96 * SD(per-walk mean error) / sqrt(number of walks); fixed trained model",
+      "per_step_latency_ms": 0.07813187494321028
+    },
+    "relative_improvement_percent": 1.7610359637221216,
+    "baseline_training_loss": [
+      0.6162315607070923,
+      0.5925185680389404,
+      0.5689010620117188,
+      0.5438326001167297,
+      0.5160728096961975,
+      0.48559409379959106,
+      0.45305538177490234,
+      0.4193401336669922
+    ],
+    "dual_training_loss": [
+      0.6162315607070923,
+      0.572137713432312,
+      0.53858482837677,
+      0.5017169713973999,
+      0.4609285295009613,
+      0.420150488615036,
+      0.38333433866500854,
+      0.36108556389808655
+    ]
+  },
+  "degraded": {
+    "name": "Degraded Wi-Fi (5 s, 40% AP drop)",
+    "wifi_period_s": 5.0,
+    "ap_dropout": 0.4,
+    "magnetic_measurement": {
+      "availability_fraction": 0.884375,
+      "mean_error_m": 3.519807815551758,
+      "median_error_m": 1.7734686136245728
+    },
+    "trajectory_split_audit": {
+      "train_seed": 1,
+      "development_seed_reserved": 2,
+      "final_test_seed": 4,
+      "train_walks": 12,
+      "test_walks": 4,
+      "exact_target_trajectory_overlap_count": 0,
+      "signature_rounding_m": 0.0001,
+      "overlap_check_scope": "exact_binned_target_trajectory_only"
+    },
+    "simulation_protocol": {
+      "heading_source": "backward_path_displacement_plus_random_walk_and_white_noise",
+      "path_graph": "euclidean_survey_node_proximity_graph",
+      "path_graph_epsilon_m": 1.6,
+      "wall_or_obstacle_geometry_used": false,
+      "heading_white_noise_std_deg": 8.8,
+      "heading_random_walk_step_std_deg": 0.12235219605809909,
+      "nominal_step_length_m": 0.65,
+      "step_frequency_range_hz": [
+        1.7,
+        2.0
+      ],
+      "speed_range_mps": [
+        1.0,
+        1.35
+      ],
+      "survey_phones_used_to_construct_environment": [
+        "A8",
+        "G7",
+        "LG G6",
+        "LG Q6",
+        "S8",
+        "S9+"
+      ],
+      "fusion_device_generalization_claim": false
+    },
+    "magnetic_reference_log_variance_training": 3.1077661514282227,
+    "magnetic_reference_sigma_training_m": 4.729800744481603,
+    "wifi_only_kalmannet": {
+      "walks": 4,
+      "points": 320,
+      "mean_m": 2.965940147638321,
+      "median_m": 2.372601866722107,
+      "p90_m": 6.086348915100098,
+      "max_m": 8.73795223236084,
+      "ci95_half_width_m": 1.2996768173050135,
+      "ci95_basis": "1.96 * SD(per-walk mean error) / sqrt(number of walks); fixed trained model",
+      "per_step_latency_ms": 0.05216515619395068
+    },
+    "cnn_dual_kalmannet": {
+      "walks": 4,
+      "points": 320,
+      "mean_m": 1.6391683220863342,
+      "median_m": 1.3832539916038513,
+      "p90_m": 3.151540994644165,
+      "max_m": 5.679650783538818,
+      "ci95_half_width_m": 0.3958952375260958,
+      "ci95_basis": "1.96 * SD(per-walk mean error) / sqrt(number of walks); fixed trained model",
+      "per_step_latency_ms": 0.03425515624257969
+    },
+    "relative_improvement_percent": 44.73360079799489,
+    "baseline_training_loss": [
+      7.46760368347168,
+      6.727477550506592,
+      5.966722011566162,
+      5.212597846984863,
+      4.5056538581848145,
+      3.8431451320648193,
+      3.2415404319763184,
+      2.7335751056671143
+    ],
+    "dual_training_loss": [
+      7.467604160308838,
+      6.499299049377441,
+      5.193788051605225,
+      4.31390905380249,
+      3.56831955909729,
+      2.9339959621429443,
+      2.4432425498962402,
+      2.099337100982666
+    ]
+  }
+}
