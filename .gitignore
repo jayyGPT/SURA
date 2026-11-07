@@ -6,16 +6,6 @@ venv/
 .pytest_cache/
 .ruff_cache/
 
-# Generated ad-hoc runs
-benchmarks/runs/
-*.pth
-*.ckpt
-*.pt
-!checkpoints/*.pt
-!benchmarks/final_protocol/wifi_heatmap/corrected_paired/random/model.pt
-!benchmarks/final_protocol/magnetic_sequence/magnetic_frozen/window_84/model.pt
-!benchmarks/final_protocol/current_results/fusion/*/*.pt
-
 # LaTeX build files
 paper/build/
 *.aux

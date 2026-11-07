@@ -18,6 +18,7 @@ import hashlib
 import json
 import math
 import sys
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -800,17 +801,38 @@ def evaluate_filter(
     device: torch.device,
     *,
     uses_magnetic: bool,
-) -> tuple[np.ndarray, np.ndarray]:
+    timing_reps: int = 100,
+) -> tuple[np.ndarray, np.ndarray, float]:
     tensors = prepare_tensors(data, device)
     motion, wifi, wifi_mask, mag, mag_logvar, mag_mask, target = tensors
     model.eval()
+    # Warm-up run (populate caches, JIT paths)
     with torch.no_grad():
         if uses_magnetic:
             output = model(motion, wifi, wifi_mask, mag, mag_logvar, mag_mask)
         else:
             output = model(motion, wifi, wifi_mask)
+    if device.type == "cuda":
+        torch.cuda.synchronize()
+    # Timed runs
+    timings: list[float] = []
+    for _ in range(timing_reps):
+        if device.type == "cuda":
+            torch.cuda.synchronize()
+        t0 = time.perf_counter()
+        with torch.no_grad():
+            if uses_magnetic:
+                output = model(motion, wifi, wifi_mask, mag, mag_logvar, mag_mask)
+            else:
+                output = model(motion, wifi, wifi_mask)
+        if device.type == "cuda":
+            torch.cuda.synchronize()
+        timings.append(time.perf_counter() - t0)
+    total_steps = motion.shape[0] * motion.shape[1]
+    median_elapsed = float(np.median(timings))
+    per_step_ms = (median_elapsed / total_steps) * 1000.0
     errors = torch.linalg.norm(output - target, dim=2).cpu().numpy()
-    return errors.mean(axis=1), output.cpu().numpy()
+    return errors.mean(axis=1), output.cpu().numpy(), per_step_ms
 
 
 def summarize(
@@ -934,7 +956,7 @@ def run_experiment(
         baseline, baseline_history = train_filter(
             baseline, training, device, epochs=fusion_epochs, uses_magnetic=False
         )
-        baseline_errors, baseline_prediction = evaluate_filter(
+        baseline_errors, baseline_prediction, baseline_latency_ms = evaluate_filter(
             baseline, testing, device, uses_magnetic=False
         )
 
@@ -947,7 +969,7 @@ def run_experiment(
         dual, dual_history = train_filter(
             dual, training, device, epochs=fusion_epochs, uses_magnetic=True
         )
-        dual_errors, dual_prediction = evaluate_filter(dual, testing, device, uses_magnetic=True)
+        dual_errors, dual_prediction, dual_latency_ms = evaluate_filter(dual, testing, device, uses_magnetic=True)
 
         target_relative = testing[6] - testing[7][:, None, :]
         baseline_pointwise = np.linalg.norm(baseline_prediction - target_relative, axis=2)
@@ -960,12 +982,14 @@ def run_experiment(
         print(
             f"  Wi-Fi-only: {baseline_summary['mean_m']:.3f} +/- "
             f"{baseline_summary['ci95_half_width_m']:.3f} m "
-            f"(median {baseline_summary['median_m']:.3f})"
+            f"(median {baseline_summary['median_m']:.3f})  "
+            f"latency {baseline_latency_ms:.5f} ms/step"
         )
         print(
             f"  CNN Dual:   {dual_summary['mean_m']:.3f} +/- "
             f"{dual_summary['ci95_half_width_m']:.3f} m "
-            f"(median {dual_summary['median_m']:.3f})"
+            f"(median {dual_summary['median_m']:.3f})  "
+            f"latency {dual_latency_ms:.5f} ms/step"
         )
         print(f"  relative improvement from magnetic CNN: {improvement:+.1f}%")
 
@@ -990,8 +1014,8 @@ def run_experiment(
             },
             "magnetic_reference_log_variance_training": magnetic_reference_log_variance,
             "magnetic_reference_sigma_training_m": magnetic_reference_sigma,
-            "wifi_only_kalmannet": baseline_summary,
-            "cnn_dual_kalmannet": dual_summary,
+            "wifi_only_kalmannet": {**baseline_summary, "per_step_latency_ms": baseline_latency_ms},
+            "cnn_dual_kalmannet": {**dual_summary, "per_step_latency_ms": dual_latency_ms},
             "relative_improvement_percent": float(improvement),
             "baseline_training_loss": baseline_history,
             "dual_training_loss": dual_history,
